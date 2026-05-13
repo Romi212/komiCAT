@@ -1,0 +1,10 @@
+nltk
+numpy
+matplotlib
+spacy
+requests
+transformers
+fugashi
+manga_ocr
+pillow
+torchvision

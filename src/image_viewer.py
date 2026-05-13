@@ -103,5 +103,6 @@ class ImageViewer:
     
     def extract_text(self):
         if self.current_image:
-            text = self.text_extractor.extract_text(self.current_image)
-            self.status_label.config(text=f"Extracted Text: {text[:50]}...")  # Show first 50 chars
+            self.detected_bubbles = self.text_extractor.detect_speech_bubbles(self.current_image)
+            #text = self.text_extractor.extract_text(self.current_image)
+           # self.status_label.config(text=f"Extracted Text: {text[:50]}...")  # Show first 50 chars
