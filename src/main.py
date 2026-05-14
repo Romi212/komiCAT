@@ -47,7 +47,7 @@ def main():
     paned.add(right_frame, minsize=200)
 
     text_viewer = TextViewer(left_frame)
-    image_viewer = ImageViewer(right_frame)
+    image_viewer = ImageViewer(right_frame, text_viewer)
 
     root.mainloop()
 

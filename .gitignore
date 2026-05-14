@@ -9,6 +9,7 @@ venv/
 ENV/
 
 env/
+.env
 
 # Ignore editor folders
 .vscode/

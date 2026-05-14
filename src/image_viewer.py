@@ -3,12 +3,15 @@ from PIL import Image, ImageTk
 from tkinter import filedialog, ttk
 
 from text_extractor import TextExtractor
+from aux_types.text_box import TextBox
 
 class ImageViewer:
-    def __init__(self, parent):
-
+    def __init__(self, parent, text_viewer=None):
+        self.text_viewer = text_viewer
         self.text_extractor = TextExtractor()
-
+        self.detected_bubbles = []  
+        self.detected_text_bubbles = []
+        self.detected_free_text = []
         # Current image and zoom
         self.original_image = None
         self.current_image = None
@@ -42,6 +45,9 @@ class ImageViewer:
 
         self.reset_zoom_button = ttk.Button(self.button_frame, text="Reset Zoom", command=self.reset_zoom)
         self.reset_zoom_button.pack(side=tk.LEFT, padx=10, pady=5)
+
+        self.detect_bubbles_button = ttk.Button(self.button_frame, text="Detect Bubbles", command=self.detect_bubbles)
+        self.detect_bubbles_button.pack(side=tk.LEFT, padx=10, pady=5)
 
         self.extract_text_button = ttk.Button(self.button_frame, text="Extract Text", command=self.extract_text)
         self.extract_text_button.pack(side=tk.LEFT, padx=10, pady=5)
@@ -101,8 +107,20 @@ class ImageViewer:
         else:
             self.zoom_out()
     
-    def extract_text(self):
+    def detect_bubbles(self):
         if self.current_image:
-            self.detected_bubbles = self.text_extractor.detect_speech_bubbles(self.current_image)
-            #text = self.text_extractor.extract_text(self.current_image)
-           # self.status_label.config(text=f"Extracted Text: {text[:50]}...")  # Show first 50 chars
+            self.detected_bubbles, self.detected_text_bubbles, self.detected_free_text = self.text_extractor.detect_speech_bubbles(self.current_image)
+            for bubble in self.detected_text_bubbles:
+                self.canvas.create_rectangle(bubble.xmin, bubble.ymin, bubble.xmax, bubble.ymax, outline='red', width=2)
+            for bubble in self.detected_free_text:
+                self.canvas.create_rectangle(bubble.xmin, bubble.ymin, bubble.xmax, bubble.ymax, outline='blue', width=2)
+
+    def extract_text(self):
+        if (self.detected_text_bubbles or self.detected_free_text) and self.current_image:
+            
+            all_bubbles = self.text_extractor.extract_text(self.current_image, self.detected_text_bubbles + self.detected_free_text)
+            for bubble in all_bubbles:
+                self.text_viewer.text_area.insert(tk.END, f"{bubble.label}: {bubble.text}\n")
+
+           
+           

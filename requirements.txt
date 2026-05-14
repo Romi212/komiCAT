@@ -8,3 +8,4 @@ fugashi
 manga_ocr
 pillow
 torchvision
+python-dotenv
