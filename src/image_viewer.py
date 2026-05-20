@@ -4,14 +4,17 @@ from tkinter import filedialog, ttk
 
 from text_extractor import TextExtractor
 from aux_types.text_box import TextBox
+from aux_types.text_box_button import TextBoxButton
 
 class ImageViewer:
     def __init__(self, parent, text_viewer=None):
         self.text_viewer = text_viewer
         self.text_extractor = TextExtractor()
         self.detected_bubbles = []  
+        self.detected_text_areas_buttons = []
         self.detected_text_bubbles = []
         self.detected_free_text = []
+        self.selected_bubbles = []  
         # Current image and zoom
         self.original_image = None
         self.current_image = None
@@ -106,11 +109,20 @@ class ImageViewer:
             self.zoom_in()
         else:
             self.zoom_out()
-    
+            
+    def selected_bubble(self, bubble_button):
+        if bubble_button not in self.selected_bubbles:
+            self.selected_bubbles.append(bubble_button)
+            bubble_button.selected(len(self.selected_bubbles))
+        
+
+
     def detect_bubbles(self):
         if self.current_image:
             self.detected_bubbles, self.detected_text_bubbles, self.detected_free_text = self.text_extractor.detect_speech_bubbles(self.current_image)
             for bubble in self.detected_text_bubbles:
+                button = TextBoxButton(bubble, self.selected_bubble)
+                self.detected_text_areas_buttons.append(button)
                 self.canvas.create_rectangle(bubble.xmin, bubble.ymin, bubble.xmax, bubble.ymax, outline='red', width=2)
             for bubble in self.detected_free_text:
                 self.canvas.create_rectangle(bubble.xmin, bubble.ymin, bubble.xmax, bubble.ymax, outline='blue', width=2)
