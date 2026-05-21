@@ -1,6 +1,7 @@
 import tkinter as tk
 from image_viewer import ImageViewer
 from text_viewer import TextViewer
+from views_adapter import ViewsAdapter
 '''
 def select_file():
 
@@ -47,8 +48,10 @@ def main():
     paned.add(right_frame, minsize=200)
 
     text_viewer = TextViewer(left_frame)
-    image_viewer = ImageViewer(right_frame, text_viewer)
+    image_viewer = ImageViewer(right_frame)
 
+    views_adapter = ViewsAdapter(image_viewer, text_viewer)
+    
     root.mainloop()
 
 if __name__ == "__main__":

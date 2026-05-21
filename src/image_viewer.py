@@ -5,10 +5,10 @@ from tkinter import filedialog, ttk
 from text_extractor import TextExtractor
 from aux_types.text_box import TextBox
 from aux_types.text_box_button import TextBoxButton
+from views_adapter import ViewsAdapter
 
 class ImageViewer:
-    def __init__(self, parent, text_viewer=None):
-        self.text_viewer = text_viewer
+    def __init__(self, parent):
         self.text_extractor = TextExtractor()
         self.detected_bubbles = []  
         self.detected_text_areas_buttons = []
@@ -62,6 +62,8 @@ class ImageViewer:
         self.status_label = ttk.Label(parent, text="Ready")
         self.status_label.pack(pady=5)
 
+    def set_adapter(self, adapter):
+        self.adapter = adapter
     def load_image(self):
         file_path = filedialog.askopenfilename(
             title="Open Image File",
@@ -111,9 +113,11 @@ class ImageViewer:
             self.zoom_out()
             
     def selected_bubble(self, bubble_button):
+        print(f"Selected bubble")
         if bubble_button not in self.selected_bubbles:
             self.selected_bubbles.append(bubble_button)
             bubble_button.selected(len(self.selected_bubbles))
+            
         
 
 
@@ -121,18 +125,21 @@ class ImageViewer:
         if self.current_image:
             self.detected_bubbles, self.detected_text_bubbles, self.detected_free_text = self.text_extractor.detect_speech_bubbles(self.current_image)
             for bubble in self.detected_text_bubbles:
-                button = TextBoxButton(bubble, self.selected_bubble)
+                button = TextBoxButton( bubble, lambda: None)
+                button.config(command=lambda b=button: self.selected_bubble(b))
                 self.detected_text_areas_buttons.append(button)
+                self.canvas.create_window((bubble.xmin + bubble.xmax)// 2, bubble.ymin, window=button)
                 self.canvas.create_rectangle(bubble.xmin, bubble.ymin, bubble.xmax, bubble.ymax, outline='red', width=2)
             for bubble in self.detected_free_text:
                 self.canvas.create_rectangle(bubble.xmin, bubble.ymin, bubble.xmax, bubble.ymax, outline='blue', width=2)
 
     def extract_text(self):
         if (self.detected_text_bubbles or self.detected_free_text) and self.current_image:
-            
-            all_bubbles = self.text_extractor.extract_text(self.current_image, self.detected_text_bubbles + self.detected_free_text)
-            for bubble in all_bubbles:
-                self.text_viewer.text_area.insert(tk.END, f"{bubble.label}: {bubble.text}\n")
+            if(len(self.selected_bubbles) == 0):
+                print("No bubbles selected, extracting text from all detected bubbles")
+            else:
+                self.text_extractor.extract_text(self.current_image, [button.text_box for button in self.selected_bubbles])
+                self.adapter.AddSegments(self.selected_bubbles)
 
            
            
