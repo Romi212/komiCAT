@@ -4,12 +4,19 @@ from PyQt6.QtCore import Qt
 
 
 class TextBoxButton(QPushButton):
-    def __init__(self, text_box, onClick, width=80, height=30, alpha=0.6):
+    def __init__(self, text_box, width=80, height=30, alpha=0.6):
         super().__init__()
         self.text_box = text_box
         self.text = ""
         self.number = 0
-        self.clicked.connect(onClick)
+        self.onClick = None
+        
+        # Make button checkable to maintain pressed state
+        self.setCheckable(True)
+        
+        # Connect to a wrapper that passes the button object instead of the boolean signal
+        self.clicked.connect(self._on_clicked)
+        
         
         # Set fixed size
         self.setFixedSize(width, height)
@@ -22,23 +29,40 @@ class TextBoxButton(QPushButton):
                 background-color: {bg_color};
                 border: 2px solid {border_color};
                 border-radius: 4px;
-                color: {border_color};
+                color: white;
                 font-weight: bold;
                 font-size: 50px;
+                padding: 5px 0px 0px 5px;
+                text-align: left;
+                margin: 0px;
             }}
             QPushButton:hover {{
                 background-color: {hover_color};
             }}
             QPushButton:pressed {{
                 background-color: {pressed_color};
+                
+            }}
+            QPushButton:checked {{
+                background-color: {pressed_color};
+                border: 8px solid {border_color};
+                border-radius: 16px;
             }}
         """)
 
+    def link_on_click(self, callback):
+        self.onClick = callback
+        
     def selected(self, number):
         print(number)
         self.number = number
         self.text = f"{number}"
         self.setText(f"{number}")
+
+    def _on_clicked(self):
+        """Wrapper that passes the button object (self) to the onClick callback"""
+        if self.onClick:
+            self.onClick(self)
 
 
     def choose_colors(self, label):

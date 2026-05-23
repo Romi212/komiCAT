@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import (
     QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QPushButton,
     QLabel, QFileDialog, QScrollArea, QGraphicsScene, QGraphicsView,
-    QGraphicsPixmapItem, QGraphicsRectItem
+    QGraphicsPixmapItem, QGraphicsRectItem, QGraphicsProxyWidget
 )
 from PyQt6.QtGui import QPixmap, QImage, QColor, QPen, QIcon
 from PyQt6.QtCore import Qt, QSize, QRect
@@ -92,24 +92,18 @@ class ImageViewer(QWidget):
             try:
                 self.original_image = Image.open(file_path)
                 self.zoom_factor = 1.0
-                self.update_image()
+                self._setup_image()
                 self.status_label.setText(f"Loaded: {os.path.basename(file_path)}")
             except Exception as e:
                 self.status_label.setText(f"Error opening file: {str(e)}")
                 print(f"Error: {e}")
-            
-    def update_image(self):
+    
+    def _setup_image(self):
+        """Set up the image in the scene (called once when loading)"""
         if self.original_image:
             try:
-                # Calculate new size
-                new_width = int(self.original_image.width * self.zoom_factor)
-                new_height = int(self.original_image.height * self.zoom_factor)
                 
-                # Resize PIL image
-                self.current_image = self.original_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
-                
-                # Convert PIL image to QPixmap
-                pil_image = self.current_image.convert("RGB")
+                pil_image = self.original_image.convert("RGB")
                 data = pil_image.tobytes("raw", "RGB")
                 bytes_per_line = 3 * pil_image.width
                 q_image = QImage(data, pil_image.width, pil_image.height, bytes_per_line, QImage.Format.Format_RGB888)
@@ -118,24 +112,37 @@ class ImageViewer(QWidget):
                 # Clear scene and add pixmap
                 self.scene.clear()
                 self.scene.addPixmap(self.current_pixmap)
-                self.view.fitInView(self.scene.itemsBoundingRect(), Qt.AspectRatioMode.KeepAspectRatio)
-                
+                #self.view.fitInView(self.scene.itemsBoundingRect(), Qt.AspectRatioMode.KeepAspectRatio)
+            except Exception as e:
+                self.status_label.setText(f"Error setting up image: {str(e)}")
+                print(f"Error: {e}")
+            
+    def update_image(self):
+        """Update the view zoom level using transform"""
+        if self.original_image:
+            try:
+                # Reset and apply zoom transform to the view
+                self.view.resetTransform()
+                self.view.scale(self.zoom_factor, self.zoom_factor)
                 self.status_label.setText(f"Zoom: {self.zoom_factor:.2f}x")
             except Exception as e:
-                self.status_label.setText(f"Error loading image: {str(e)}")
+                self.status_label.setText(f"Error updating zoom: {str(e)}")
                 print(f"Error: {e}")
             
     def zoom_in(self):
         self.zoom_factor *= 1.2
         self.update_image()
         
+        
     def zoom_out(self):
         self.zoom_factor /= 1.2
         self.update_image()
         
+        
     def reset_zoom(self):
         self.zoom_factor = 1.0
         self.update_image()
+        
         
     def on_mouse_wheel(self, event):
         if event.angleDelta().y() > 0:
@@ -151,43 +158,23 @@ class ImageViewer(QWidget):
             
     def detect_bubbles(self):
         if self.current_pixmap:
-            
-            
+            # Always detect from original image (no zoom-based resizing)
             self.detected_bubbles, self.detected_text_bubbles, self.detected_free_text = \
-                self.text_extractor.detect_speech_bubbles(self.current_image)
+                self.text_extractor.detect_speech_bubbles(self.original_image)
             
-            for bubble in self.detected_text_bubbles:
-                # Create button
+            for bubble in self.detected_text_bubbles + self.detected_free_text:
+                # Create button based on original image coordinates
                 button = TextBoxButton(
                     bubble,
-                    lambda b=None: self.selected_bubble(b) if b else None,
                     width=bubble.xmax - bubble.xmin,
                     height=bubble.ymax - bubble.ymin,
                     alpha=0.6
                 )
-                button.clicked.connect(lambda checked, btn=button: self.selected_bubble(btn))
+
+                button.link_on_click(lambda checked, btn=button: self.selected_bubble(btn))
                 self.detected_text_areas_buttons.append(button)
                 
-                # Add to scene
-                proxy = self.scene.addWidget(button)
-                proxy.setPos((bubble.xmin + bubble.xmax) // 2 - button.width() // 2, bubble.ymin)
-                
-                # Draw rectangle outline
-               
-            
-            for bubble in self.detected_free_text:
-                # Create button
-                button = TextBoxButton(
-                    bubble,
-                    lambda b=None: self.selected_bubble(b) if b else None,
-                    width=bubble.xmax - bubble.xmin,
-                    height=bubble.ymax - bubble.ymin,
-                    alpha=0.6
-                )
-                button.clicked.connect(lambda checked, btn=button: self.selected_bubble(btn))
-                self.detected_text_areas_buttons.append(button)
-                
-                # Add to scene
+                # Add to scene at original coordinates (zoom transform will scale it)
                 proxy = self.scene.addWidget(button)
                 proxy.setPos((bubble.xmin + bubble.xmax) // 2 - button.width() // 2, bubble.ymin)
                 
