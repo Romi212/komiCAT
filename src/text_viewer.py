@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QScrollArea
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QSizePolicy
 from PyQt6.QtCore import Qt
 from aux_types.segment_box import SegmentBox
 
@@ -17,13 +17,19 @@ class TextViewer(QWidget):
         # Create scroll area
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         
         # Container for segments
         self.scroll_container = QWidget()
         self.scroll_layout = QVBoxLayout()
         self.scroll_layout.setSpacing(10)
         self.scroll_layout.setContentsMargins(10, 10, 10, 10)
+        self.scroll_layout.addStretch()  # Push segments to the top
         self.scroll_container.setLayout(self.scroll_layout)
+        
+        # Set size policy so it doesn't expand to fill scroll area
+        self.scroll_container.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         
         self.scroll_area.setWidget(self.scroll_container)
         layout.addWidget(self.scroll_area)
@@ -35,8 +41,10 @@ class TextViewer(QWidget):
     
     def create_segment(self, japanese_text=""):
         segment = SegmentBox(japanese_text)
+        segment.on_focused = self.focused_segment  # Link focus callback
         self.text_areas.append(segment)
-        self.scroll_layout.addWidget(segment)
+        # Insert before the stretch (at second-to-last position)
+        self.scroll_layout.insertWidget(self.scroll_layout.count() - 1, segment)
         return segment
     
     def load_text(self, file_path):
@@ -44,3 +52,7 @@ class TextViewer(QWidget):
             content = file.read()
             if self.text_areas:
                 self.text_areas[0].set_translation(content)
+
+    def focused_segment(self, segment):
+        self.adapter.focused_segment(segment)
+        return None

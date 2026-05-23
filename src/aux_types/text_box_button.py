@@ -17,13 +17,17 @@ class TextBoxButton(QPushButton):
         # Connect to a wrapper that passes the button object instead of the boolean signal
         self.clicked.connect(self._on_clicked)
         
+        # Set custom properties for state management
+        self.setProperty("extracted", False)
+
+        self.setProperty("focus", False)
         
         # Set fixed size
         self.setFixedSize(width, height)
 
-        bg_color,  hover_color, pressed_color, border_color= self.choose_colors(text_box.label)
+        bg_color, hover_color, pressed_color, border_color = self.choose_colors(text_box.label)
         
-        # Apply styling with transparency
+        # Apply styling with custom property selectors
         self.setStyleSheet(f"""
             QPushButton {{
                 background-color: {bg_color};
@@ -31,8 +35,8 @@ class TextBoxButton(QPushButton):
                 border-radius: 4px;
                 color: white;
                 font-weight: bold;
-                font-size: 50px;
-                padding: 5px 0px 0px 5px;
+                font-size: 12px;
+                padding: 2px 0px 0px 2px;
                 text-align: left;
                 margin: 0px;
             }}
@@ -41,18 +45,43 @@ class TextBoxButton(QPushButton):
             }}
             QPushButton:pressed {{
                 background-color: {pressed_color};
-                
             }}
             QPushButton:checked {{
                 background-color: {pressed_color};
                 border: 8px solid {border_color};
                 border-radius: 16px;
             }}
+            /* Custom state: extracted */
+            QPushButton[extracted="true"] {{
+                background-color: rgba(0, 0, 0, 0);
+                border: 1px solid gray;
+                color: transparent;
+            }}
+            QPushButton[extracted="true"]:hover {{
+                background-color: rgba(0, 0, 0, 0);
+            }}
+            QPushButton[extracted="true"]:checked {{
+                background-color: rgba(0, 0, 0, 0);
+                border: 1px solid gray;
+            }}
+            /* Custom state: extracted AND focused */
+            QPushButton[extracted="true", focus="true"] {{
+                background-color: rgba(0, 0, 0, 0);
+                border: 1px solid blue;
+                color: transparent;
+            }}
+            QPushButton[extracted="true", focus="true"]:hover {{
+                background-color: rgba(0, 0, 0, 0);
+            }}
+            QPushButton[extracted="true", focus="true"]:checked {{
+                background-color: rgba(0, 0, 0, 0);
+                border: 1px solid gray;
+            }}
         """)
 
     def link_on_click(self, callback):
         self.onClick = callback
-        
+
     def selected(self, number):
         print(number)
         self.number = number
@@ -64,6 +93,23 @@ class TextBoxButton(QPushButton):
         if self.onClick:
             self.onClick(self)
 
+    def has_been_extracted(self):
+        """Mark button as extracted using custom property"""
+        self.setProperty("extracted", True)
+        self.style().unpolish(self)  # Reapply stylesheet
+        self.style().polish(self)
+    
+    def reset_extraction_state(self):
+        """Reset button to non-extracted state"""
+        self.setProperty("extracted", False)
+        self.style().unpolish(self)
+        self.style().polish(self)
+
+    def set_focus(self, focused):
+        """Set focus state using custom property"""
+        self.setProperty("focus", focused)
+        self.style().unpolish(self)
+        self.style().polish(self)
 
     def choose_colors(self, label):
         background = 200
