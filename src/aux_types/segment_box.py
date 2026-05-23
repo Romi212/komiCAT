@@ -1,24 +1,45 @@
-import tkinter as tk
-from tkinter import ttk
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QTextEdit
+from PyQt6.QtCore import Qt
 
-class SegmentBox(ttk.Frame):
-    def __init__(self, parent, japanese_text=""):
-        super().__init__(parent, relief=tk.SUNKEN, borderwidth=2)
+
+class SegmentBox(QWidget):
+    def __init__(self, japanese_text=""):
+        super().__init__()
+        
+        layout = QVBoxLayout()
+        layout.setContentsMargins(5, 5, 5, 5)
+        layout.setSpacing(5)
         
         # Label with Japanese text
-        self.label = ttk.Label(self, text=japanese_text, font=('Arial', 10, 'bold'), wraplength=300)
-        self.label.pack(fill=tk.X, padx=5, pady=5)
+        self.label = QLabel(japanese_text)
+        self.label.setWordWrap(True)
+        self.label.setStyleSheet("font-weight: bold; font-size: 12px;")
+        layout.addWidget(self.label)
         
         # Text area for translation
-        self.text_area = tk.Text(self, height=4, width=40, wrap=tk.WORD)
-        self.text_area.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        self.text_area = QTextEdit()
+        self.text_area.setMinimumHeight(100)
+        self.text_area.setMaximumHeight(150)
+        layout.addWidget(self.text_area)
+        
+        # Set border style
+        self.setStyleSheet("""
+            SegmentBox {
+                border: 1px solid #cccccc;
+                border-radius: 4px;
+                background-color: #f9f9f9;
+            }
+        """)
+        
+        self.setLayout(layout)
+        self.setMinimumHeight(150)
+        self.setMaximumHeight(200)
     
     def set_japanese_text(self, text):
-        self.label.config(text=text)
+        self.label.setText(text)
     
     def get_translation(self):
-        return self.text_area.get(1.0, tk.END).strip()
+        return self.text_area.toPlainText().strip()
     
     def set_translation(self, text):
-        self.text_area.delete(1.0, tk.END)
-        self.text_area.insert(tk.END, text)
+        self.text_area.setPlainText(text)

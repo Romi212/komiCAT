@@ -1,113 +1,144 @@
-import tkinter as tk
-from PIL import Image, ImageTk
-from tkinter import filedialog, ttk
+from PyQt6.QtWidgets import (
+    QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QPushButton,
+    QLabel, QFileDialog, QScrollArea, QGraphicsScene, QGraphicsView,
+    QGraphicsPixmapItem, QGraphicsRectItem
+)
+from PyQt6.QtGui import QPixmap, QImage, QColor, QPen, QIcon
+from PyQt6.QtCore import Qt, QSize, QRect
+from PIL import Image
+import os
 
 from text_extractor import TextExtractor
 from aux_types.text_box import TextBox
 from aux_types.text_box_button import TextBoxButton
 from views_adapter import ViewsAdapter
 
-class ImageViewer:
-    def __init__(self, parent):
+
+class ImageViewer(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.text_extractor = TextExtractor()
-        self.detected_bubbles = []  
+        self.detected_bubbles = []
         self.detected_text_areas_buttons = []
         self.detected_text_bubbles = []
         self.detected_free_text = []
-        self.selected_bubbles = []  
+        self.selected_bubbles = []
+        
         # Current image and zoom
         self.original_image = None
-        self.current_image = None
+        self.current_pixmap = None
         self.zoom_factor = 1.0
-
-        # Create scrollable canvas
-        self.frame = ttk.Frame(parent)
-        self.frame.pack(fill=tk.BOTH, expand=True)
-
-        self.canvas = tk.Canvas(self.frame, bg='gray')
-        self.h_scroll = ttk.Scrollbar(self.frame, orient=tk.HORIZONTAL, command=self.canvas.xview)
-        self.v_scroll = ttk.Scrollbar(self.frame, orient=tk.VERTICAL, command=self.canvas.yview)
-        self.canvas.configure(xscrollcommand=self.h_scroll.set, yscrollcommand=self.v_scroll.set)
-
-        self.h_scroll.pack(side=tk.BOTTOM, fill=tk.X)
-        self.v_scroll.pack(side=tk.RIGHT, fill=tk.Y)
-        self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-
-        # Button frame
-        self.button_frame = ttk.Frame(parent)
-        self.button_frame.pack(fill=tk.X)
-
-        self.open_button = ttk.Button(self.button_frame, text="Open Image", command=self.load_image)
-        self.open_button.pack(side=tk.LEFT, padx=10, pady=5)
-
-        self.zoom_in_button = ttk.Button(self.button_frame, text="Zoom In", command=self.zoom_in)
-        self.zoom_in_button.pack(side=tk.LEFT, padx=10, pady=5)
-
-        self.zoom_out_button = ttk.Button(self.button_frame, text="Zoom Out", command=self.zoom_out)
-        self.zoom_out_button.pack(side=tk.LEFT, padx=10, pady=5)
-
-        self.reset_zoom_button = ttk.Button(self.button_frame, text="Reset Zoom", command=self.reset_zoom)
-        self.reset_zoom_button.pack(side=tk.LEFT, padx=10, pady=5)
-
-        self.detect_bubbles_button = ttk.Button(self.button_frame, text="Detect Bubbles", command=self.detect_bubbles)
-        self.detect_bubbles_button.pack(side=tk.LEFT, padx=10, pady=5)
-
-        self.extract_text_button = ttk.Button(self.button_frame, text="Extract Text", command=self.extract_text)
-        self.extract_text_button.pack(side=tk.LEFT, padx=10, pady=5)
-
-        # Bind mouse wheel for zooming
-        self.canvas.bind("<MouseWheel>", self.on_mouse_wheel)
-
+        
+        # Setup UI
+        self.init_ui()
+        
+    def init_ui(self):
+        layout = QVBoxLayout()
+        
+        # Graphics view for image display with zoom
+        self.scene = QGraphicsScene()
+        self.view = QGraphicsView(self.scene)
+        self.view.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
+        self.view.wheelEvent = self.on_mouse_wheel
+        layout.addWidget(self.view)
+        
         # Status label
-        self.status_label = ttk.Label(parent, text="Ready")
-        self.status_label.pack(pady=5)
-
+        self.status_label = QLabel("Ready")
+        layout.addWidget(self.status_label)
+        
+        # Button bar
+        button_layout = QHBoxLayout()
+        
+        self.open_button = QPushButton("Open Image")
+        self.open_button.clicked.connect(self.load_image)
+        button_layout.addWidget(self.open_button)
+        
+        self.zoom_in_button = QPushButton("Zoom In")
+        self.zoom_in_button.clicked.connect(self.zoom_in)
+        button_layout.addWidget(self.zoom_in_button)
+        
+        self.zoom_out_button = QPushButton("Zoom Out")
+        self.zoom_out_button.clicked.connect(self.zoom_out)
+        button_layout.addWidget(self.zoom_out_button)
+        
+        self.reset_zoom_button = QPushButton("Reset Zoom")
+        self.reset_zoom_button.clicked.connect(self.reset_zoom)
+        button_layout.addWidget(self.reset_zoom_button)
+        
+        self.detect_bubbles_button = QPushButton("Detect Bubbles")
+        self.detect_bubbles_button.clicked.connect(self.detect_bubbles)
+        button_layout.addWidget(self.detect_bubbles_button)
+        
+        self.extract_text_button = QPushButton("Extract Text")
+        self.extract_text_button.clicked.connect(self.extract_text)
+        button_layout.addWidget(self.extract_text_button)
+        
+        layout.addLayout(button_layout)
+        self.setLayout(layout)
+        self.setWindowTitle("Image Viewer")
+        self.resize(1000, 800)
+        
     def set_adapter(self, adapter):
         self.adapter = adapter
+        
     def load_image(self):
-        file_path = filedialog.askopenfilename(
-            title="Open Image File",
-            filetypes=[("Image files", "*.png *.jpg *.jpeg *.gif *.bmp *.ico")]
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Open Image File",
+            "",
+            "Image files (*.png *.jpg *.jpeg *.gif *.bmp *.ico);;All files (*)"
         )
         if file_path:
-            self.original_image = Image.open(file_path)
-            self.zoom_factor = 1.0
-            self.update_image()
-            self.status_label.config(text=f"Loaded: {file_path}")
-
+            try:
+                self.original_image = Image.open(file_path)
+                self.zoom_factor = 1.0
+                self.update_image()
+                self.status_label.setText(f"Loaded: {os.path.basename(file_path)}")
+            except Exception as e:
+                self.status_label.setText(f"Error opening file: {str(e)}")
+                print(f"Error: {e}")
+            
     def update_image(self):
         if self.original_image:
-            # Calculate new size
-            new_width = int(self.original_image.width * self.zoom_factor)
-            new_height = int(self.original_image.height * self.zoom_factor)
-
-            # Resize image
-            self.current_image = self.original_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
-            self.photo = ImageTk.PhotoImage(self.current_image)
-
-            # Clear canvas and add new image
-            self.canvas.delete("all")
-            self.canvas.create_image(0, 0, anchor=tk.NW, image=self.photo)
-
-            # Update scroll region
-            self.canvas.config(scrollregion=(0, 0, new_width, new_height))
-
-            self.status_label.config(text=f"Zoom: {self.zoom_factor:.2f}x")
-
+            try:
+                # Calculate new size
+                new_width = int(self.original_image.width * self.zoom_factor)
+                new_height = int(self.original_image.height * self.zoom_factor)
+                
+                # Resize PIL image
+                self.current_image = self.original_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                
+                # Convert PIL image to QPixmap
+                pil_image = self.current_image.convert("RGB")
+                data = pil_image.tobytes("raw", "RGB")
+                bytes_per_line = 3 * pil_image.width
+                q_image = QImage(data, pil_image.width, pil_image.height, bytes_per_line, QImage.Format.Format_RGB888)
+                self.current_pixmap = QPixmap.fromImage(q_image)
+                
+                # Clear scene and add pixmap
+                self.scene.clear()
+                self.scene.addPixmap(self.current_pixmap)
+                self.view.fitInView(self.scene.itemsBoundingRect(), Qt.AspectRatioMode.KeepAspectRatio)
+                
+                self.status_label.setText(f"Zoom: {self.zoom_factor:.2f}x")
+            except Exception as e:
+                self.status_label.setText(f"Error loading image: {str(e)}")
+                print(f"Error: {e}")
+            
     def zoom_in(self):
         self.zoom_factor *= 1.2
         self.update_image()
-
+        
     def zoom_out(self):
         self.zoom_factor /= 1.2
         self.update_image()
-
+        
     def reset_zoom(self):
         self.zoom_factor = 1.0
         self.update_image()
-
+        
     def on_mouse_wheel(self, event):
-        if event.delta > 0:
+        if event.angleDelta().y() > 0:
             self.zoom_in()
         else:
             self.zoom_out()
@@ -118,27 +149,58 @@ class ImageViewer:
             self.selected_bubbles.append(bubble_button)
             bubble_button.selected(len(self.selected_bubbles))
             
-        
-
-
     def detect_bubbles(self):
-        if self.current_image:
-            self.detected_bubbles, self.detected_text_bubbles, self.detected_free_text = self.text_extractor.detect_speech_bubbles(self.current_image)
+        if self.current_pixmap:
+            
+            
+            self.detected_bubbles, self.detected_text_bubbles, self.detected_free_text = \
+                self.text_extractor.detect_speech_bubbles(self.current_image)
+            
             for bubble in self.detected_text_bubbles:
-                button = TextBoxButton( bubble, lambda: None)
-                button.config(command=lambda b=button: self.selected_bubble(b))
+                # Create button
+                button = TextBoxButton(
+                    bubble,
+                    lambda b=None: self.selected_bubble(b) if b else None,
+                    width=bubble.xmax - bubble.xmin,
+                    height=bubble.ymax - bubble.ymin,
+                    alpha=0.6
+                )
+                button.clicked.connect(lambda checked, btn=button: self.selected_bubble(btn))
                 self.detected_text_areas_buttons.append(button)
-                self.canvas.create_window((bubble.xmin + bubble.xmax)// 2, bubble.ymin, window=button)
-                self.canvas.create_rectangle(bubble.xmin, bubble.ymin, bubble.xmax, bubble.ymax, outline='red', width=2)
+                
+                # Add to scene
+                proxy = self.scene.addWidget(button)
+                proxy.setPos((bubble.xmin + bubble.xmax) // 2 - button.width() // 2, bubble.ymin)
+                
+                # Draw rectangle outline
+               
+            
             for bubble in self.detected_free_text:
-                self.canvas.create_rectangle(bubble.xmin, bubble.ymin, bubble.xmax, bubble.ymax, outline='blue', width=2)
-
+                # Create button
+                button = TextBoxButton(
+                    bubble,
+                    lambda b=None: self.selected_bubble(b) if b else None,
+                    width=bubble.xmax - bubble.xmin,
+                    height=bubble.ymax - bubble.ymin,
+                    alpha=0.6
+                )
+                button.clicked.connect(lambda checked, btn=button: self.selected_bubble(btn))
+                self.detected_text_areas_buttons.append(button)
+                
+                # Add to scene
+                proxy = self.scene.addWidget(button)
+                proxy.setPos((bubble.xmin + bubble.xmax) // 2 - button.width() // 2, bubble.ymin)
+                
+                
     def extract_text(self):
-        if (self.detected_text_bubbles or self.detected_free_text) and self.current_image:
-            if(len(self.selected_bubbles) == 0):
+        if (self.detected_text_bubbles or self.detected_free_text) and self.current_pixmap:
+            if len(self.selected_bubbles) == 0:
                 print("No bubbles selected, extracting text from all detected bubbles")
             else:
-                self.text_extractor.extract_text(self.current_image, [button.text_box for button in self.selected_bubbles])
+                self.text_extractor.extract_text(
+                    self.original_image,
+                    [button.text_box for button in self.selected_bubbles]
+                )
                 self.adapter.AddSegments(self.selected_bubbles)
 
            
