@@ -10,12 +10,13 @@ class SegmentBox(QWidget):
         layout = QVBoxLayout()
         layout.setContentsMargins(5, 5, 5, 5)
         layout.setSpacing(5)
+        self.text_size = 12
         
         # TextEdit for Japanese text (editable)
         self.label = QTextEdit()
         self.label.setPlainText(japanese_text)
         self.label.setReadOnly(False)
-        self.label.setMinimumHeight(20)
+        self.label.setMinimumHeight(25)
         self.label.setStyleSheet("font-weight: bold; font-size: 12px;")
         self.label.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.label.textChanged.connect(self._adjust_label_height)
@@ -25,7 +26,7 @@ class SegmentBox(QWidget):
         
         # Text area for translation
         self.text_area = QTextEdit()
-        self.text_area.setMinimumHeight(20)
+        self.text_area.setMinimumHeight(25)
         self.text_area.setStyleSheet("font-size: 12px;")
         self.text_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.text_area.textChanged.connect(self._adjust_text_area_height)
@@ -39,6 +40,8 @@ class SegmentBox(QWidget):
                 border: 1px solid #cccccc;
                 border-radius: 4px;
                 background-color: #f9f9f9;
+                
+                           
             }
         """)
         
@@ -85,3 +88,11 @@ class SegmentBox(QWidget):
         if self.on_unfocused:
             self.on_unfocused(self)
         QTextEdit.focusOutEvent(self.label, event)
+
+    def zoom(self, factor):
+        """Zoom in/out by adjusting font size"""
+        print(f"Zooming segment {self.text_size}")
+        self.text_size = max(6, min(48, int(self.text_size * factor)))
+        print(f"New text size: {self.text_size}")
+        self.label.setStyleSheet(f"font-weight: bold; font-size: {self.text_size}px;")
+        self.text_area.setStyleSheet(f"font-size: {self.text_size}px;")

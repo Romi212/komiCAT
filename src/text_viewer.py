@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QSizePolicy
+from PyQt6.QtWidgets import QPushButton, QHBoxLayout, QWidget, QVBoxLayout, QScrollArea, QSizePolicy
 from PyQt6.QtCore import Qt
 from aux_types.segment_box import SegmentBox
 
@@ -35,7 +35,19 @@ class TextViewer(QWidget):
         layout.addWidget(self.scroll_area)
         
         self.setLayout(layout)
+
+        button_layout = QHBoxLayout()
         
+        self.zoom_in_button = QPushButton("Zoom In")
+        self.zoom_in_button.clicked.connect(self.zoom_in)
+        button_layout.addWidget(self.zoom_in_button)
+
+        self.zoom_out_button = QPushButton("Zoom Out")
+        self.zoom_out_button.clicked.connect(self.zoom_out)
+        button_layout.addWidget(self.zoom_out_button)
+        
+        layout.addLayout(button_layout)
+                
     def set_adapter(self, adapter):
         self.adapter = adapter
     
@@ -63,3 +75,13 @@ class TextViewer(QWidget):
         print(f"Unfocused segment")
         self.adapter.unfocused_segment(segment)
         return None
+
+    def zoom_in(self):
+        print("Zooming in")
+        for segment in self.text_areas:
+
+            segment.zoom(1.2)  # Zoom in by 20%
+    
+    def zoom_out(self):
+        for segment in self.text_areas:
+            segment.zoom(0.8)  # Zoom out by 20%

@@ -10,6 +10,7 @@ class TextBoxButton(QPushButton):
         self.text = ""
         self.number = 0
         self.onClick = None
+        self.has_been_extracted_flag = False
         
         # Make button checkable to maintain pressed state
         self.setCheckable(True)
@@ -34,10 +35,9 @@ class TextBoxButton(QPushButton):
                 border-radius: 4px;
                 color: white;
                 font-weight: bold;
-                font-size: 12px;
+                font-size: 52px;
                 padding: 2px 0px 0px 2px;
-                text-align: left;
-                margin: 0px;
+                
             }}
             QPushButton:hover {{
                 background-color: {hover_color};
@@ -94,6 +94,7 @@ class TextBoxButton(QPushButton):
 
     def has_been_extracted(self):
         """Mark button as extracted using custom property"""
+        self.has_been_extracted_flag = True
         self.setProperty("state", "extracted")
         self.style().unpolish(self)  # Reapply stylesheet
         self.style().polish(self)
@@ -123,4 +124,10 @@ class TextBoxButton(QPushButton):
         else:
             return f"rgba(0, {background}, 0, {transparency})", f"rgba(0, {selected}, 0, {transparency})", f"rgba(0, {pressed}, 0, {transparency})", "green"
 
-    
+    def uncheck(self):
+        """Uncheck the button and reset state"""
+        self.setChecked(False)
+        self.setText("")
+        self.setProperty("state", "not_extracted")
+        self.style().unpolish(self)
+        self.style().polish(self)

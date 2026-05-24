@@ -53,14 +53,6 @@ class ImageViewer(QWidget):
         self.open_button.clicked.connect(self.load_image)
         button_layout.addWidget(self.open_button)
         
-        self.zoom_in_button = QPushButton("Zoom In")
-        self.zoom_in_button.clicked.connect(self.zoom_in)
-        button_layout.addWidget(self.zoom_in_button)
-        
-        self.zoom_out_button = QPushButton("Zoom Out")
-        self.zoom_out_button.clicked.connect(self.zoom_out)
-        button_layout.addWidget(self.zoom_out_button)
-        
         self.reset_zoom_button = QPushButton("Reset Zoom")
         self.reset_zoom_button.clicked.connect(self.reset_zoom)
         button_layout.addWidget(self.reset_zoom_button)
@@ -72,6 +64,10 @@ class ImageViewer(QWidget):
         self.extract_text_button = QPushButton("Extract Text")
         self.extract_text_button.clicked.connect(self.extract_text)
         button_layout.addWidget(self.extract_text_button)
+
+        self.clear_selection_button = QPushButton("Clear Selection")
+        self.clear_selection_button.clicked.connect(self.clear_selection)
+        button_layout.addWidget(self.clear_selection_button)
         
         layout.addLayout(button_layout)
         self.setLayout(layout)
@@ -152,7 +148,7 @@ class ImageViewer(QWidget):
             
     def selected_bubble(self, bubble_button):
         print(f"Selected bubble")
-        if bubble_button not in self.selected_bubbles:
+        if bubble_button not in self.selected_bubbles and not bubble_button.has_been_extracted_flag:
             self.selected_bubbles.append(bubble_button)
             bubble_button.selected(len(self.selected_bubbles))
             
@@ -189,6 +185,10 @@ class ImageViewer(QWidget):
                     [button.text_box for button in self.selected_bubbles]
                 )
                 self.adapter.AddSegments(self.selected_bubbles)
+                self.selected_bubbles = []  # Clear selection after extraction
 
-           
+    def clear_selection(self):
+        for button in self.selected_bubbles:
+            button.uncheck()
+        self.selected_bubbles = []
            
