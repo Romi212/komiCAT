@@ -20,6 +20,7 @@ class SegmentBox(QWidget):
         self.label.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.label.textChanged.connect(self._adjust_label_height)
         self.label.focusInEvent = self._on_label_focus
+        self.label.focusOutEvent = self._on_label_unfocus
         layout.addWidget(self.label)
         
         # Text area for translation
@@ -28,7 +29,8 @@ class SegmentBox(QWidget):
         self.text_area.setStyleSheet("font-size: 12px;")
         self.text_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.text_area.textChanged.connect(self._adjust_text_area_height)
-        self.text_area.focusInEvent = self._on_text_area_focus
+        self.text_area.focusInEvent = self._on_label_focus
+        self.text_area.focusOutEvent = self._on_label_unfocus  # Reuse unfocus for both
         layout.addWidget(self.text_area)
         
         # Set border style
@@ -76,10 +78,10 @@ class SegmentBox(QWidget):
             self.on_focused(self)
         # Call the original focusInEvent
         QTextEdit.focusInEvent(self.label, event)
-    
-    def _on_text_area_focus(self, event):
-        """Called when text_area gets focus"""
-        if self.on_focused:
-            self.on_focused(self)
-        # Call the original focusInEvent
-        QTextEdit.focusInEvent(self.text_area, event)
+
+
+    def _on_label_unfocus(self, event):
+        """Called when label loses focus"""
+        if self.on_unfocused:
+            self.on_unfocused(self)
+        QTextEdit.focusOutEvent(self.label, event)

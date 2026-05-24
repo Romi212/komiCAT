@@ -17,4 +17,9 @@ class ViewsAdapter:
         button = self.segment_bubble_map.get(segment)
         if button:
             button.set_focus(True)
+
+    def unfocused_segment(self, segment):
+        button = self.segment_bubble_map.get(segment)
+        if button:
+            button.set_focus(False)
                 

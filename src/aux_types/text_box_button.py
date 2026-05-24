@@ -18,9 +18,8 @@ class TextBoxButton(QPushButton):
         self.clicked.connect(self._on_clicked)
         
         # Set custom properties for state management
-        self.setProperty("extracted", False)
-
-        self.setProperty("focus", False)
+        self.setProperty("state", "not_extracted")
+        
         
         # Set fixed size
         self.setFixedSize(width, height)
@@ -51,32 +50,32 @@ class TextBoxButton(QPushButton):
                 border: 8px solid {border_color};
                 border-radius: 16px;
             }}
-            /* Custom state: extracted */
-            QPushButton[extracted="true"] {{
+            QPushButton[state="extracted"] {{
                 background-color: rgba(0, 0, 0, 0);
                 border: 1px solid gray;
                 color: transparent;
             }}
-            QPushButton[extracted="true"]:hover {{
+            QPushButton[state="extracted"]:hover {{
                 background-color: rgba(0, 0, 0, 0);
             }}
-            QPushButton[extracted="true"]:checked {{
+            QPushButton[state="extracted"]:checked {{
                 background-color: rgba(0, 0, 0, 0);
                 border: 1px solid gray;
             }}
-            /* Custom state: extracted AND focused */
-            QPushButton[extracted="true", focus="true"] {{
+            QPushButton[state="focused"] {{
                 background-color: rgba(0, 0, 0, 0);
-                border: 1px solid blue;
+                border: 4px solid blue;
                 color: transparent;
             }}
-            QPushButton[extracted="true", focus="true"]:hover {{
+            QPushButton[state="focused"]:hover {{
                 background-color: rgba(0, 0, 0, 0);
             }}
-            QPushButton[extracted="true", focus="true"]:checked {{
+            QPushButton[state="focused"]:checked {{
                 background-color: rgba(0, 0, 0, 0);
-                border: 1px solid gray;
+                border: 4px solid blue;
             }}
+            
+            
         """)
 
     def link_on_click(self, callback):
@@ -95,19 +94,20 @@ class TextBoxButton(QPushButton):
 
     def has_been_extracted(self):
         """Mark button as extracted using custom property"""
-        self.setProperty("extracted", True)
+        self.setProperty("state", "extracted")
         self.style().unpolish(self)  # Reapply stylesheet
         self.style().polish(self)
     
     def reset_extraction_state(self):
         """Reset button to non-extracted state"""
-        self.setProperty("extracted", False)
+        self.setProperty("state", "not_extracted")
         self.style().unpolish(self)
         self.style().polish(self)
 
     def set_focus(self, focused):
         """Set focus state using custom property"""
-        self.setProperty("focus", focused)
+        print(f"Setting focus to {focused} for button with text '{self.text}'")
+        self.setProperty("state", "focused" if focused else "extracted")
         self.style().unpolish(self)
         self.style().polish(self)
 

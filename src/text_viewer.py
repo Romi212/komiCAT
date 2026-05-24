@@ -42,6 +42,7 @@ class TextViewer(QWidget):
     def create_segment(self, japanese_text=""):
         segment = SegmentBox(japanese_text)
         segment.on_focused = self.focused_segment  # Link focus callback
+        segment.on_unfocused = self.unfocused_segment  # Link unfocus callback
         self.text_areas.append(segment)
         # Insert before the stretch (at second-to-last position)
         self.scroll_layout.insertWidget(self.scroll_layout.count() - 1, segment)
@@ -54,5 +55,11 @@ class TextViewer(QWidget):
                 self.text_areas[0].set_translation(content)
 
     def focused_segment(self, segment):
+        print(f"Focused segment")
         self.adapter.focused_segment(segment)
+        return None
+    
+    def unfocused_segment(self, segment):
+        print(f"Unfocused segment")
+        self.adapter.unfocused_segment(segment)
         return None
