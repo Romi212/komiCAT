@@ -5,8 +5,9 @@ from PyQt6.QtCore import Qt
 class SegmentBox(QWidget):
     def __init__(self, japanese_text=""):
         super().__init__()
-        self.on_focused = None  # Callback for when this segment gets focus
-        
+        self.on_focused = None  
+        self.on_unfocused = None  
+
         layout = QVBoxLayout()
         layout.setContentsMargins(5, 5, 5, 5)
         layout.setSpacing(5)
@@ -30,8 +31,8 @@ class SegmentBox(QWidget):
         self.text_area.setStyleSheet("font-size: 12px;")
         self.text_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.text_area.textChanged.connect(self._adjust_text_area_height)
-        self.text_area.focusInEvent = self._on_label_focus
-        self.text_area.focusOutEvent = self._on_label_unfocus  # Reuse unfocus for both
+        self.text_area.focusInEvent = self._on_text_area_focus
+        self.text_area.focusOutEvent = self._on_text_area_unfocus  # Reuse unfocus for both
         layout.addWidget(self.text_area)
         
         # Set border style
@@ -89,6 +90,20 @@ class SegmentBox(QWidget):
             self.on_unfocused(self)
         QTextEdit.focusOutEvent(self.label, event)
 
+    def _on_text_area_focus(self, event):
+        """Called when text area gets focus"""
+        if self.on_focused:
+            self.on_focused(self)
+        # Call the original focusInEvent
+        QTextEdit.focusInEvent(self.text_area, event)
+
+
+    def _on_text_area_unfocus(self, event):
+        """Called when text area loses focus"""
+        if self.on_unfocused:
+            self.on_unfocused(self)
+        QTextEdit.focusOutEvent(self.text_area, event)
+
     def zoom(self, factor):
         """Zoom in/out by adjusting font size"""
         print(f"Zooming segment {self.text_size}")
@@ -96,3 +111,5 @@ class SegmentBox(QWidget):
         print(f"New text size: {self.text_size}")
         self.label.setStyleSheet(f"font-weight: bold; font-size: {self.text_size}px;")
         self.text_area.setStyleSheet(f"font-size: {self.text_size}px;")
+        self._adjust_label_height()
+        self._adjust_text_area_height()
