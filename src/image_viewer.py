@@ -23,6 +23,8 @@ class ImageViewer(QWidget):
         self.detected_text_bubbles = []
         self.detected_free_text = []
         self.selected_bubbles = []
+        self.current_image = 0
+        self.loaded_images = []  
         
         # Current image and zoom
         self.original_image = None
@@ -35,6 +37,21 @@ class ImageViewer(QWidget):
     def init_ui(self):
         layout = QVBoxLayout()
         
+        image_nav_layout = QHBoxLayout()
+        self.prev_image_button = QPushButton("<")
+        self.prev_image_button.clicked.connect(self.load_previous_image)
+        image_nav_layout.addWidget(self.prev_image_button)
+
+        self.image_index_label = QLabel("No image loaded")
+        image_nav_layout.addWidget(self.image_index_label)
+
+        self.next_image_button = QPushButton(">")
+        self.next_image_button.clicked.connect(self.load_next_image)
+        image_nav_layout.addWidget(self.next_image_button)
+
+        layout.addLayout(image_nav_layout)
+
+
         # Graphics view for image display with zoom
         self.scene = QGraphicsScene()
         self.view = QGraphicsView(self.scene)
@@ -78,21 +95,24 @@ class ImageViewer(QWidget):
         self.adapter = adapter
         
     def load_image(self):
-        file_path, _ = QFileDialog.getOpenFileName(
+        self.file_paths, _ = QFileDialog.getOpenFileNames(
             self,
             "Open Image File",
             "",
             "Image files (*.png *.jpg *.jpeg *.gif *.bmp *.ico);;All files (*)"
         )
-        if file_path:
+        for file_path in self.file_paths:
             try:
-                self.original_image = Image.open(file_path)
-                self.zoom_factor = 1.0
-                self._setup_image()
+                image = Image.open(file_path)
+                self.loaded_images.append(image)
                 self.status_label.setText(f"Loaded: {os.path.basename(file_path)}")
             except Exception as e:
                 self.status_label.setText(f"Error opening file: {str(e)}")
                 print(f"Error: {e}")
+        self.zoom_factor = 1.0
+        self.image_index_label.setText(self.file_paths[0] if self.file_paths else "No image loaded")
+        self.original_image = self.loaded_images[0] if self.loaded_images else None
+        self._setup_image()
     
     def _setup_image(self):
         """Set up the image in the scene (called once when loading)"""
@@ -192,3 +212,18 @@ class ImageViewer(QWidget):
             button.uncheck()
         self.selected_bubbles = []
            
+    def load_previous_image(self):
+        if self.current_image >0:
+             self.current_image -= 1
+             self.original_image = self.loaded_images[self.current_image]
+             self.image_index_label.setText(os.path.basename(self.file_paths[self.current_image] if self.file_paths else "No image loaded"))
+             self._setup_image()
+        
+
+    def load_next_image(self):
+        if self.current_image < len(self.loaded_images) - 1:
+             self.current_image += 1
+             self.image_index_label.setText(os.path.basename(self.file_paths[self.current_image] if self.file_paths else "No image loaded"))
+             self.original_image = self.loaded_images[self.current_image]
+             self._setup_image()
+        
