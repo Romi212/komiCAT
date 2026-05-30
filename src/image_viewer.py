@@ -12,6 +12,7 @@ from text_extractor import TextExtractor
 from aux_types.text_box import TextBox
 from aux_types.text_box_button import TextBoxButton
 from views_adapter import ViewsAdapter
+from aux_types.page import Page
 
 
 class ImageViewer(QWidget):
@@ -24,10 +25,9 @@ class ImageViewer(QWidget):
         self.detected_free_text = []
         self.selected_bubbles = []
         self.current_image = 0
-        self.loaded_images = []  
+        self.pages = []
         
         # Current image and zoom
-        self.original_image = None
         self.current_pixmap = None
         self.zoom_factor = 1.0
         
@@ -104,38 +104,58 @@ class ImageViewer(QWidget):
         for file_path in self.file_paths:
             try:
                 image = Image.open(file_path)
-                self.loaded_images.append(image)
-                self.status_label.setText(f"Loaded: {os.path.basename(file_path)}")
+                page = Page(file_path=file_path, image=image)
+                self.pages.append(page)
+                self.status_label.setText(f"Loaded: {page.page_name}")
             except Exception as e:
                 self.status_label.setText(f"Error opening file: {str(e)}")
                 print(f"Error: {e}")
         self.zoom_factor = 1.0
-        self.image_index_label.setText(self.file_paths[0] if self.file_paths else "No image loaded")
-        self.original_image = self.loaded_images[0] if self.loaded_images else None
-        self._setup_image()
+        self._setup_page()
     
-    def _setup_image(self):
-        """Set up the image in the scene (called once when loading)"""
-        if self.original_image:
+    def _setup_page(self):
+        current_page = self.pages[self.current_image]
+
+        #Set up image
+        current_image = current_page.image
+        if current_image:
             try:
                 
-                pil_image = self.original_image.convert("RGB")
+                pil_image = current_image.convert("RGB")
                 data = pil_image.tobytes("raw", "RGB")
                 bytes_per_line = 3 * pil_image.width
                 q_image = QImage(data, pil_image.width, pil_image.height, bytes_per_line, QImage.Format.Format_RGB888)
                 self.current_pixmap = QPixmap.fromImage(q_image)
                 
                 # Clear scene and add pixmap
-                self.scene.clear()
+                for item in self.scene.items():
+                    self.scene.removeItem(item)
                 self.scene.addPixmap(self.current_pixmap)
-                #self.view.fitInView(self.scene.itemsBoundingRect(), Qt.AspectRatioMode.KeepAspectRatio)
+                self.image_index_label.setText(current_page.page_name)
+                self.status_label.setText(f"Image loaded: {current_page.page_name}")
             except Exception as e:
                 self.status_label.setText(f"Error setting up image: {str(e)}")
                 print(f"Error: {e}")
+
+        #Add bubble butons if it had been detected before
+        
+        self.detected_text_bubbles = []
+        self.detected_free_text = []
+        for proxy in current_page.text_boxes_buttons:
+            self.scene.addItem(proxy)
+            button = proxy.widget()
+            if isinstance(button, TextBoxButton):
+                if button.text_box.label == "text_bubble":
+                    self.detected_text_bubbles.append(button.text_box)
+                elif button.text_box.label == "free_text":
+                    self.detected_free_text.append(button.text_box)
+            
             
     def update_image(self):
         """Update the view zoom level using transform"""
-        if self.original_image:
+        current_page = self.pages[self.current_image]
+        current_image = current_page.image
+        if current_image:
             try:
                 # Reset and apply zoom transform to the view
                 self.view.resetTransform()
@@ -173,13 +193,15 @@ class ImageViewer(QWidget):
             bubble_button.selected(len(self.selected_bubbles))
             
     def detect_bubbles(self):
-        if self.current_pixmap:
-            # Always detect from original image (no zoom-based resizing)
+        current_page = self.pages[self.current_image]
+        current_image = current_page.image
+        if current_image:
+           
             self.detected_bubbles, self.detected_text_bubbles, self.detected_free_text = \
-                self.text_extractor.detect_speech_bubbles(self.original_image)
-            
+                self.text_extractor.detect_speech_bubbles(current_image)
+            current_page.bubbles = self.detected_bubbles
             for bubble in self.detected_text_bubbles + self.detected_free_text:
-                # Create button based on original image coordinates
+               
                 button = TextBoxButton(
                     bubble,
                     width=bubble.xmax - bubble.xmin,
@@ -189,19 +211,22 @@ class ImageViewer(QWidget):
 
                 button.link_on_click(lambda checked, btn=button: self.selected_bubble(btn))
                 self.detected_text_areas_buttons.append(button)
+                 
                 
-                # Add to scene at original coordinates (zoom transform will scale it)
+               
                 proxy = self.scene.addWidget(button)
                 proxy.setPos((bubble.xmin + bubble.xmax) // 2 - button.width() // 2, bubble.ymin)
+                current_page.text_boxes_buttons.append(proxy) 
                 
                 
+    
     def extract_text(self):
-        if (self.detected_text_bubbles or self.detected_free_text) and self.current_pixmap:
+        if (self.detected_text_bubbles or self.detected_free_text):
             if len(self.selected_bubbles) == 0:
                 print("No bubbles selected, extracting text from all detected bubbles")
             else:
                 self.text_extractor.extract_text(
-                    self.original_image,
+                    self.pages[self.current_image].image,
                     [button.text_box for button in self.selected_bubbles]
                 )
                 self.adapter.AddSegments(self.selected_bubbles)
@@ -215,15 +240,11 @@ class ImageViewer(QWidget):
     def load_previous_image(self):
         if self.current_image >0:
              self.current_image -= 1
-             self.original_image = self.loaded_images[self.current_image]
-             self.image_index_label.setText(os.path.basename(self.file_paths[self.current_image] if self.file_paths else "No image loaded"))
-             self._setup_image()
+             self._setup_page()
         
 
     def load_next_image(self):
-        if self.current_image < len(self.loaded_images) - 1:
+        if self.current_image < len(self.pages) - 1:
              self.current_image += 1
-             self.image_index_label.setText(os.path.basename(self.file_paths[self.current_image] if self.file_paths else "No image loaded"))
-             self.original_image = self.loaded_images[self.current_image]
-             self._setup_image()
+             self._setup_page()
         
