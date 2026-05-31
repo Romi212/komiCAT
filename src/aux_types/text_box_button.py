@@ -4,8 +4,11 @@ from PyQt6.QtCore import Qt
 
 
 class TextBoxButton(QPushButton):
+    
     def __init__(self, text_box, width=80, height=30, alpha=0.6):
         super().__init__()
+        self.segment = None
+        #Es necesario guardar el text box para extraer el texto
         self.text_box = text_box
         self.text = ""
         self.number = 0
@@ -131,3 +134,6 @@ class TextBoxButton(QPushButton):
         self.setProperty("state", "not_extracted")
         self.style().unpolish(self)
         self.style().polish(self)
+
+    def set_segment(self, segment):
+        self.segment = segment

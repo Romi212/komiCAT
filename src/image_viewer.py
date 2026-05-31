@@ -11,24 +11,22 @@ import os
 from text_extractor import TextExtractor
 from aux_types.text_box import TextBox
 from aux_types.text_box_button import TextBoxButton
-from views_adapter import ViewsAdapter
 from aux_types.page import Page
+from aux_types.segment import Segment
 
 
 class ImageViewer(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, controller, parent=None, chapter=None):
         super().__init__(parent)
         self.text_extractor = TextExtractor()
-        self.detected_bubbles = []
-        self.detected_text_areas_buttons = []
-        self.detected_text_bubbles = []
-        self.detected_free_text = []
+        self.controller = controller
+        self.chapter = chapter
+        self.current_page = None
+
+        self.current_page_text_boxes_proxies = []
         self.selected_bubbles = []
-        self.current_image = 0
-        self.pages = []
         
-        # Current image and zoom
-        self.current_pixmap = None
+        
         self.zoom_factor = 1.0
         
         # Setup UI
@@ -38,7 +36,7 @@ class ImageViewer(QWidget):
         layout = QVBoxLayout()
         
         image_nav_layout = QHBoxLayout()
-        self.prev_image_button = QPushButton("<")
+        self.prev_image_button = QPushButton("<") #TODO change to a left arrow icon
         self.prev_image_button.clicked.connect(self.load_previous_image)
         image_nav_layout.addWidget(self.prev_image_button)
 
@@ -63,11 +61,11 @@ class ImageViewer(QWidget):
         self.status_label = QLabel("Ready")
         layout.addWidget(self.status_label)
         
-        # Button bar
+        # TODO change text to include translations
         button_layout = QHBoxLayout()
         
-        self.open_button = QPushButton("Open Image")
-        self.open_button.clicked.connect(self.load_image)
+        self.open_button = QPushButton("Open Images")
+        self.open_button.clicked.connect(self.load_images)
         button_layout.addWidget(self.open_button)
         
         self.reset_zoom_button = QPushButton("Reset Zoom")
@@ -91,10 +89,8 @@ class ImageViewer(QWidget):
         self.setWindowTitle("Image Viewer")
         self.resize(1000, 800)
         
-    def set_adapter(self, adapter):
-        self.adapter = adapter
         
-    def load_image(self):
+    def load_images(self):
         self.file_paths, _ = QFileDialog.getOpenFileNames(
             self,
             "Open Image File",
@@ -104,8 +100,8 @@ class ImageViewer(QWidget):
         for file_path in self.file_paths:
             try:
                 image = Image.open(file_path)
-                page = Page(file_path=file_path, image=image)
-                self.pages.append(page)
+                page = Page(file_path=file_path, image=image, chapter=self.chapter)
+                self.chapter.add_page(page)
                 self.status_label.setText(f"Loaded: {page.page_name}")
             except Exception as e:
                 self.status_label.setText(f"Error opening file: {str(e)}")
@@ -114,50 +110,42 @@ class ImageViewer(QWidget):
         self._setup_page()
     
     def _setup_page(self):
-        current_page = self.pages[self.current_image]
+        self.current_page = self.chapter.get_current_page()
 
         #Set up image
-        current_image = current_page.image
-        if current_image:
+        
+        if self.current_page:
             try:
-                
+                current_image = self.current_page.image
                 pil_image = current_image.convert("RGB")
                 data = pil_image.tobytes("raw", "RGB")
                 bytes_per_line = 3 * pil_image.width
                 q_image = QImage(data, pil_image.width, pil_image.height, bytes_per_line, QImage.Format.Format_RGB888)
-                self.current_pixmap = QPixmap.fromImage(q_image)
+                current_pixmap = QPixmap.fromImage(q_image)
                 
                 # Clear scene and add pixmap
                 for item in self.scene.items():
                     self.scene.removeItem(item)
-                self.scene.addPixmap(self.current_pixmap)
-                self.image_index_label.setText(current_page.page_name)
-                self.status_label.setText(f"Image loaded: {current_page.page_name}")
+                self.scene.addPixmap(current_pixmap)
+                self.image_index_label.setText(self.current_page.page_name)
+                self.status_label.setText(f"Image loaded: {self.current_page.page_name}")
             except Exception as e:
                 self.status_label.setText(f"Error setting up image: {str(e)}")
                 print(f"Error: {e}")
 
         #Add bubble butons if it had been detected before
         
-        self.detected_text_bubbles = []
-        self.detected_free_text = []
-        for proxy in current_page.text_boxes_buttons:
+        self.current_page_text_boxes_proxies = []
+        for segment in self.current_page.segments:
+            proxy = segment.text_box_button_proxy
             self.scene.addItem(proxy)
-            button = proxy.widget()
-            if isinstance(button, TextBoxButton):
-                if button.text_box.label == "text_bubble":
-                    self.detected_text_bubbles.append(button.text_box)
-                elif button.text_box.label == "free_text":
-                    self.detected_free_text.append(button.text_box)
+            self.current_page_text_boxes_proxies.append(proxy)
             
             
-    def update_image(self):
+    def resize_page(self):
         """Update the view zoom level using transform"""
-        current_page = self.pages[self.current_image]
-        current_image = current_page.image
-        if current_image:
+        if self.current_page:
             try:
-                # Reset and apply zoom transform to the view
                 self.view.resetTransform()
                 self.view.scale(self.zoom_factor, self.zoom_factor)
                 self.status_label.setText(f"Zoom: {self.zoom_factor:.2f}x")
@@ -167,17 +155,17 @@ class ImageViewer(QWidget):
             
     def zoom_in(self):
         self.zoom_factor *= 1.2
-        self.update_image()
+        self.resize_page()
         
         
     def zoom_out(self):
         self.zoom_factor /= 1.2
-        self.update_image()
+        self.resize_page()
         
         
     def reset_zoom(self):
         self.zoom_factor = 1.0
-        self.update_image()
+        self.resize_page()
         
         
     def on_mouse_wheel(self, event):
@@ -192,15 +180,20 @@ class ImageViewer(QWidget):
             self.selected_bubbles.append(bubble_button)
             bubble_button.selected(len(self.selected_bubbles))
             
+    
+    #Extractor devuelve 3 arrelgos de textBox, creo los buttons por cada textBox, creo los segmentos y los relaciono
+    #Button conoce al segmento, segmento conoce al proxy
     def detect_bubbles(self):
-        current_page = self.pages[self.current_image]
-        current_image = current_page.image
-        if current_image:
-           
-            self.detected_bubbles, self.detected_text_bubbles, self.detected_free_text = \
+        
+        
+        if self.current_page:
+            current_image = self.current_page.image
+            detected_bubbles, detected_text_bubbles, detected_free_text = \
                 self.text_extractor.detect_speech_bubbles(current_image)
-            current_page.bubbles = self.detected_bubbles
-            for bubble in self.detected_text_bubbles + self.detected_free_text:
+            
+            self.current_page.store_detected_bubbles(detected_bubbles, detected_text_bubbles, detected_free_text)
+
+            for bubble in detected_text_bubbles + detected_free_text:
                
                 button = TextBoxButton(
                     bubble,
@@ -210,27 +203,30 @@ class ImageViewer(QWidget):
                 )
 
                 button.link_on_click(lambda checked, btn=button: self.selected_bubble(btn))
-                self.detected_text_areas_buttons.append(button)
-                 
                 
-               
+                 
+                           
                 proxy = self.scene.addWidget(button)
                 proxy.setPos((bubble.xmin + bubble.xmax) // 2 - button.width() // 2, bubble.ymin)
-                current_page.text_boxes_buttons.append(proxy) 
+                self.current_page_text_boxes_proxies.append(proxy)
+                segment = self.current_page.create_segment(proxy)
+                button.set_segment(segment)
+
                 
                 
     
     def extract_text(self):
-        if (self.detected_text_bubbles or self.detected_free_text):
-            if len(self.selected_bubbles) == 0:
-                print("No bubbles selected, extracting text from all detected bubbles")
-            else:
-                self.text_extractor.extract_text(
-                    self.pages[self.current_image].image,
-                    [button.text_box for button in self.selected_bubbles]
-                )
-                self.adapter.AddSegments(self.selected_bubbles)
-                self.selected_bubbles = []  # Clear selection after extraction
+        
+        if len(self.selected_bubbles) == 0:
+            print("No bubbles selected, please select bubbles")
+        else:
+            
+            self.text_extractor.extract_text(
+                self.current_page.image,
+                [button.text_box for button in self.selected_bubbles]
+            )
+            self.controller.extracted(self.selected_bubbles)
+            self.selected_bubbles = []  # Clear selection after extraction
 
     def clear_selection(self):
         for button in self.selected_bubbles:
@@ -238,13 +234,15 @@ class ImageViewer(QWidget):
         self.selected_bubbles = []
            
     def load_previous_image(self):
-        if self.current_image >0:
-             self.current_image -= 1
+        new_page = self.chapter.previous_page()
+        if new_page:
+             self.current_page = new_page
              self._setup_page()
         
 
     def load_next_image(self):
-        if self.current_image < len(self.pages) - 1:
-             self.current_image += 1
+        new_page = self.chapter.next_page()
+        if new_page:
+             self.current_page = new_page
              self._setup_page()
         
