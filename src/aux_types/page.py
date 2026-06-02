@@ -22,3 +22,9 @@ class Page:
         segment = Segment(self, -1, proxy)
         self.segments.append(segment)
         return segment
+    
+    def get_data(self):
+        data = self.file_path + ":#" 
+        for segment in self.segments:
+            data += segment.get_data() + ","
+        return data + "]"

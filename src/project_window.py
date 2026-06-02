@@ -1,8 +1,9 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QSplitter, QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QApplication, QMainWindow, QSplitter, QVBoxLayout, QWidget, QMenuBar
 from PyQt6.QtCore import Qt
 
 from image_viewer import ImageViewer
+from project_loader import ProjectLoader
 from text_viewer import TextViewer
 from aux_types.chapter import Chapter
 
@@ -16,15 +17,24 @@ class ProjectWindow(QMainWindow):
         
         self.setWindowTitle("Text and Image Viewer")
         self.resize(1600, 900)
-        
+
+        #Create menu bar
+        self.menu_bar = QMenuBar(self)
+        file_menu = self.menu_bar.addMenu("File")
+        #Save project button
+        save_action = file_menu.addAction("Save Project")
+        save_action.triggered.connect(self.save_project)
+
         # Create central widget with splitter
         central_widget = QWidget()
         layout = QVBoxLayout()
         
         splitter = QSplitter(Qt.Orientation.Horizontal)
 
+
+        self.project_loader = ProjectLoader()
         
-        self.chapter = Chapter("Kuro no sekai","",4)
+        self.chapter = self.project_loader.create_project()
         # Create viewers
         self.text_viewer = TextViewer(chapter=self.chapter)
         self.image_viewer = ImageViewer(controller=self, chapter=self.chapter)
@@ -35,6 +45,7 @@ class ProjectWindow(QMainWindow):
         splitter.setStretchFactor(0, 1)
         splitter.setStretchFactor(1, 2)
         
+        layout.setMenuBar(self.menu_bar)
         layout.addWidget(splitter)
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
@@ -52,3 +63,7 @@ class ProjectWindow(QMainWindow):
             segment.text_extracted(bubble_button.text_box.text)
             segments.append(segment)
         self.text_viewer.create_segment_boxes(segments)
+
+
+    def save_project(self):
+        self.project_loader.save_project()
