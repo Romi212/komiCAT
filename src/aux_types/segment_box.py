@@ -3,10 +3,11 @@ from PyQt6.QtCore import Qt
 
 
 class SegmentBox(QWidget):
-    def __init__(self, japanese_text=""):
+    def __init__(self, logic_segment):
         super().__init__()
         self.on_focused = None  
         self.on_unfocused = None  
+        self.segment = logic_segment
 
         layout = QVBoxLayout()
         layout.setContentsMargins(5, 5, 5, 5)
@@ -15,7 +16,7 @@ class SegmentBox(QWidget):
         
         # TextEdit for Japanese text (editable)
         self.label = QTextEdit()
-        self.label.setPlainText(japanese_text)
+        self.label.setPlainText(self.segment.source_text)
         self.label.setReadOnly(False)
         self.label.setMinimumHeight(25)
         self.label.setStyleSheet("font-weight: bold; font-size: 12px;")
@@ -77,31 +78,21 @@ class SegmentBox(QWidget):
         self.text_area.setMaximumHeight(max(20, min(doc_height + 4, 200)))
     
     def _on_label_focus(self, event):
-        """Called when label gets focus"""
-        if self.on_focused:
-            self.on_focused(self)
-        # Call the original focusInEvent
+        self.segment.show_focus(True)
         QTextEdit.focusInEvent(self.label, event)
 
 
     def _on_label_unfocus(self, event):
-        """Called when label loses focus"""
-        if self.on_unfocused:
-            self.on_unfocused(self)
+        self.segment.show_focus(False)
         QTextEdit.focusOutEvent(self.label, event)
 
     def _on_text_area_focus(self, event):
-        """Called when text area gets focus"""
-        if self.on_focused:
-            self.on_focused(self)
-        # Call the original focusInEvent
+        self.segment.show_focus(True)
         QTextEdit.focusInEvent(self.text_area, event)
 
 
     def _on_text_area_unfocus(self, event):
-        """Called when text area loses focus"""
-        if self.on_unfocused:
-            self.on_unfocused(self)
+        self.segment.show_focus(False)
         QTextEdit.focusOutEvent(self.text_area, event)
 
     def zoom(self, factor):

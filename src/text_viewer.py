@@ -4,9 +4,10 @@ from aux_types.segment_box import SegmentBox
 
 
 class TextViewer(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, chapter=None):
         super().__init__(parent)
-        self.text_areas = []
+        self.chapter = chapter
+        self.segment_boxes = []
         self.dragging = None
         self.drag_start = None
         
@@ -48,40 +49,27 @@ class TextViewer(QWidget):
         
         layout.addLayout(button_layout)
                 
-    def set_adapter(self, adapter):
-        self.adapter = adapter
+    #Called from ProjectWindow when the user clicks the "Extract" button, passing the list of segments with the source text gud
+    def create_segment_boxes(self, segments):
+        for segment in segments:
+            segment_box = self.create_segment(segment)
+            segment.set_segment_box(segment_box)
     
-    def create_segment(self, japanese_text=""):
-        segment = SegmentBox(japanese_text)
-        segment.on_focused = self.focused_segment  # Link focus callback
-        segment.on_unfocused = self.unfocused_segment  # Link unfocus callback
-        self.text_areas.append(segment)
+    def create_segment(self, logic_segment):
+        segment = SegmentBox(logic_segment)
+        
+        self.segment_boxes.append(segment)
         # Insert before the stretch (at second-to-last position)
         self.scroll_layout.insertWidget(self.scroll_layout.count() - 1, segment)
         return segment
     
-    def load_text(self, file_path):
-        with open(file_path, 'r', encoding='utf-8') as file:
-            content = file.read()
-            if self.text_areas:
-                self.text_areas[0].set_translation(content)
-
-    def focused_segment(self, segment):
-        print(f"Focused segment")
-        self.adapter.focused_segment(segment)
-        return None
-    
-    def unfocused_segment(self, segment):
-        print(f"Unfocused segment")
-        self.adapter.unfocused_segment(segment)
-        return None
 
     def zoom_in(self):
         print("Zooming in")
-        for segment in self.text_areas:
+        for segment in self.segment_boxes:
 
             segment.zoom(1.2)  # Zoom in by 20%
     
     def zoom_out(self):
-        for segment in self.text_areas:
+        for segment in self.segment_boxes:
             segment.zoom(0.8)  # Zoom out by 20%
