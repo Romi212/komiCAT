@@ -65,7 +65,7 @@ class ImageViewer(QWidget):
         button_layout = QHBoxLayout()
         
         self.open_button = QPushButton("Open Images")
-        self.open_button.clicked.connect(self.load_images)
+        self.open_button.clicked.connect(self.open_images)
         button_layout.addWidget(self.open_button)
         
         self.reset_zoom_button = QPushButton("Reset Zoom")
@@ -90,14 +90,21 @@ class ImageViewer(QWidget):
         self.resize(1000, 800)
         
         
-    def load_images(self):
-        self.file_paths, _ = QFileDialog.getOpenFileNames(
+    def open_images(self):
+        file_paths, _ = QFileDialog.getOpenFileNames(
             self,
             "Open Image File",
             "",
             "Image files (*.png *.jpg *.jpeg *.gif *.bmp *.ico);;All files (*)"
         )
-        for file_path in self.file_paths:
+        self.load_pages(file_paths)
+        
+    def load_chapter(self, chapter):
+        self.chapter = chapter
+        self.load_pages([page.file_path for page in chapter.pages])
+    
+    def load_pages(self, file_paths):
+        for file_path in file_paths:
             try:
                 image = Image.open(file_path)
                 page = Page(file_path=file_path, image=image, chapter=self.chapter)
@@ -108,7 +115,7 @@ class ImageViewer(QWidget):
                 print(f"Error: {e}")
         self.zoom_factor = 1.0
         self._setup_page()
-    
+
     def _setup_page(self):
         self.current_page = self.chapter.get_current_page()
 
@@ -138,7 +145,15 @@ class ImageViewer(QWidget):
         self.current_page_text_boxes_proxies = []
         for segment in self.current_page.segments:
             proxy = segment.text_box_button_proxy
-            self.scene.addItem(proxy)
+            if proxy:
+                self.scene.addItem(proxy)
+            else:
+                proxy = self.scene.addWidget(segment.button)
+                segment.text_box_button_proxy = proxy
+            # Always set the correct position using text_box bounds
+            text_box = segment.button.text_box
+            button_width = text_box.xmax - text_box.xmin
+            proxy.setPos((text_box.xmin + text_box.xmax) // 2 - button_width // 2, text_box.ymin)
             self.current_page_text_boxes_proxies.append(proxy)
             
             
@@ -204,10 +219,10 @@ class ImageViewer(QWidget):
 
                 button.link_on_click(lambda checked, btn=button: self.selected_bubble(btn))
                 
-                 
                            
                 proxy = self.scene.addWidget(button)
-                proxy.setPos((bubble.xmin + bubble.xmax) // 2 - button.width() // 2, bubble.ymin)
+                button_width = bubble.xmax - bubble.xmin
+                proxy.setPos((bubble.xmin + bubble.xmax) // 2 - button_width // 2, bubble.ymin)
                 self.current_page_text_boxes_proxies.append(proxy)
                 segment = self.current_page.create_segment(proxy)
                 button.set_segment(segment)

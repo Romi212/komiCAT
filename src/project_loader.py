@@ -1,6 +1,6 @@
 
 from aux_types.chapter import Chapter
-
+import json
 
 class ProjectLoader:
     def __init__(self):
@@ -12,25 +12,23 @@ class ProjectLoader:
         
         return self.chapter
 
-    def load_project(self):
+    def load_project(self, file_path):
         #Load project from file
-        file_path = self.chapter.name + ".txt" 
-        data = ""
         with open(file_path, "r", encoding="utf-8") as f:
-            data = f.read()
-            #Parse data and create chapter, pages and segments
-        lines = data.split("\n")
-        #iterate over lines 3 to rest
-        for line in lines[3:]:
-            file_path = ""
-            page = line.split(":#")
-            self.chapter.load_page(page[0],page[1])
+            data = json.load(f)
+        self.chapter = Chapter(
+            series_name=data["series_name"],
+            name=data["name"],
+            number=data["number"]
+        )
+        self.chapter.load_chapter(data)
+        return self.chapter
 
-    def save_project(self):
-        #Create a file in save path
-        file_name =  self.chapter.name + ".txt"
-        with open(file_name, "w", encoding="utf-8") as f:
-            f.write(self.chapter.get_data())
+    def save_project(self, save_path):
+        self.save_path = save_path +".romi"
+        print(self.save_path)
+        with open(self.save_path, "w", encoding="utf-8") as f:
+            json.dump(self.chapter.get_data(), f)
             
         
 

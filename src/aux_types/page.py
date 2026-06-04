@@ -24,7 +24,13 @@ class Page:
         return segment
     
     def get_data(self):
-        data = self.file_path + ":#" 
-        for segment in self.segments:
-            data += segment.get_data() + ","
-        return data + "]"
+        return {
+            "file_path": self.file_path,
+            "segments": [segment.get_data() for segment in self.segments]
+        }
+    
+    def load_segments(self, segments_data):
+        for segment_data in segments_data:
+            segment = Segment(self, segment_data["nro"], None)
+            segment.load_data(segment_data)
+            self.segments.append(segment)

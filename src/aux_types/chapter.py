@@ -18,12 +18,13 @@ class Chapter:
         self.pages.append(page)
 
 
-    def load_page(self, page_path, seg_data):
-        image = Image.open(page_path)
-        page = Page(file_path=page_path, image=image, chapter=self.chapter)
-        self.add_page(page)
-        page.load_segments(seg_data)
-        
+    def load_chapter(self, data):
+        for page_data in data["pages"]:
+            image = Image.open(page_data["file_path"])
+            page = Page(file_path=page_data["file_path"], image=image, chapter=self)
+            self.add_page(page)
+            page.load_segments(page_data["segments"])
+            
 
     def get_current_page(self):
         if self.pages:
@@ -44,7 +45,9 @@ class Chapter:
     
 
     def get_data(self):
-        data = f"Chapter: {self.name}\nSeries: {self.series_name}\nNumber: {self.number}\n"
-        for page in self.pages:
-            data += page.get_data() + "\n"
-        return data
+        return {
+            "name": self.name,
+            "series_name": self.series_name,
+            "number": self.number,
+            "pages": [page.get_data() for page in self.pages]
+        }

@@ -1,5 +1,5 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QSplitter, QVBoxLayout, QWidget, QMenuBar
+from PyQt6.QtWidgets import QApplication, QFileDialog, QMainWindow, QSplitter, QVBoxLayout, QWidget, QMenuBar
 from PyQt6.QtCore import Qt
 
 from image_viewer import ImageViewer
@@ -24,6 +24,10 @@ class ProjectWindow(QMainWindow):
         #Save project button
         save_action = file_menu.addAction("Save Project")
         save_action.triggered.connect(self.save_project)
+
+        #Load project button
+        load_action = file_menu.addAction("Load Project")
+        load_action.triggered.connect(self.load_project)
 
         # Create central widget with splitter
         central_widget = QWidget()
@@ -66,4 +70,12 @@ class ProjectWindow(QMainWindow):
 
 
     def save_project(self):
-        self.project_loader.save_project()
+        save_path = QFileDialog.getSaveFileName()
+        self.project_loader.save_project(save_path[0])
+
+    def load_project(self):
+        load_path = QFileDialog.getOpenFileName()
+        self.chapter = self.project_loader.load_project(load_path[0])
+
+        self.image_viewer.load_chapter(self.chapter)
+        self.text_viewer.load_chapter(self.chapter)
