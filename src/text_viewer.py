@@ -64,6 +64,14 @@ class TextViewer(QWidget):
         return segment
     
 
+    def load_chapter(self, chapter):
+        self.chapter = chapter
+        for page in chapter.pages:
+            for segment in page.segments:
+                if segment.source_text:  
+                    segment_box = self.create_segment(segment)
+                    segment.set_segment_box(segment_box)
+
     def zoom_in(self):
         print("Zooming in")
         for segment in self.segment_boxes:
