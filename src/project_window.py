@@ -29,6 +29,9 @@ class ProjectWindow(QMainWindow):
         load_action = file_menu.addAction("Load Project")
         load_action.triggered.connect(self.load_project)
 
+        load_action = file_menu.addAction("Export Translation")
+        load_action.triggered.connect(self.export_translation)
+
         # Create central widget with splitter
         central_widget = QWidget()
         layout = QVBoxLayout()
@@ -79,3 +82,7 @@ class ProjectWindow(QMainWindow):
 
         self.image_viewer.load_chapter(self.chapter)
         self.text_viewer.load_chapter(self.chapter)
+
+    def export_translation(self):
+        export_path = QFileDialog.getSaveFileName()
+        self.project_loader.export_translation(export_path[0])

@@ -51,3 +51,9 @@ class Chapter:
             "number": self.number,
             "pages": [page.get_data() for page in self.pages]
         }
+    
+    def get_translation_text(self):
+        translation_text = f"{self.series_name} - Chapter {self.number}: {self.name}\n\n"
+        for page in self.pages:
+            translation_text += page.get_translation_text()
+        return translation_text

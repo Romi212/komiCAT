@@ -84,6 +84,7 @@ class SegmentBox(QWidget):
 
     def _on_label_unfocus(self, event):
         self.segment.show_focus(False)
+        self.segment.source_text = self.get_japanese_text()
         QTextEdit.focusOutEvent(self.label, event)
 
     def _on_text_area_focus(self, event):
@@ -93,6 +94,7 @@ class SegmentBox(QWidget):
 
     def _on_text_area_unfocus(self, event):
         self.segment.show_focus(False)
+        self.segment.translation = self.get_translation()
         QTextEdit.focusOutEvent(self.text_area, event)
 
     def zoom(self, factor):

@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QPushButton, QHBoxLayout, QWidget, QVBoxLayout, QScrollArea, QSizePolicy
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QKeyEvent
 from aux_types.segment_box import SegmentBox
 
 
@@ -8,6 +9,7 @@ class TextViewer(QWidget):
         super().__init__(parent)
         self.chapter = chapter
         self.segment_boxes = []
+        self.current_segment_index = 0
         self.dragging = None
         self.drag_start = None
         
@@ -59,6 +61,9 @@ class TextViewer(QWidget):
         segment = SegmentBox(logic_segment)
         
         self.segment_boxes.append(segment)
+        # Install event filter to intercept Tab key presses
+        segment.installEventFilter(self)
+        
         # Insert before the stretch (at second-to-last position)
         self.scroll_layout.insertWidget(self.scroll_layout.count() - 1, segment)
         return segment
@@ -81,3 +86,61 @@ class TextViewer(QWidget):
     def zoom_out(self):
         for segment in self.segment_boxes:
             segment.zoom(0.8)  # Zoom out by 20%
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Tab:
+            self.focus_next_segment()
+            event.accept()
+        elif event.key() == Qt.Key.Key_Backtab:  # Shift+Tab
+            self.focus_previous_segment()
+            event.accept()
+        else:
+            super().keyPressEvent(event)
+
+    def focus_next_segment(self):
+        if not self.segment_boxes:
+            return
+        
+        # Find currently focused segment box
+        current_index = self.current_segment_index
+        next_index = (current_index + 1) % len(self.segment_boxes)
+        
+        self.current_segment_index = next_index
+        next_segment = self.segment_boxes[next_index]
+        next_segment.text_area.setFocus()
+        
+        # Scroll to make it visible
+        self.scroll_area.ensureWidgetVisible(next_segment)
+
+    def focus_previous_segment(self):
+        if not self.segment_boxes:
+            return
+        
+        # Find currently focused segment box
+        current_index = self.current_segment_index
+        prev_index = (current_index - 1) % len(self.segment_boxes)
+        
+        self.current_segment_index = prev_index
+        prev_segment = self.segment_boxes[prev_index]
+        prev_segment.text_area.setFocus()
+        
+        # Scroll to make it visible
+        self.scroll_area.ensureWidgetVisible(prev_segment)
+
+    def eventFilter(self, obj, event):
+        """Handle Tab key presses from segment boxes"""
+        if event.type() == 6:  # QEvent.KeyPress
+            if event.key() == Qt.Key.Key_Tab:
+                # Find which segment box this came from
+                for i, segment in enumerate(self.segment_boxes):
+                    if segment.isAncestorOf(obj) or segment == obj:
+                        self.current_segment_index = i
+                        self.focus_next_segment()
+                        return True
+            elif event.key() == Qt.Key.Key_Backtab:  # Shift+Tab
+                for i, segment in enumerate(self.segment_boxes):
+                    if segment.isAncestorOf(obj) or segment == obj:
+                        self.current_segment_index = i
+                        self.focus_previous_segment()
+                        return True
+        return super().eventFilter(obj, event)

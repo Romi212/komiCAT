@@ -31,4 +31,9 @@ class ProjectLoader:
             json.dump(self.chapter.get_data(), f)
             
         
+    def export_translation(self, export_path):
+        export_path = export_path if export_path.endswith(".txt") else export_path + ".txt"
+        with open(export_path, "w", encoding="utf-8") as f:
+            f.write(self.chapter.get_translation_text())
+        print(f"Translation exported to {export_path}")
 

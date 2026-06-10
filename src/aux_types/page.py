@@ -19,7 +19,7 @@ class Page:
         self.detected_free_text = detected_free_text
 
     def create_segment(self, proxy):
-        segment = Segment(self, -1, proxy)
+        segment = Segment(self, len(self.segments), proxy)
         self.segments.append(segment)
         return segment
     
@@ -34,3 +34,10 @@ class Page:
             segment = Segment(self, segment_data["nro"], None)
             segment.load_data(segment_data)
             self.segments.append(segment)
+            self.segments.sort(key=lambda s: s.nro)
+
+    def get_translation_text(self):
+        translation_text = f"---------------------------{self.page_name}----------------------------------\n"
+        for segment in self.segments:
+            translation_text += f"Segment {segment.nro}: {segment.translation}\n\n"
+        return translation_text
