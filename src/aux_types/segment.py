@@ -27,12 +27,17 @@ class Segment:
             self.segment_box.set_japanese_text(new_text)
 
     def show_focus(self, focused):
-        self.text_box_button_proxy.widget().set_focus(focused)
+        if self.text_box_button_proxy:
+            self.text_box_button_proxy.widget().set_focus(focused)
+        else:
+            self.button.set_focus(focused)
 
-    
     def get_data(self):
         
-        button = self.text_box_button_proxy.widget()
+        if(self.text_box_button_proxy):
+            button = self.text_box_button_proxy.widget()
+        else:
+            button = self.button
         return {
             "nro": self.nro,
             "is_extracted": button.has_been_extracted_flag,

@@ -97,7 +97,8 @@ class ImageViewer(QWidget):
             "",
             "Image files (*.png *.jpg *.jpeg *.gif *.bmp *.ico);;All files (*)"
         )
-        self.load_pages(file_paths)
+        if file_paths:
+            self.load_pages(file_paths)
         
     def load_chapter(self, chapter):
         self.chapter = chapter
@@ -150,10 +151,11 @@ class ImageViewer(QWidget):
             else:
                 proxy = self.scene.addWidget(segment.button)
                 segment.text_box_button_proxy = proxy
-            # Always set the correct position using text_box bounds
-            text_box = segment.button.text_box
-            button_width = text_box.xmax - text_box.xmin
-            proxy.setPos((text_box.xmin + text_box.xmax) // 2 - button_width // 2, text_box.ymin)
+                text_box = segment.button.text_box
+                button_width = text_box.xmax - text_box.xmin
+                proxy.setPos((text_box.xmin + text_box.xmax) // 2 - button_width // 2, text_box.ymin)
+            
+            
             self.current_page_text_boxes_proxies.append(proxy)
             
             

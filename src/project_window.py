@@ -1,7 +1,8 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QFileDialog, QMainWindow, QSplitter, QVBoxLayout, QWidget, QMenuBar
+from PyQt6.QtWidgets import QApplication, QDialog, QFileDialog, QMainWindow, QSplitter, QVBoxLayout, QWidget, QMenuBar
 from PyQt6.QtCore import Qt
 
+from create_project_window import CreateProjectWindow
 from image_viewer import ImageViewer
 from project_loader import ProjectLoader
 from text_viewer import TextViewer
@@ -22,6 +23,9 @@ class ProjectWindow(QMainWindow):
         self.menu_bar = QMenuBar(self)
         file_menu = self.menu_bar.addMenu("File")
         #Save project button
+        create_action = file_menu.addAction("New Project")
+        create_action.triggered.connect(self.create_new_project)
+
         save_action = file_menu.addAction("Save Project")
         save_action.triggered.connect(self.save_project)
 
@@ -41,7 +45,13 @@ class ProjectWindow(QMainWindow):
 
         self.project_loader = ProjectLoader()
         
-        self.chapter = self.project_loader.create_project()
+        
+        self.chapter = None
+
+
+       
+
+        
         # Create viewers
         self.text_viewer = TextViewer(chapter=self.chapter)
         self.image_viewer = ImageViewer(controller=self, chapter=self.chapter)
@@ -64,17 +74,21 @@ class ProjectWindow(QMainWindow):
 
     def extracted(self, extracted_bubbles):
         segments = []
+        base_index = self.chapter.get_current_page().extracted_bubbles
         for bubble_button in extracted_bubbles:
-            bubble_button.has_been_extracted()
+            
             segment = bubble_button.segment
+            segment.nro = base_index + int(bubble_button.text)
             segment.text_extracted(bubble_button.text_box.text)
             segments.append(segment)
+            bubble_button.has_been_extracted()
         self.text_viewer.create_segment_boxes(segments)
+        self.chapter.get_current_page().extracted_bubbles += len(extracted_bubbles)
 
 
     def save_project(self):
-        save_path = QFileDialog.getSaveFileName()
-        self.project_loader.save_project(save_path[0])
+        self.project_loader.save_project()
+        self.image_viewer.status_label.setText("Project saved successfully! in " + self.project_loader.save_path)   
 
     def load_project(self):
         load_path = QFileDialog.getOpenFileName()
@@ -86,3 +100,12 @@ class ProjectWindow(QMainWindow):
     def export_translation(self):
         export_path = QFileDialog.getSaveFileName()
         self.project_loader.export_translation(export_path[0])
+
+    def create_new_project(self):
+        self.create_project_window = CreateProjectWindow()
+        data = self.create_project_window.exec()
+        if data == QDialog.DialogCode.Accepted:
+            project_data = self.create_project_window.get_project_data()
+            self.chapter = self.project_loader.create_project(project_data)
+            self.image_viewer.chapter = self.chapter
+            self.text_viewer.chapter = self.chapter

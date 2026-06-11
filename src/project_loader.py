@@ -7,13 +7,14 @@ class ProjectLoader:
         self.chapter = None
         self.save_path = ""
 
-    def create_project(self):
-        self.chapter = Chapter("Kuro no sekai","abracadabra",4)
-        
+    def create_project(self, project_data):
+        self.chapter = Chapter(project_data["series_name"], project_data["name"], project_data["number"])
+        self.save_path = project_data["path"] + "/" + project_data["name"] + ".romi"
         return self.chapter
 
     def load_project(self, file_path):
         #Load project from file
+        self.save_path = file_path
         with open(file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
         self.chapter = Chapter(
@@ -24,8 +25,8 @@ class ProjectLoader:
         self.chapter.load_chapter(data)
         return self.chapter
 
-    def save_project(self, save_path):
-        self.save_path = save_path +".romi"
+    def save_project(self):
+        print("Saving project...")
         print(self.save_path)
         with open(self.save_path, "w", encoding="utf-8") as f:
             json.dump(self.chapter.get_data(), f)

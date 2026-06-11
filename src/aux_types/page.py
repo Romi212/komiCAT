@@ -11,6 +11,7 @@ class Page:
         self.page_name = os.path.basename(file_path)
         self.segments = []
         self.chapter = chapter
+        self.extracted_bubbles = 0
     
 
     def store_detected_bubbles(self, detected_bubbles, detected_text_bubbles, detected_free_text):
@@ -19,7 +20,7 @@ class Page:
         self.detected_free_text = detected_free_text
 
     def create_segment(self, proxy):
-        segment = Segment(self, len(self.segments), proxy)
+        segment = Segment(self, -1, proxy)
         self.segments.append(segment)
         return segment
     
