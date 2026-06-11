@@ -53,7 +53,7 @@ class ProjectWindow(QMainWindow):
 
         
         # Create viewers
-        self.text_viewer = TextViewer(chapter=self.chapter)
+        self.text_viewer = TextViewer(controller=self, chapter=self.chapter)
         self.image_viewer = ImageViewer(controller=self, chapter=self.chapter)
         
         # Add to splitter
@@ -109,3 +109,7 @@ class ProjectWindow(QMainWindow):
             self.chapter = self.project_loader.create_project(project_data)
             self.image_viewer.chapter = self.chapter
             self.text_viewer.chapter = self.chapter
+
+    def set_current_page(self, page):
+        self.chapter.set_current_page(page)
+        self.image_viewer._setup_page()

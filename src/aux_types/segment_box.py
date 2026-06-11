@@ -1,5 +1,16 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QTextEdit
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QKeyEvent
+
+
+class TabIgnoringTextEdit(QTextEdit):
+    """QTextEdit that ignores Tab and Shift+Tab to allow focus navigation"""
+    def keyPressEvent(self, event: QKeyEvent):
+        if event.key() in (Qt.Key.Key_Tab, Qt.Key.Key_Backtab):
+            # Don't insert tab, let it propagate to parent for focus navigation
+            event.ignore()
+        else:
+            super().keyPressEvent(event)
 
 
 class SegmentBox(QWidget):
@@ -15,7 +26,7 @@ class SegmentBox(QWidget):
         self.text_size = 12
         
         # TextEdit for Japanese text (editable)
-        self.label = QTextEdit()
+        self.label = TabIgnoringTextEdit()
         self.label.setPlainText(self.segment.source_text)
         self.label.setReadOnly(False)
         self.label.setMinimumHeight(25)
@@ -27,8 +38,9 @@ class SegmentBox(QWidget):
         layout.addWidget(self.label)
         
         # Text area for translation
-        self.text_area = QTextEdit()
+        self.text_area = TabIgnoringTextEdit()
         self.text_area.setMinimumHeight(25)
+        self.text_area.setPlainText(self.segment.translation)
         self.text_area.setStyleSheet("font-size: 12px;")
         self.text_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.text_area.textChanged.connect(self._adjust_text_area_height)
@@ -84,9 +96,10 @@ class SegmentBox(QWidget):
 
     def _on_label_unfocus(self, event):
         self.segment.show_focus(False)
-        
-        QTextEdit.focusOutEvent(self.label, event)
         self.segment.source_text = self.get_japanese_text()
+        print(f"Updated source text for segment {self.segment.nro}: {self.segment.source_text}")
+        QTextEdit.focusOutEvent(self.label, event)
+        
 
     def _on_text_area_focus(self, event):
         self.segment.show_focus(True)
@@ -98,6 +111,7 @@ class SegmentBox(QWidget):
         
         QTextEdit.focusOutEvent(self.text_area, event)
         self.segment.translation = self.get_translation()
+        print(f"Updated translation for segment {self.segment.nro}: {self.segment.translation}")
 
     def zoom(self, factor):
         """Zoom in/out by adjusting font size"""

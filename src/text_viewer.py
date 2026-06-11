@@ -5,13 +5,14 @@ from aux_types.segment_box import SegmentBox
 
 
 class TextViewer(QWidget):
-    def __init__(self, parent=None, chapter=None):
+    def __init__(self, controller= None, parent=None, chapter=None):
         super().__init__(parent)
         self.chapter = chapter
         self.segment_boxes = []
         self.current_segment_index = 0
         self.dragging = None
         self.drag_start = None
+        self.controller = controller
         
         # Create layout
         layout = QVBoxLayout()
@@ -108,6 +109,8 @@ class TextViewer(QWidget):
         self.current_segment_index = next_index
         next_segment = self.segment_boxes[next_index]
         next_segment.text_area.setFocus()
+        if next_segment.segment.page != self.chapter.current_page:
+            self.controller.set_current_page(next_segment.segment.page)  # Switch to the page of the next segment
         
         # Scroll to make it visible
         self.scroll_area.ensureWidgetVisible(next_segment)
@@ -123,6 +126,9 @@ class TextViewer(QWidget):
         self.current_segment_index = prev_index
         prev_segment = self.segment_boxes[prev_index]
         prev_segment.text_area.setFocus()
+
+        if prev_segment.segment.page != self.chapter.current_page:
+            self.controller.set_current_page(prev_segment.segment.page)  # Switch to the page of the previous segment
         
         # Scroll to make it visible
         self.scroll_area.ensureWidgetVisible(prev_segment)

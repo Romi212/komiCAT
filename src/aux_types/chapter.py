@@ -57,3 +57,6 @@ class Chapter:
         for page in self.pages:
             translation_text += page.get_translation_text()
         return translation_text
+    
+    def set_current_page(self, page):
+        self.current_page = self.pages.index(page)
