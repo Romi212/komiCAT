@@ -13,3 +13,6 @@ env/
 
 # Ignore editor folders
 .vscode/
+
+# Ignore model files
+models/

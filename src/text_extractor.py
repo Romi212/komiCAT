@@ -13,9 +13,41 @@ load_dotenv()
 class TextExtractor:
 
     def __init__(self):
+        
+        self._intialize_local()
+
+
+    def _intialize_local(self):
+        # 1. Define the relative path to your local model folder
+        local_model_path = "./models/bubble_detector_model"
+        
+        # 2. Load the processor and model locally
+        processor = AutoImageProcessor.from_pretrained(
+            local_model_path, 
+            local_files_only=True
+        )
+        model = AutoModelForObjectDetection.from_pretrained(
+            local_model_path, 
+            local_files_only=True
+        )
+
+        # 3. Pass them into the pipeline
+        self.bubble_detector = pipeline(
+            "object-detection",
+            model=model,
+            feature_extractor=processor,
+        )
+
+        local_ocr_path = "./models/manga_ocr_model"
+        self.mocr = MangaOcr(
+            pretrained_model_name_or_path=local_ocr_path
+        )
+
+    def _initialize_hf(self):
+        self.mocr = MangaOcr()
         hf_token = os.getenv("HF_TOKEN")
         login(token=hf_token)
-        self.mocr = MangaOcr()
+        
         processor = AutoImageProcessor.from_pretrained("ogkalu/comic-text-and-bubble-detector")
         model = AutoModelForObjectDetection.from_pretrained("ogkalu/comic-text-and-bubble-detector")
 

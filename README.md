@@ -4,7 +4,6 @@
 - Tener Python instalado
 
 ## Como buildear:
-1) Agregar un archivo .env en la raiz que especifique HF_TOKEN = _TOKEN de HuggingFace_
-2) Setear un virtual enviroment (opcional)
-3) instalar las librerias requeriadas con el comando pip install -r requirements.txt
-4) ejecutar el archivo src/main.py
+1) Setear un virtual enviroment (opcional)
+2) ejecutar el archivo set_up.py en la raíz del proyecto: script que descarga automaticamente las librerias necesarias y los modelos a utilizar
+3) ejecutar el archivo src/main.py para correr la aplicación~
