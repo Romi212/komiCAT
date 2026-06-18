@@ -2,6 +2,7 @@ import sys
 from PyQt6.QtWidgets import QApplication, QDialog, QFileDialog, QMainWindow, QSplitter, QVBoxLayout, QWidget, QMenuBar
 from PyQt6.QtCore import Qt
 
+from aux_types.segment_combined import SegmentCombined
 from create_project_window import CreateProjectWindow
 from image_viewer import ImageViewer
 from project_loader import ProjectLoader
@@ -71,19 +72,11 @@ class ProjectWindow(QMainWindow):
         self.show()
        
 
+  
 
     def extracted(self, extracted_bubbles):
-        segments = []
-        base_index = self.chapter.get_current_page().extracted_bubbles
-        for bubble_button in extracted_bubbles:
-            
-            segment = bubble_button.segment
-            segment.nro = base_index + int(bubble_button.text)
-            segment.text_extracted(bubble_button.text_box.text)
-            segments.append(segment)
-            bubble_button.has_been_extracted()
+        segments = self.chapter.get_current_page().extracted_segments(extracted_bubbles)
         self.text_viewer.create_segment_boxes(segments)
-        self.chapter.get_current_page().extracted_bubbles += len(extracted_bubbles)
 
 
     def save_project(self):

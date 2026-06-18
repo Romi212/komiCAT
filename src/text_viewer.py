@@ -55,8 +55,29 @@ class TextViewer(QWidget):
     #Called from ProjectWindow when the user clicks the "Extract" button, passing the list of segments with the source text gud
     def create_segment_boxes(self, segments):
         for segment in segments:
+            aux = segment
             segment_box = self.create_segment(segment)
             segment.set_segment_box(segment_box)
+            if(aux.get_child()):
+                # Create a container widget for combined segments
+                container = QWidget()
+                container.setObjectName("combinedSegmentContainer")
+                container.setStyleSheet("#combinedSegmentContainer { border: 2px solid #6e2130; border-radius: 5px; }")
+                layout = QVBoxLayout()
+                layout.setContentsMargins(8, 8, 8, 8)
+                layout.setSpacing(5)
+                layout.addWidget(segment_box)
+                while (aux.get_child()):
+                    aux = aux.get_child()
+                    segment_box = self.create_segment(aux)
+                    aux.set_segment_box(segment_box)
+                    layout.addWidget(segment_box)
+                container.setLayout(layout)
+                self.scroll_layout.insertWidget(self.scroll_layout.count() - 1, container)
+            else:
+                self.scroll_layout.insertWidget(self.scroll_layout.count() - 1, segment_box)
+         # Insert before the stretch (at second-to-last position)
+        
     
     def create_segment(self, logic_segment):
         segment = SegmentBox(logic_segment)
@@ -65,18 +86,19 @@ class TextViewer(QWidget):
         # Install event filter to intercept Tab key presses
         segment.installEventFilter(self)
         
-        # Insert before the stretch (at second-to-last position)
-        self.scroll_layout.insertWidget(self.scroll_layout.count() - 1, segment)
+       
         return segment
     
 
     def load_chapter(self, chapter):
         self.chapter = chapter
+        
         for page in chapter.pages:
+            to_show= []
             for segment in page.segments:
                 if segment.source_text:  
-                    segment_box = self.create_segment(segment)
-                    segment.set_segment_box(segment_box)
+                    to_show.append(segment)
+            self.create_segment_boxes(to_show)
 
     def zoom_in(self):
         print("Zooming in")

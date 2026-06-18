@@ -44,7 +44,8 @@ class Segment:
             "bounds": {"xmin": button.text_box.xmin, "ymin": button.text_box.ymin, "xmax": button.text_box.xmax, "ymax": button.text_box.ymax},
             "label" : button.text_box.label,
             "source_text": self.source_text,
-            "translation": self.translation
+            "translation": self.translation,
+            "next_segment": None
         }
     
     def load_data(self, data):
@@ -67,5 +68,14 @@ class Segment:
             alpha=0.6
         )
         self.button = button
+        button.segment = self
         if data["is_extracted"]:
             button.has_been_extracted()
+
+    def get_translation(self):
+        if(self.nro == -1): 
+            return ""
+        return str(self.nro) + ": "+self.translation
+    
+    def get_child(self):
+        return None

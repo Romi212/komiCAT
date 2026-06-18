@@ -144,19 +144,27 @@ class ImageViewer(QWidget):
         #Add bubble butons if it had been detected before
         
         self.current_page_text_boxes_proxies = []
-        for segment in self.current_page.segments:
-            proxy = segment.text_box_button_proxy
-            if proxy:
-                self.scene.addItem(proxy)
-            else:
-                proxy = self.scene.addWidget(segment.button)
-                segment.text_box_button_proxy = proxy
-                text_box = segment.button.text_box
-                button_width = text_box.xmax - text_box.xmin
-                proxy.setPos((text_box.xmin + text_box.xmax) // 2 - button_width // 2, text_box.ymin)
-            
-            
-            self.current_page_text_boxes_proxies.append(proxy)
+        for segment_head in self.current_page.segments:
+            segment = segment_head
+            while(segment):
+                proxy = segment.text_box_button_proxy
+                if proxy:
+                    self.scene.addItem(proxy)
+                    button = proxy.widget()
+                    button.link_on_click(lambda checked, btn=button: self.selected_bubble(btn))
+
+                else:
+                    proxy = self.scene.addWidget(segment.button)
+                    segment.button.link_on_click(lambda checked, btn=segment.button: self.selected_bubble(btn))
+                    segment.text_box_button_proxy = proxy
+                    text_box = segment.button.text_box
+                    button_width = text_box.xmax - text_box.xmin
+                    proxy.setPos((text_box.xmin + text_box.xmax) // 2 - button_width // 2, text_box.ymin)
+                
+                
+                self.current_page_text_boxes_proxies.append(proxy)
+
+                segment = segment.get_child()
             
             
     def resize_page(self):
