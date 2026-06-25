@@ -41,9 +41,9 @@ class SegmentCombined(Segment):
     def get_translation(self):
         if(self.nro == -1): 
             return ""
-        translation = str(self.nro)+": "+self.translation
+        translation = self.translation
         if self.next_segment:
-            translation += " \\ " + self.next_segment.get_translation()
+            translation += " // " + self.next_segment.get_translation()
         return translation
     
     def get_child(self):

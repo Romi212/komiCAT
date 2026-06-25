@@ -75,7 +75,7 @@ class Segment:
     def get_translation(self):
         if(self.nro == -1): 
             return ""
-        return str(self.nro) + ": "+self.translation
+        return self.translation
     
     def get_child(self):
         return None

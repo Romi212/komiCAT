@@ -73,7 +73,7 @@ class ImageViewer(QWidget):
         button_layout.addWidget(self.reset_zoom_button)
         
         self.detect_bubbles_button = QPushButton("Detect Bubbles")
-        self.detect_bubbles_button.clicked.connect(self.detect_bubbles)
+        self.detect_bubbles_button.clicked.connect(self.detect_all_pages)
         button_layout.addWidget(self.detect_bubbles_button)
         
         self.extract_text_button = QPushButton("Extract Text")
@@ -270,4 +270,11 @@ class ImageViewer(QWidget):
         if new_page:
              self.current_page = new_page
              self._setup_page()
+             return True
         
+
+    def detect_all_pages(self):
+        have_page = True
+        while(have_page):
+            self.detect_bubbles()
+            have_page = self.load_next_image()
