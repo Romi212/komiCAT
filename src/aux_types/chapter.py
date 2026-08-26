@@ -6,12 +6,13 @@ from aux_types.page import Page
 
 
 class Chapter:
-    def __init__(self,  series_name, name, number):
+    def __init__(self,  series_name, name, number,language='es'):
         self.name = name
         self.series_name = series_name
         self.number = number
         self.pages = []
         self.current_page = 0
+        self.language = language 
 
 
     def add_page(self, page):

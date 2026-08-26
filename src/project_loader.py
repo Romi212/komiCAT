@@ -8,7 +8,7 @@ class ProjectLoader:
         self.save_path = ""
 
     def create_project(self, project_data):
-        self.chapter = Chapter(project_data["series_name"], project_data["name"], project_data["number"])
+        self.chapter = Chapter(project_data["series_name"], project_data["name"], project_data["number"], project_data["output_language"])
         self.save_path = project_data["path"] + "/" + project_data["name"] + ".romi"
         return self.chapter
 

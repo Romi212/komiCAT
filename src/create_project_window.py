@@ -35,10 +35,10 @@ class CreateProjectWindow(QDialog):
         
         # 3. Source Language Selection
         self.lang_input = QComboBox()
-        self.lang_input.addItems(["Japanese"])
+        self.lang_input.addItems(["jp"])
         form_layout.addRow("Source Language:", self.lang_input)
         self.output_lang_input = QComboBox()
-        self.output_lang_input.addItems(["Spanish"])
+        self.output_lang_input.addItems(["es"])
         form_layout.addRow("Output Language:", self.output_lang_input)
 
         self.series_name_input = QLineEdit()

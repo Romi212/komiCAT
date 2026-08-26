@@ -10,3 +10,4 @@ manga_ocr
 pillow
 torchvision
 python-dotenv
+symspellpy

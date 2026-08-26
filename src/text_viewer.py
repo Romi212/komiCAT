@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QPushButton, QHBoxLayout, QWidget, QVBoxLayout, QScr
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QKeyEvent
 from aux_types.segment_box import SegmentBox
+from spell_checker import SpellChecker
 
 
 class TextViewer(QWidget):
@@ -13,6 +14,8 @@ class TextViewer(QWidget):
         self.dragging = None
         self.drag_start = None
         self.controller = controller
+        
+        self.text_size = 12  # Default text size
         
         # Create layout
         layout = QVBoxLayout()
@@ -80,7 +83,7 @@ class TextViewer(QWidget):
         
     
     def create_segment(self, logic_segment):
-        segment = SegmentBox(logic_segment)
+        segment = SegmentBox(logic_segment, self.text_size)
         
         self.segment_boxes.append(segment)
         # Install event filter to intercept Tab key presses
@@ -92,6 +95,7 @@ class TextViewer(QWidget):
 
     def load_chapter(self, chapter):
         self.chapter = chapter
+        self.spell_checker = SpellChecker(language=chapter.language)  # Initialize the spell checker for Spanish
         
         for page in chapter.pages:
             to_show= []
@@ -102,13 +106,15 @@ class TextViewer(QWidget):
 
     def zoom_in(self):
         print("Zooming in")
+        self.text_size += 2
         for segment in self.segment_boxes:
 
-            segment.zoom(1.2)  # Zoom in by 20%
+            segment.zoom(self.text_size)  
     
     def zoom_out(self):
+        self.text_size = max(2, self.text_size - 2)  
         for segment in self.segment_boxes:
-            segment.zoom(0.8)  # Zoom out by 20%
+            segment.zoom(self.text_size)  # Zoom out by adjusting the text size
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Tab:
