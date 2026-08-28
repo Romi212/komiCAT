@@ -1,9 +1,14 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QTextEdit
+from PyQt6.QtWidgets import QMenu, QWidget, QVBoxLayout, QLabel, QTextEdit
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QKeyEvent
+from PyQt6.QtGui import QKeyEvent, QTextCursor, QTextCharFormat, QColor
 
 
 class TabIgnoringTextEdit(QTextEdit):
+
+    def __init__(self, spell_checker=None, parent=None):
+        super().__init__(parent)
+        self.spell_checker = spell_checker
+
     """QTextEdit that ignores Tab and Shift+Tab to allow focus navigation"""
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() in (Qt.Key.Key_Tab, Qt.Key.Key_Backtab):
@@ -12,12 +17,64 @@ class TabIgnoringTextEdit(QTextEdit):
         else:
             super().keyPressEvent(event)
 
+    def mouseDoubleClickEvent(self, event):
+        # Let default double-click behavior run first so PyQt selects the word
+        super().mouseDoubleClickEvent(event)
+        
+        if not self.spell_checker:
+            return
+
+        cursor = self.textCursor()
+        selected_word = cursor.selectedText().strip()
+
+        if not selected_word:
+            return
+
+        # Check if the clicked word is misspelled
+        if not self.spell_checker.check_word(selected_word):
+            suggestions = self.spell_checker.get_suggestions(selected_word)
+            self._show_suggestions_menu(event.globalPosition().toPoint(), selected_word, suggestions, cursor)
+
+    def _show_suggestions_menu(self, global_pos, word, suggestions, cursor):
+        menu = QMenu(self)
+        
+        if suggestions:
+            for correction in suggestions:
+                action = menu.addAction(correction)
+                # Connect action to replace the selected text with the correction
+                action.triggered.connect(lambda checked, corr=correction, c=cursor: self._replace_word(c, corr))
+        else:
+            no_sugg = menu.addAction("No suggestions")
+            no_sugg.setEnabled(False)
+
+        menu.addSeparator()
+        # Option to ignore or add to dictionary dynamically
+        add_dict_action = menu.addAction(f"Add '{word}' to dictionary")
+        add_dict_action.triggered.connect(lambda: self._add_to_dictionary(word))
+
+        menu.exec(global_pos)
+
+    def _replace_word(self, cursor, replacement):
+        # Begin edit block for undo/redo history
+        cursor.beginEditBlock()
+        fmt = QTextCharFormat()
+        fmt.setFontUnderline(False) 
+        cursor.mergeCharFormat(fmt)
+        cursor.insertText(replacement)
+        cursor.endEditBlock()
+
+    def _add_to_dictionary(self, word):
+        if hasattr(self.spell_checker, 'add_custom_word'):
+            self.spell_checker.add_custom_word(word)
+            # Optionally re-trigger parent check_spelling if available
+
 
 class SegmentBox(QWidget):
 
 
-    def __init__(self, logic_segment, initial_text_size=12):
+    def __init__(self, spell_checker, logic_segment, initial_text_size=12):
         super().__init__()
+        self.spell_checker = spell_checker
         self.on_focused = None  
         self.on_unfocused = None  
         self.segment = logic_segment
@@ -42,7 +99,7 @@ class SegmentBox(QWidget):
         layout.addWidget(self.label)
         
         # Text area for translation
-        self.text_area = TabIgnoringTextEdit()
+        self.text_area = TabIgnoringTextEdit(spell_checker=self.spell_checker)
         self.text_area.setMinimumHeight(5)
         self.text_area.setMaximumHeight(self.initial_height)
         self.text_area.setPlainText(self.segment.translation)
@@ -117,6 +174,7 @@ class SegmentBox(QWidget):
         QTextEdit.focusOutEvent(self.text_area, event)
         self.segment.translation = self.get_translation()
         print(f"Updated translation for segment {self.segment.nro}: {self.segment.translation}")
+        self.check_spelling() 
 
     def zoom(self, new_size):
         self.text_size = new_size
@@ -125,3 +183,39 @@ class SegmentBox(QWidget):
         self.text_area.setStyleSheet(f"font-size: {self.text_size}px;")
         self._adjust_label_height()
         self._adjust_text_area_height()
+
+    def check_spelling(self):
+        if not self.get_translation().strip():  # Only check if there's text
+            return
+        """Check spelling of the translation text and highlight misspelled words."""
+        text = self.get_translation()
+        misspelled_words = self.spell_checker.get_misspelled_words(text)
+
+        if misspelled_words:
+            print(f"Misspelled words in segment {self.segment.nro}: {misspelled_words}")
+ 
+            # Configure the underline format
+            fmt = QTextCharFormat()
+            fmt.setFontUnderline(True) 
+            # Optional: Custom underline styling (like a red wavy spellcheck line)
+            #fmt.setUnderlineStyle(QTextCharFormat.WaveUnderline)
+            fmt.setUnderlineColor(QColor("red"))
+
+            # Obtain document cursor
+            doc = self.text_area.document()
+
+            for word in misspelled_words:
+                # Clear previous cursor adjustments and search from beginning
+                cursor = QTextCursor(doc)
+                while True:
+                    # Find the next occurrence of the word
+                    cursor = doc.find(word, cursor)
+                    
+                    # If no more matches are found, break loop
+                    if cursor.isNull():
+                        break
+                        
+                    # Apply formatting specifically to the matched cursor selection
+                    cursor.mergeCharFormat(fmt)
+
+            

@@ -83,12 +83,13 @@ class TextViewer(QWidget):
         
     
     def create_segment(self, logic_segment):
-        segment = SegmentBox(logic_segment, self.text_size)
+        segment = SegmentBox(self.spell_checker,logic_segment, self.text_size)
         
         self.segment_boxes.append(segment)
         # Install event filter to intercept Tab key presses
         segment.installEventFilter(self)
-        
+
+        segment.check_spelling()
        
         return segment
     
