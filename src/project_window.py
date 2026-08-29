@@ -11,10 +11,12 @@ from aux_types.chapter import Chapter
 
 class ProjectWindow(QMainWindow):
 
-    def __init__(self):
+    def __init__(self, text_extractor=None, chapter=None, project_loader=None):
         super().__init__()
         
-
+        self.text_extractor = text_extractor;
+        self.chapter = chapter;
+        self.project_loader = project_loader;
         # Create main window
         
         self.setWindowTitle("Text and Image Viewer")
@@ -42,20 +44,14 @@ class ProjectWindow(QMainWindow):
         layout = QVBoxLayout()
         
         splitter = QSplitter(Qt.Orientation.Horizontal)
-
-
-        self.project_loader = ProjectLoader()
-        
-        
-        self.chapter = None
-
-
        
 
         
         # Create viewers
         self.text_viewer = TextViewer(controller=self, chapter=self.chapter)
-        self.image_viewer = ImageViewer(controller=self, chapter=self.chapter)
+        self.image_viewer = ImageViewer(controller=self, chapter=self.chapter, text_extractor=self.text_extractor)
+        self.image_viewer.load_chapter(self.chapter)
+        self.text_viewer.load_chapter(self.chapter)
         
         # Add to splitter
         splitter.addWidget(self.text_viewer)

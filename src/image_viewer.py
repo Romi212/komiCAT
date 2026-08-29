@@ -16,9 +16,9 @@ from aux_types.segment import Segment
 
 
 class ImageViewer(QWidget):
-    def __init__(self, controller, parent=None, chapter=None):
+    def __init__(self, controller, parent=None, chapter=None, text_extractor=None):
         super().__init__(parent)
-        self.text_extractor = TextExtractor()
+        self.text_extractor = text_extractor 
         self.controller = controller
         self.chapter = chapter
         self.current_page = None

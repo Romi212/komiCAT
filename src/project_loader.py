@@ -2,17 +2,38 @@
 from aux_types.chapter import Chapter
 import json
 
+from PyQt6.QtWidgets import QDialog, QFileDialog, QMainWindow
+
+from create_project_window import CreateProjectWindow
+
 class ProjectLoader:
     def __init__(self):
         self.chapter = None
         self.save_path = ""
 
-    def create_project(self, project_data):
+
+    def create_new_project(self):
+        self.create_project_window = CreateProjectWindow()
+        data = self.create_project_window.exec()
+        if data == QDialog.DialogCode.Accepted:
+            project_data = self.create_project_window.get_project_data()
+            self.chapter = self.create_project_chapter(project_data)
+            return self.chapter
+        return None
+
+    def create_project_chapter(self, project_data):
+        
         self.chapter = Chapter(project_data["series_name"], project_data["name"], project_data["number"], project_data["output_language"])
         self.save_path = project_data["path"] + "/" + project_data["name"] + ".romi"
         return self.chapter
 
-    def load_project(self, file_path):
+    def load_project(self):
+        load_path = QFileDialog.getOpenFileName()
+        if load_path[0]:
+            self.chapter = self.load_project_chapter(load_path[0])
+            return self.chapter
+        
+    def load_project_chapter(self, file_path):
         #Load project from file
         self.save_path = file_path
         with open(file_path, "r", encoding="utf-8") as f:
