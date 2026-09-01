@@ -115,7 +115,8 @@ class ImageViewer(QWidget):
                 self.status_label.setText(f"Error opening file: {str(e)}")
                 print(f"Error: {e}")
         self.zoom_factor = 1.0
-        self._setup_page()
+        if file_paths:
+            self._setup_page()
 
     def _setup_page(self):
         self.current_page = self.chapter.get_current_page()
