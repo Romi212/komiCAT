@@ -86,8 +86,8 @@ class Page:
                 text_bubble.xmax <= bubble.xmax and
                 text_bubble.ymax <= bubble.ymax)
 
-    def create_segment(self, proxy):
-        segment = Segment(self, -1, proxy)
+    def create_segment(self):
+        segment = Segment(self, -1)
         self.segments.append(segment)
         return segment
     
@@ -101,9 +101,9 @@ class Page:
         for segment_data in segments_data:
             if segment_data["next_segment"]:
                 print("loading combined")
-                segment = SegmentCombined(self, segment_data["nro"], None)
+                segment = SegmentCombined(self, segment_data["nro"])
             else:
-                segment = Segment(self, segment_data["nro"], None)
+                segment = Segment(self, segment_data["nro"])
             segment.load_data(segment_data)
             self.segments.append(segment)
             self.segments.sort(key=lambda s: s.nro)

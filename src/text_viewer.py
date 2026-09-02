@@ -93,17 +93,27 @@ class TextViewer(QWidget):
        
         return segment
     
+    def addPageDivision(self, page_number):
+        # Create a label for the page division
+        page_label = QPushButton(f"{page_number}")
+        page_label.setEnabled(False)  # Make it non-interactive
+        page_label.setStyleSheet("font-weight: bold; border: none;")
+        
+        # Insert the page label before the stretch (at second-to-last position)
+        self.scroll_layout.insertWidget(self.scroll_layout.count() - 1, page_label)
 
     def load_chapter(self, chapter):
         self.chapter = chapter
         self.spell_checker = SpellChecker(language=chapter.language)  # Initialize the spell checker for Spanish
         
         for page in chapter.pages:
+            self.addPageDivision(page.page_name)
             to_show= []
             for segment in page.segments:
                 if segment.source_text:  
                     to_show.append(segment)
             self.create_segment_boxes(to_show)
+            
 
     def zoom_in(self):
         print("Zooming in")

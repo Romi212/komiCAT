@@ -3,7 +3,7 @@ import sys
 from PyQt6.QtWidgets import QApplication, QDialog, QFileDialog, QLabel, QMainWindow, QPushButton,  QSplitter, QVBoxLayout, QWidget, QMenuBar
 from aux_types.segment_combined import SegmentCombined
 from create_project_window import CreateProjectWindow
-from process.models_loader import ModelLoaderWorker
+from process.background_worker import BackgroundWorker
 from project_loader import ProjectLoader
 from project_window import ProjectWindow
 from text_extractor import TextExtractor
@@ -48,7 +48,7 @@ class LauncherWindow(QMainWindow):
         self.status_label.setText("Loading AI models in background...")
         
         # Instantiate TextExtractor inside the worker thread execution
-        worker = ModelLoaderWorker(TextExtractor)
+        worker = BackgroundWorker(TextExtractor)
         worker.signals.finished.connect(self._on_models_loaded)
         worker.signals.error.connect(self._on_models_error)
 

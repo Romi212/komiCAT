@@ -4,7 +4,7 @@ from aux_types.text_box_button import TextBoxButton
 
 
 class Segment:
-    def __init__(self, page, segment_nro, proxy):
+    def __init__(self, page, segment_nro, proxy=None):
         self.page = page
         self.nro = segment_nro
         self.source_text = None

@@ -228,14 +228,8 @@ class ImageViewer(QWidget):
                     alpha=0.6
                 )
 
-                button.link_on_click(lambda checked, btn=button: self.selected_bubble(btn))
-                
-                           
-                proxy = self.scene.addWidget(button)
-                button_width = bubble.xmax - bubble.xmin
-                proxy.setPos((bubble.xmin + bubble.xmax) // 2 - button_width // 2, bubble.ymin)
-                self.current_page_text_boxes_proxies.append(proxy)
-                segment = self.current_page.create_segment(proxy)
+                segment = self.current_page.create_segment()
+                segment.button = button
                 button.set_segment(segment)
 
                 
@@ -275,7 +269,8 @@ class ImageViewer(QWidget):
         
 
     def detect_all_pages(self):
-        have_page = True
-        while(have_page):
+        for page in self.chapter.pages:
+            self.current_page = page
             self.detect_bubbles()
-            have_page = self.load_next_image()
+        self.current_page = self.chapter.get_current_page()
+        self._setup_page()

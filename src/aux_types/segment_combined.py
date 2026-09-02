@@ -4,7 +4,7 @@ from aux_types.segment import Segment
 
 class SegmentCombined(Segment):
     
-    def __init__(self, page, segment_nro, proxy):
+    def __init__(self, page, segment_nro, proxy=None):
         super().__init__(page, segment_nro, proxy)
         self.next_segment = None
 
@@ -32,9 +32,9 @@ class SegmentCombined(Segment):
         super().load_data(data)
         
         if data["next_segment"]["next_segment"]:
-            self.next_segment = SegmentCombined(self.page, -1, None)
+            self.next_segment = SegmentCombined(self.page, -1)
         else:
-            self.next_segment = Segment(self.page, -1, None)
+            self.next_segment = Segment(self.page, -1)
         if data["next_segment"]:
             self.next_segment.load_data(data["next_segment"])
 

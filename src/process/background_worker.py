@@ -1,17 +1,17 @@
 from PyQt6.QtCore import QRunnable, QObject, pyqtSignal
 
-class ModelLoaderSignals(QObject):
+class WorkerSignals(QObject):
     # Signal emitted when model loading is complete
     finished = pyqtSignal(object)  # Passes loaded model instance (or dict of models)
     error = pyqtSignal(str)       # Passes error message if loading fails
 
-class ModelLoaderWorker(QRunnable):
+class BackgroundWorker(QRunnable):
     def __init__(self, load_function, *args, **kwargs):
         super().__init__()
         self.load_function = load_function
         self.args = args
         self.kwargs = kwargs
-        self.signals = ModelLoaderSignals()
+        self.signals = WorkerSignals()
 
     def run(self):
         try:
