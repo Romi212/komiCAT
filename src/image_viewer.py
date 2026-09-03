@@ -68,11 +68,11 @@ class ImageViewer(QWidget):
         self.open_button.clicked.connect(self.open_images)
         button_layout.addWidget(self.open_button)
         
-        self.reset_zoom_button = QPushButton("Reset Zoom")
-        self.reset_zoom_button.clicked.connect(self.reset_zoom)
+        self.reset_zoom_button = QPushButton("Detect page Bubbles")
+        self.reset_zoom_button.clicked.connect(self.detect_page_bubbles)
         button_layout.addWidget(self.reset_zoom_button)
         
-        self.detect_bubbles_button = QPushButton("Detect Bubbles")
+        self.detect_bubbles_button = QPushButton("Batch detect Bubbles")
         self.detect_bubbles_button.clicked.connect(self.detect_all_pages)
         button_layout.addWidget(self.detect_bubbles_button)
         
@@ -83,6 +83,10 @@ class ImageViewer(QWidget):
         self.clear_selection_button = QPushButton("Clear Selection")
         self.clear_selection_button.clicked.connect(self.clear_selection)
         button_layout.addWidget(self.clear_selection_button)
+
+        self.add_bubble_button = QPushButton("Add Bubble")
+        self.add_bubble_button.clicked.connect(self.add_bubble)
+        button_layout.addWidget(self.add_bubble_button)
         
         layout.addLayout(button_layout)
         self.setLayout(layout)
@@ -150,12 +154,14 @@ class ImageViewer(QWidget):
             while(segment):
                 proxy = segment.text_box_button_proxy
                 if proxy:
+                    proxy.setFlag(QGraphicsProxyWidget.GraphicsItemFlag.ItemIsMovable, True)
                     self.scene.addItem(proxy)
                     button = proxy.widget()
                     button.link_on_click(lambda checked, btn=button: self.selected_bubble(btn))
 
                 else:
                     proxy = self.scene.addWidget(segment.button)
+                    proxy.setFlag(QGraphicsProxyWidget.GraphicsItemFlag.ItemIsMovable, True)
                     segment.button.link_on_click(lambda checked, btn=segment.button: self.selected_bubble(btn))
                     segment.text_box_button_proxy = proxy
                     text_box = segment.button.text_box
@@ -185,8 +191,9 @@ class ImageViewer(QWidget):
         
         
     def zoom_out(self):
-        self.zoom_factor /= 1.2
-        self.resize_page()
+        if(self.zoom_factor > 0.1):  # Prevent zooming out too much
+            self.zoom_factor /= 1.2
+            self.resize_page()
         
         
     def reset_zoom(self):
@@ -240,7 +247,16 @@ class ImageViewer(QWidget):
         if len(self.selected_bubbles) == 0:
             print("No bubbles selected, please select bubbles")
         else:
-            
+            for button in self.selected_bubbles:
+                proxy = button.graphicsProxyWidget()
+                if proxy:
+                    pos = proxy.pos()
+                    # Update the bounding box based on the dragged position
+                    button.text_box.xmin = int(pos.x())
+                    button.text_box.ymin = int(pos.y())
+                    button.text_box.xmax = int(pos.x() + button.width())
+                    button.text_box.ymax = int(pos.y() + button.height())
+                    
             self.text_extractor.extract_text(
                 self.current_page.image,
                 [button.text_box for button in self.selected_bubbles]
@@ -274,3 +290,23 @@ class ImageViewer(QWidget):
             self.detect_bubbles()
         self.current_page = self.chapter.get_current_page()
         self._setup_page()
+
+    def detect_page_bubbles(self):
+        if self.current_page:
+            self.detect_bubbles()
+            self._setup_page()
+
+    def add_bubble(self):
+        button = TextBoxButton(
+            TextBox(0, 0, 100, 50,"manual"),  # Default size and position
+            width=100,
+            height=50,
+            alpha=0.6
+        )
+
+        segment = self.current_page.create_segment()
+        segment.button = button
+        button.set_segment(segment)
+
+        proxy = self.scene.addWidget(button)
+        button.link_on_click(lambda checked, btn=button: self.selected_bubble(btn))

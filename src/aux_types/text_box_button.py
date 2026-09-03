@@ -1,6 +1,6 @@
 
-from PyQt6.QtWidgets import QPushButton
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QPushButton, QGraphicsItem
+from PyQt6.QtCore import Qt, QRectF
 
 
 class TextBoxButton(QPushButton):
@@ -27,6 +27,7 @@ class TextBoxButton(QPushButton):
         
         # Set fixed size
         self.setFixedSize(width, height)
+        self.setMouseTracking(True)
 
         bg_color, hover_color, pressed_color, border_color = self.choose_colors(text_box.label)
         
@@ -80,6 +81,143 @@ class TextBoxButton(QPushButton):
             
             
         """)
+
+    def _get_hit_zone(self, pos):
+        """Determine if mouse is near an edge/corner or in the center."""
+        margin = 8  # Edge detection margin in pixels
+        x, y = pos.x(), pos.y()
+        w, h = self.width(), self.height()
+
+        left = x < margin
+        right = x > w - margin
+        top = y < margin
+        bottom = y > h - margin
+
+        if top and left: return "TL"
+        if top and right: return "TR"
+        if bottom and left: return "BL"
+        if bottom and right: return "BR"
+        if left: return "L"
+        if right: return "R"
+        if top: return "T"
+        if bottom: return "B"
+        return "MOVE"
+
+    def _update_cursor(self, zone):
+        """Set appropriate resize cursor based on hover zone."""
+        cursors = {
+            "TL": Qt.CursorShape.SizeFDiagCursor,
+            "BR": Qt.CursorShape.SizeFDiagCursor,
+            "TR": Qt.CursorShape.SizeBDiagCursor,
+            "BL": Qt.CursorShape.SizeBDiagCursor,
+            "L": Qt.CursorShape.SizeHorCursor,
+            "R": Qt.CursorShape.SizeHorCursor,
+            "T": Qt.CursorShape.SizeVerCursor,
+            "B": Qt.CursorShape.SizeVerCursor,
+            "MOVE": Qt.CursorShape.ArrowCursor
+        }
+        self.setCursor(cursors.get(zone, Qt.CursorShape.ArrowCursor))
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton and not self.has_been_extracted_flag:
+            self._global_drag_start = event.globalPosition()
+            self._has_moved = False
+            self._hit_zone = self._get_hit_zone(event.position())
+
+            proxy = self.graphicsProxyWidget()
+            if proxy and proxy.scene():
+                self._start_proxy_pos = proxy.pos()
+                self._start_scene_mouse_pos = proxy.mapToScene(event.position())
+                self._start_size = (self.width(), self.height())
+
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if not event.buttons():
+            zone = self._get_hit_zone(event.position())
+            self._update_cursor(zone)
+            super().mouseMoveEvent(event)
+            return
+        
+        if (event.buttons() & Qt.MouseButton.LeftButton) and hasattr(self, '_start_scene_mouse_pos') and not self.has_been_extracted_flag:
+            # Check drag threshold (3 pixels)
+            global_delta = event.globalPosition() - self._global_drag_start
+            if abs(global_delta.x()) + abs(global_delta.y()) > 3:
+                self._has_moved = True
+
+            proxy = self.graphicsProxyWidget()
+            if proxy and proxy.scene():
+                # Calculate current mouse position in scene coordinates
+                current_scene_mouse_pos = proxy.mapToScene(event.position())
+                
+                # Calculate exact displacement delta
+                delta = current_scene_mouse_pos - self._start_scene_mouse_pos
+
+#resize part
+                start_w, start_h = self._start_size
+                start_x, start_y = self._start_proxy_pos.x(), self._start_proxy_pos.y()
+                min_size = 20  # Prevent shrinking box to 0
+
+                zone = getattr(self, '_hit_zone', 'MOVE')
+
+                if zone == "MOVE":
+                    # Standard drag move
+                    proxy.setPos(self._start_proxy_pos + delta)
+                else:
+                    # Handle Resizing
+                    new_w, new_h = start_w, start_h
+                    new_x, new_y = start_x, start_y
+
+                    # Horizontal resizing
+                    if "R" in zone:
+                        new_w = max(min_size, start_w + delta.x())
+                    elif "L" in zone:
+                        possible_w = start_w - delta.x()
+                        if possible_w >= min_size:
+                            new_w = possible_w
+                            new_x = start_x + delta.x()
+                        else:
+                            new_w = min_size
+                            new_x = start_x + (start_w - min_size)
+
+                    # Vertical resizing
+                    if "B" in zone:
+                        new_h = max(min_size, start_h + delta.y())
+                    elif "T" in zone:
+                        possible_h = start_h - delta.y()
+                        if possible_h >= min_size:
+                            new_h = possible_h
+                            new_y = start_y + delta.y()
+                        else:
+                            new_h = min_size
+                            new_y = start_y + (start_h - min_size)
+
+                    int_w, int_h = int(new_w), int(new_h)
+                    proxy.setCacheMode(QGraphicsItem.CacheMode.NoCache)
+                    proxy.prepareGeometryChange()
+                    self.setFixedSize(int_w, int_h)
+                    proxy.setGeometry(QRectF(float(new_x), float(new_y), float(int_w), float(int_h)))
+
+                    self.style().unpolish(self)
+                    self.style().polish(self)
+                    # Invalidate style cache and force repaint
+                    proxy.update()
+                    self.update()
+                    proxy.scene().update(proxy.sceneBoundingRect())
+              
+        else:
+            super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if hasattr(self, '_has_moved') and self._has_moved:
+            # If we dragged the button, intercept the release event and DO NOT call super().
+            # This prevents the button from triggering a "click" and selecting the bubble.
+            self._has_moved = False
+            self.setDown(False) # Visually un-press the button
+            return
+            
+        # If it was just a normal click without dragging, let it trigger the selection
+        super().mouseReleaseEvent(event)
 
     def link_on_click(self, callback):
         self.onClick = callback
