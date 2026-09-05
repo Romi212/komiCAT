@@ -22,7 +22,7 @@ class Chapter:
     def load_chapter(self, data):
         for page_data in data["pages"]:
             image = Image.open(page_data["file_path"])
-            page = Page(file_path=page_data["file_path"], image=image, chapter=self)
+            page = Page(file_path=page_data["file_path"], image=image, chapter=self, number=len(self.pages))
             self.add_page(page)
             page.load_segments(page_data["segments"])
             

@@ -104,13 +104,16 @@ class ImageViewer(QWidget):
         
     def load_chapter(self, chapter):
         self.chapter = chapter
-        self.load_pages([page.file_path for page in chapter.pages])
+        #self.load_pages([page.file_path for page in chapter.pages])
+        if len(chapter.pages) > 0:
+            self.current_page = chapter.get_current_page()
+            self._setup_page()
     
     def load_pages(self, file_paths):
         for file_path in file_paths:
             try:
                 image = Image.open(file_path)
-                page = Page(file_path=file_path, image=image, chapter=self.chapter)
+                page = Page(file_path=file_path, image=image, chapter=self.chapter, number=len(self.chapter.pages))
                 self.chapter.add_page(page)
                 self.status_label.setText(f"Loaded: {page.page_name}")
             except Exception as e:
@@ -277,7 +280,7 @@ class ImageViewer(QWidget):
     def add_bubble(self):
        
 
-        rect = TextBoxRect(TextBox(0, 0, 100, 50,"manual"), alpha=0.6)
+        rect = TextBoxRect(TextBox(63, 1618, 119, 1746,"manual"), alpha=0.6)
 
         segment = self.current_page.create_segment()
         segment.button = rect
@@ -285,5 +288,4 @@ class ImageViewer(QWidget):
 
         # add a QGraphicsRectItem
         self.scene.addItem(rect)
-        rect.setFlag(QGraphicsRectItem.GraphicsItemFlag.ItemIsMovable, True)
         rect.link_on_click(lambda checked, btn=rect: self.selected_bubble(btn))

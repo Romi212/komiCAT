@@ -14,6 +14,7 @@ class TextViewer(QWidget):
         self.dragging = None
         self.drag_start = None
         self.controller = controller
+        self.page_containers = []
         
         self.text_size = 12  # Default text size
         
@@ -54,9 +55,15 @@ class TextViewer(QWidget):
         button_layout.addWidget(self.zoom_out_button)
         
         layout.addLayout(button_layout)
-                
+
+    def add_extracted_segments(self, segments):
+        if not self.page_containers:
+            self._create_page_containers()
+        page_container = self.page_containers[self.chapter.current_page]
+        self.create_segment_boxes(segments, page_container)
+
     #Called from ProjectWindow when the user clicks the "Extract" button, passing the list of segments with the source text gud
-    def create_segment_boxes(self, segments):
+    def create_segment_boxes(self, segments, page_container):
         for segment in segments:
             aux = segment
             segment_box = self.create_segment(segment)
@@ -76,9 +83,9 @@ class TextViewer(QWidget):
                     aux.set_segment_box(segment_box)
                     layout.addWidget(segment_box)
                 container.setLayout(layout)
-                self.scroll_layout.insertWidget(self.scroll_layout.count() - 1, container)
+                page_container.insertWidget(page_container.count() - 1, container)
             else:
-                self.scroll_layout.insertWidget(self.scroll_layout.count() - 1, segment_box)
+                page_container.insertWidget(page_container.count() - 1, segment_box)
          # Insert before the stretch (at second-to-last position)
         
     
@@ -93,26 +100,30 @@ class TextViewer(QWidget):
        
         return segment
     
-    def addPageDivision(self, page_number):
+    def addPageDivision(self, page_number, page_container):
         # Create a label for the page division
         page_label = QPushButton(f"{page_number}")
         page_label.setEnabled(False)  # Make it non-interactive
         page_label.setStyleSheet("font-weight: bold; border: none;")
         
         # Insert the page label before the stretch (at second-to-last position)
-        self.scroll_layout.insertWidget(self.scroll_layout.count() - 1, page_label)
+        page_container.insertWidget( page_label)
 
     def load_chapter(self, chapter):
         self.chapter = chapter
         self.spell_checker = SpellChecker(language=chapter.language)  # Initialize the spell checker for Spanish
         
         for page in chapter.pages:
-            self.addPageDivision(page.page_name)
+            page_container = self._create_page_container()
+            self.scroll_layout.insertLayout(self.scroll_layout.count() - 1, page_container)
+            self.page_containers.append(page_container)
+            self.addPageDivision(page.page_name, page_container)
+
             to_show= []
             for segment in page.segments:
                 if segment.source_text:  
                     to_show.append(segment)
-            self.create_segment_boxes(to_show)
+            self.create_segment_boxes(to_show, page_container)
             
 
     def zoom_in(self):
@@ -189,3 +200,15 @@ class TextViewer(QWidget):
                         self.focus_previous_segment()
                         return True
         return super().eventFilter(obj, event)
+
+    def _create_page_container(self):
+        page_container = QVBoxLayout()
+        page_container.setSpacing(10)
+        return page_container
+
+    def _create_page_containers(self):
+        self.page_containers = []
+        for page in self.chapter.pages:
+            page_container = self._create_page_container()
+            self.scroll_layout.insertLayout(self.scroll_layout.count() - 1, page_container)
+            self.page_containers.append(page_container)

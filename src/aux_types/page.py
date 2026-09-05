@@ -5,11 +5,12 @@ from aux_types.segment_combined import SegmentCombined
 
 
 class Page:
-    def __init__(self, file_path=None, image=None, chapter=None):
+    def __init__(self, file_path=None, image=None, chapter=None, number=0):
         
         self.file_path = file_path
         self.image = image
         self.page_name = os.path.basename(file_path)
+        self.number = number
         self.segments = []
         self.chapter = chapter
         self.extracted_bubbles = 0
