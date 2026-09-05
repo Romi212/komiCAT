@@ -1,16 +1,16 @@
 from PyQt6.QtWidgets import (
     QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QPushButton,
     QLabel, QFileDialog, QScrollArea, QGraphicsScene, QGraphicsView,
-    QGraphicsPixmapItem, QGraphicsRectItem, QGraphicsProxyWidget
+    QGraphicsPixmapItem, QGraphicsRectItem
 )
 from PyQt6.QtGui import QPixmap, QImage, QColor, QPen, QIcon
 from PyQt6.QtCore import Qt, QSize, QRect
 from PIL import Image
 import os
 
+from aux_types.text_box_rect import TextBoxRect
 from text_extractor import TextExtractor
 from aux_types.text_box import TextBox
-from aux_types.text_box_button import TextBoxButton
 from aux_types.page import Page
 from aux_types.segment import Segment
 
@@ -23,9 +23,7 @@ class ImageViewer(QWidget):
         self.chapter = chapter
         self.current_page = None
 
-        self.current_page_text_boxes_proxies = []
         self.selected_bubbles = []
-        
         
         self.zoom_factor = 1.0
         
@@ -148,29 +146,12 @@ class ImageViewer(QWidget):
 
         #Add bubble butons if it had been detected before
         
-        self.current_page_text_boxes_proxies = []
+        
         for segment_head in self.current_page.segments:
             segment = segment_head
             while(segment):
-                proxy = segment.text_box_button_proxy
-                if proxy:
-                    proxy.setFlag(QGraphicsProxyWidget.GraphicsItemFlag.ItemIsMovable, True)
-                    self.scene.addItem(proxy)
-                    button = proxy.widget()
-                    button.link_on_click(lambda checked, btn=button: self.selected_bubble(btn))
-
-                else:
-                    proxy = self.scene.addWidget(segment.button)
-                    proxy.setFlag(QGraphicsProxyWidget.GraphicsItemFlag.ItemIsMovable, True)
-                    segment.button.link_on_click(lambda checked, btn=segment.button: self.selected_bubble(btn))
-                    segment.text_box_button_proxy = proxy
-                    text_box = segment.button.text_box
-                    button_width = text_box.xmax - text_box.xmin
-                    proxy.setPos((text_box.xmin + text_box.xmax) // 2 - button_width // 2, text_box.ymin)
-                
-                
-                self.current_page_text_boxes_proxies.append(proxy)
-
+                segment.button.link_on_click(lambda checked, btn=segment.button: self.selected_bubble(btn))
+                self.scene.addItem(segment.button)
                 segment = segment.get_child()
             
             
@@ -215,7 +196,7 @@ class ImageViewer(QWidget):
             
     
     #Extractor devuelve 3 arrelgos de textBox, creo los buttons por cada textBox, creo los segmentos y los relaciono
-    #Button conoce al segmento, segmento conoce al proxy
+    #Button conoce al segmento, 
     def detect_bubbles(self):
         
         
@@ -228,10 +209,8 @@ class ImageViewer(QWidget):
 
             for bubble in detected_text_bubbles + detected_free_text:
                
-                button = TextBoxButton(
+                button = TextBoxRect(
                     bubble,
-                    width=bubble.xmax - bubble.xmin,
-                    height=bubble.ymax - bubble.ymin,
                     alpha=0.6
                 )
 
@@ -245,17 +224,16 @@ class ImageViewer(QWidget):
     def extract_text(self):
         
         if len(self.selected_bubbles) == 0:
-            print("No bubbles selected, please select bubbles")
+            self.status_label.setText("No bubbles selected, please select bubbles")
         else:
             for button in self.selected_bubbles:
-                proxy = button.graphicsProxyWidget()
-                if proxy:
-                    pos = proxy.pos()
-                    # Update the bounding box based on the dragged position
-                    button.text_box.xmin = int(pos.x())
-                    button.text_box.ymin = int(pos.y())
-                    button.text_box.xmax = int(pos.x() + button.width())
-                    button.text_box.ymax = int(pos.y() + button.height())
+
+                scene_rect = button.mapToScene(button.rect()).boundingRect()
+
+                button.text_box.xmin = scene_rect.left()
+                button.text_box.ymin = scene_rect.top()
+                button.text_box.xmax = scene_rect.right()
+                button.text_box.ymax = scene_rect.bottom()
                     
             self.text_extractor.extract_text(
                 self.current_page.image,
@@ -297,16 +275,15 @@ class ImageViewer(QWidget):
             self._setup_page()
 
     def add_bubble(self):
-        button = TextBoxButton(
-            TextBox(0, 0, 100, 50,"manual"),  # Default size and position
-            width=100,
-            height=50,
-            alpha=0.6
-        )
+       
+
+        rect = TextBoxRect(TextBox(0, 0, 100, 50,"manual"), alpha=0.6)
 
         segment = self.current_page.create_segment()
-        segment.button = button
-        button.set_segment(segment)
+        segment.button = rect
+        rect.set_segment(segment)
 
-        proxy = self.scene.addWidget(button)
-        button.link_on_click(lambda checked, btn=button: self.selected_bubble(btn))
+        # add a QGraphicsRectItem
+        self.scene.addItem(rect)
+        rect.setFlag(QGraphicsRectItem.GraphicsItemFlag.ItemIsMovable, True)
+        rect.link_on_click(lambda checked, btn=rect: self.selected_bubble(btn))

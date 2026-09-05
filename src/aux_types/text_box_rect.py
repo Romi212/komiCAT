@@ -2,14 +2,14 @@ from PyQt6.QtWidgets import QGraphicsRectItem, QGraphicsItem
 from PyQt6.QtGui import QPen, QBrush, QColor, QFont, QCursor
 from PyQt6.QtCore import Qt, QRectF
 
-class textBoxRect(QGraphicsRectItem):
+class TextBoxRect(QGraphicsRectItem):
     STYLES = {
         "text_bubble": {"bg": QColor(200, 0, 0, 50), "border": QColor(255, 0, 0)},
         "free_text":   {"bg": QColor(0, 0, 200, 50), "border": QColor(0, 0, 255)},
         "other":       {"bg": QColor(0, 200, 0, 50), "border": QColor(0, 255, 0)},
     }
 
-    def __init__(self, text_box, parent = None, width=80, height=30, alpha=0.6):
+    def __init__(self, text_box, parent = None,  alpha=0.6):
         w = text_box.xmax - text_box.xmin
         h = text_box.ymax - text_box.ymin
         super().__init__(0, 0, w, h, parent)
@@ -18,20 +18,43 @@ class textBoxRect(QGraphicsRectItem):
         self.text_box = text_box
         self.text = ""
         self.number = 0
+        self.onClick = None
 
-        self.state = "not_extracted" # not_extracted, extracted, focused
+        self._is_dragging = False
+        self._has_moved = False
 
+        self.has_been_extracted_flag = False
+        self.state = "not_extracted" # not_extracted, checked, extracted, focused
         self.style_config = self.STYLES.get(text_box.label, self.STYLES["other"])
 
-        # Native QGraphicsItem flags replace manual proxy dragging logic
+                
         self.setPos(text_box.xmin, text_box.ymin)
         self.setFlags(
-            QGraphicsItem.GraphicsItemFlag.ItemIsMovable |
             QGraphicsItem.GraphicsItemFlag.ItemIsSelectable |
             QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges
         )
         self.setAcceptHoverEvents(True)
         self._resize_edge = None        
+
+
+    def link_on_click(self, callback):
+            self.onClick = callback
+
+    def _on_clicked(self):
+        """Wrapper that passes the button object (self) to the onClick callback"""
+        if self.onClick:
+            self.onClick(self)
+
+    def selected(self, number):
+            print(number)
+            self.number = number
+            self.text = f"{number}"
+            self.update()
+
+    def uncheck(self):
+        self.number = 0
+        self.text = ""
+        self.update()
 
     def _get_hit_zone(self, pos):
         """Hit test for 8-direction resize handles."""
@@ -136,9 +159,16 @@ class textBoxRect(QGraphicsRectItem):
             super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
-        self._resize_edge = None
-        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
-        super().mouseReleaseEvent(event)
+        if event.button() == Qt.MouseButton.LeftButton and self._is_dragging:
+            self._is_dragging = False
+
+            if not self._has_moved:
+                # --- ACTION 1: PURE CLICK (Show Text / Select Number) ---
+                self._on_clicked()
+
+            event.accept()
+        else:
+            super().mouseReleaseEvent(event)
 
     def paint(self, painter, option, widget=None):
         """Replaces QSS completely with fast, native vector painting."""
@@ -164,3 +194,16 @@ class textBoxRect(QGraphicsRectItem):
             painter.setPen(QPen(QColor("white")))
             painter.setFont(QFont("Arial", int(min(rect.height() * 0.5, 36)), QFont.Weight.Bold))
             painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, str(self.number))
+
+    def has_been_extracted(self):
+            self.has_been_extracted_flag = True
+            self.state = "extracted"
+            self.update()
+
+    def set_focus(self, focused=True):
+        if self.has_been_extracted_flag:
+            self.state = "focused" if focused else "extracted"
+            self.update()
+
+    def set_segment(self, segment):
+        self.segment = segment

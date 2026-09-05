@@ -14,9 +14,9 @@ class TextBox:
 
 
     def intersects(self, other):
-        if not self.bubble_container or not other.bubble_container:
-            return False
-        return ((self.bubble_container.xmin in range(other.bubble_container.xmin, other.bubble_container.xmax) and self.bubble_container.ymin in range(other.bubble_container.ymin, other.bubble_container.ymax)) or
-                (self.bubble_container.xmax in range(other.bubble_container.xmin, other.bubble_container.xmax) and self.bubble_container.ymax in range(other.bubble_container.ymin, other.bubble_container.ymax)) or
-                (self.bubble_container.xmin in range(other.bubble_container.xmin, other.bubble_container.xmax) and self.bubble_container.ymax in range(other.bubble_container.ymin, other.bubble_container.ymax)) or
-                (self.bubble_container.xmax in range(other.bubble_container.xmin, other.bubble_container.xmax) and self.bubble_container.ymin in range(other.bubble_container.ymin, other.bubble_container.ymax)))
+        #Check if self intersects with another TextBox with a tolerance of 5 pixels
+        tolerance = 5
+        return not (self.xmax + tolerance < other.xmin or
+                    self.xmin - tolerance > other.xmax or
+                    self.ymax + tolerance < other.ymin or
+                    self.ymin - tolerance > other.ymax)

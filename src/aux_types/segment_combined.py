@@ -1,11 +1,10 @@
 from aux_types.text_box import TextBox
-from aux_types.text_box_button import TextBoxButton
 from aux_types.segment import Segment
 
 class SegmentCombined(Segment):
     
-    def __init__(self, page, segment_nro, proxy=None):
-        super().__init__(page, segment_nro, proxy)
+    def __init__(self, page, segment_nro):
+        super().__init__(page, segment_nro)
         self.next_segment = None
 
     def set_next_segment(self, next_segment):
@@ -14,10 +13,7 @@ class SegmentCombined(Segment):
 
     def get_data(self):
         
-        if(self.text_box_button_proxy):
-            button = self.text_box_button_proxy.widget()
-        else:
-            button = self.button
+        button = self.button
         return {
             "nro": self.nro,
             "is_extracted": button.has_been_extracted_flag,

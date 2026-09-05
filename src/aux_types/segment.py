@@ -1,16 +1,15 @@
 
 from aux_types.text_box import TextBox
-from aux_types.text_box_button import TextBoxButton
+from aux_types.text_box_rect import TextBoxRect
 
 
 class Segment:
-    def __init__(self, page, segment_nro, proxy=None):
+    def __init__(self, page, segment_nro):
         self.page = page
         self.nro = segment_nro
         self.source_text = None
         self.translation = ""
 
-        self.text_box_button_proxy = proxy
         self.button = None
         self.segment_box = None 
 
@@ -27,17 +26,11 @@ class Segment:
             self.segment_box.set_japanese_text(new_text)
 
     def show_focus(self, focused):
-        if self.text_box_button_proxy:
-            self.text_box_button_proxy.widget().set_focus(focused)
-        else:
-            self.button.set_focus(focused)
+        self.button.set_focus(focused)
 
     def get_data(self):
         
-        if(self.text_box_button_proxy):
-            button = self.text_box_button_proxy.widget()
-        else:
-            button = self.button
+        button = self.button
         return {
             "nro": self.nro,
             "is_extracted": button.has_been_extracted_flag,
@@ -61,10 +54,8 @@ class Segment:
         )
         print(f"Loaded TextBox for Segment {self.nro}: ({text_box.xmin}, {text_box.ymin}, {text_box.xmax}, {text_box.ymax}) with label '{text_box.label}'")
         text_box.text = self.source_text
-        button = TextBoxButton(
+        button = TextBoxRect(
             text_box,
-            width=text_box.xmax - text_box.xmin,
-            height=text_box.ymax - text_box.ymin,
             alpha=0.6
         )
         self.button = button

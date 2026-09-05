@@ -36,7 +36,7 @@ class Page:
         for i in range(1, len(extracted_bubbles)):
             bubble_button = extracted_bubbles[i-1]
             if extracted_bubbles[i].text_box.intersects(bubble_button.text_box):
-                segment = SegmentCombined(self, -1, bubble_button.segment.text_box_button_proxy)
+                segment = SegmentCombined(self, -1)
                 self.segments.remove(bubble_button.segment)
                 bubble_button.segment = segment
                 if combined_segment_head:
