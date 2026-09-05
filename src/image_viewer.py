@@ -153,8 +153,15 @@ class ImageViewer(QWidget):
         for segment_head in self.current_page.segments:
             segment = segment_head
             while(segment):
-                segment.button.link_on_click(lambda checked, btn=segment.button: self.selected_bubble(btn))
-                self.scene.addItem(segment.button)
+                if(segment.button):
+                    button = segment.button
+                else:
+                    button = TextBoxRect(segment.text_box, alpha=0.6)
+                    segment.button = button
+                    button.set_segment(segment)
+
+                button.link_on_click(lambda checked, btn=segment.button: self.selected_bubble(btn))
+                self.scene.addItem(button)
                 segment = segment.get_child()
             
             
@@ -219,6 +226,7 @@ class ImageViewer(QWidget):
 
                 segment = self.current_page.create_segment()
                 segment.button = button
+                segment.text_box = bubble
                 button.set_segment(segment)
 
                 
@@ -279,11 +287,12 @@ class ImageViewer(QWidget):
 
     def add_bubble(self):
        
-
-        rect = TextBoxRect(TextBox(63, 1618, 119, 1746,"manual"), alpha=0.6)
+        text_box = TextBox(63, 1618, 119, 1746,"manual")
+        rect = TextBoxRect(text_box, alpha=0.6)
 
         segment = self.current_page.create_segment()
         segment.button = rect
+        segment.text_box = text_box
         rect.set_segment(segment)
 
         # add a QGraphicsRectItem

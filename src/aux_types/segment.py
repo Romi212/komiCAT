@@ -10,6 +10,7 @@ class Segment:
         self.source_text = None
         self.translation = ""
 
+        self.text_box = None
         self.button = None
         self.segment_box = None 
 
@@ -30,12 +31,12 @@ class Segment:
 
     def get_data(self):
         
-        button = self.button
+        
         return {
             "nro": self.nro,
-            "is_extracted": button.has_been_extracted_flag,
-            "bounds": {"xmin": button.text_box.xmin, "ymin": button.text_box.ymin, "xmax": button.text_box.xmax, "ymax": button.text_box.ymax},
-            "label" : button.text_box.label,
+            "is_extracted": self.source_text is not None,
+            "bounds": {"xmin": self.text_box.xmin, "ymin": self.text_box.ymin, "xmax": self.text_box.xmax, "ymax": self.text_box.ymax},
+            "label" : self.text_box.label,
             "source_text": self.source_text,
             "translation": self.translation,
             "next_segment": None
@@ -58,6 +59,7 @@ class Segment:
             text_box,
             alpha=0.6
         )
+        self.text_box = text_box
         self.button = button
         button.segment = self
         if data["is_extracted"]:

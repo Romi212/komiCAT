@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QPushButton, QHBoxLayout, QWidget, QVBoxLayout, QScrollArea, QSizePolicy
+from PyQt6.QtWidgets import QLabel, QPushButton, QHBoxLayout, QWidget, QVBoxLayout, QScrollArea, QSizePolicy
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QKeyEvent
 from aux_types.segment_box import SegmentBox
@@ -83,9 +83,9 @@ class TextViewer(QWidget):
                     aux.set_segment_box(segment_box)
                     layout.addWidget(segment_box)
                 container.setLayout(layout)
-                page_container.insertWidget(page_container.count() - 1, container)
+                page_container.insertWidget(page_container.count() , container)
             else:
-                page_container.insertWidget(page_container.count() - 1, segment_box)
+                page_container.insertWidget(page_container.count() , segment_box)
          # Insert before the stretch (at second-to-last position)
         
     
@@ -102,12 +102,9 @@ class TextViewer(QWidget):
     
     def addPageDivision(self, page_number, page_container):
         # Create a label for the page division
-        page_label = QPushButton(f"{page_number}")
-        page_label.setEnabled(False)  # Make it non-interactive
-        page_label.setStyleSheet("font-weight: bold; border: none;")
-        
-        # Insert the page label before the stretch (at second-to-last position)
-        page_container.insertWidget( page_label)
+        self.page_label = QLabel("--------------------------- Page " + str(page_number) + " ----------------------------------")
+        self.page_label.setStyleSheet("font-weight: bold; border: none;")
+        page_container.insertWidget(0, self.page_label)
 
     def load_chapter(self, chapter):
         self.chapter = chapter

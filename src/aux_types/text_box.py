@@ -7,7 +7,7 @@ class TextBox:
         self.ymax = ymax
         self.label = label
         self.text = ""
-        self.bubble_container = None
+        
 
     def set_bubble_container(self, bubble_container):
         self.bubble_container = bubble_container
