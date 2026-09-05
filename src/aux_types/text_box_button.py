@@ -14,7 +14,9 @@ class TextBoxButton(QPushButton):
         self.number = 0
         self.onClick = None
         self.has_been_extracted_flag = False
-        
+
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         # Make button checkable to maintain pressed state
         self.setCheckable(True)
         
@@ -201,7 +203,7 @@ class TextBoxButton(QPushButton):
                     self.style().unpolish(self)
                     self.style().polish(self)
                     # Invalidate style cache and force repaint
-                    proxy.update()
+                    
                     self.update()
                     proxy.scene().update(proxy.sceneBoundingRect())
               
