@@ -1,6 +1,6 @@
 
-from aux_types.text_box import TextBox
-from aux_types.text_box_rect import TextBoxRect
+from data_structure.text_box import TextBox
+from image_area_widgets.text_box_rect import TextBoxRect
 
 
 class Segment:

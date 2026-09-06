@@ -1,5 +1,5 @@
-from aux_types.text_box import TextBox
-from aux_types.segment import Segment
+from data_structure.text_box import TextBox
+from data_structure.segment import Segment
 
 class SegmentCombined(Segment):
     

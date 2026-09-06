@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 from manga_ocr import MangaOcr
 from matplotlib import text
-from aux_types.text_box import TextBox
+from data_structure.text_box import TextBox
 from transformers import AutoImageProcessor, AutoModelForObjectDetection, pipeline
 from huggingface_hub import login
 

@@ -2,7 +2,7 @@
 
 from PIL import Image
 
-from aux_types.page import Page
+from data_structure.page import Page
 
 
 class Chapter:

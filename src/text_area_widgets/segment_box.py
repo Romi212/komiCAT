@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QMenu, QWidget, QVBoxLayout, QLabel, QTextEdit
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QKeyEvent, QTextCursor, QTextCharFormat, QColor
-from aux_types.translation_text_edit import TranslationTextEdit
+from text_area_widgets.translation_text_edit import TranslationTextEdit
 
 
 

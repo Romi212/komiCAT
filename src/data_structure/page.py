@@ -1,7 +1,7 @@
 import os
 
-from aux_types.segment import Segment
-from aux_types.segment_combined import SegmentCombined
+from data_structure.segment import Segment
+from data_structure.segment_combined import SegmentCombined
 
 
 class Page:
@@ -40,6 +40,8 @@ class Page:
                 segment = SegmentCombined(self, -1)
                 self.segments.remove(bubble_button.segment)
                 bubble_button.segment = segment
+                segment.button = bubble_button
+                segment.text_box = bubble_button.text_box
                 if combined_segment_head:
                     print("Segment "+ bubble_button.text + " " + bubble_button.text_box.text + " ~continua~")
                     combined_segment_head.set_next_segment(segment)
@@ -78,7 +80,9 @@ class Page:
 
         last_button.has_been_extracted()
         self.extracted_bubbles += len(extracted_bubbles)
-
+        print("--------------------------EXTRACTED SEGMENTS--------------------------------")
+        for segment in self.segments:
+            print(f"Segment {segment.nro}: {segment.source_text} ")
         return segments
 
     def _is_within(self, text_bubble, bubble):
@@ -88,7 +92,7 @@ class Page:
                 text_bubble.ymax <= bubble.ymax)
 
     def create_segment(self):
-        segment = Segment(self, -1)
+        segment = Segment(self, len(self.segments))
         self.segments.append(segment)
         return segment
     
@@ -106,6 +110,8 @@ class Page:
             else:
                 segment = Segment(self, segment_data["nro"])
             segment.load_data(segment_data)
+            if segment.source_text:
+                self.extracted_bubbles += 1
             self.segments.append(segment)
             self.segments.sort(key=lambda s: s.nro)
 

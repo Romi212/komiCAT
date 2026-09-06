@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QLabel, QPushButton, QHBoxLayout, QWidget, QVBoxLayout, QScrollArea, QSizePolicy
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QKeyEvent
-from aux_types.segment_box import SegmentBox
+from text_area_widgets.segment_box import SegmentBox
 from spell_checker import SpellChecker
 
 
@@ -155,10 +155,10 @@ class TextViewer(QWidget):
         
         self.current_segment_index = next_index
         next_segment = self.segment_boxes[next_index]
-        next_segment.text_area.setFocus()
+        
         if next_segment.segment.page != self.chapter.current_page:
             self.controller.set_current_page(next_segment.segment.page)  # Switch to the page of the next segment
-        
+        next_segment.text_area.setFocus()
         # Scroll to make it visible
         self.scroll_area.ensureWidgetVisible(next_segment)
 

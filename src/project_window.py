@@ -2,12 +2,12 @@ import sys
 from PyQt6.QtWidgets import QApplication, QDialog, QFileDialog, QMainWindow, QSplitter, QVBoxLayout, QWidget, QMenuBar
 from PyQt6.QtCore import Qt
 
-from aux_types.segment_combined import SegmentCombined
+from data_structure.segment_combined import SegmentCombined
 from create_project_window import CreateProjectWindow
 from image_viewer import ImageViewer
 from project_loader import ProjectLoader
 from text_viewer import TextViewer
-from aux_types.chapter import Chapter
+from data_structure.chapter import Chapter
 
 class ProjectWindow(QMainWindow):
 

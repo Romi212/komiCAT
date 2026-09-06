@@ -1,7 +1,7 @@
 #Small window with 3 buttons to load or create proyect 
 import sys
 from PyQt6.QtWidgets import QApplication, QDialog, QFileDialog, QLabel, QMainWindow, QPushButton,  QSplitter, QVBoxLayout, QWidget, QMenuBar
-from aux_types.segment_combined import SegmentCombined
+from data_structure.segment_combined import SegmentCombined
 from create_project_window import CreateProjectWindow
 from process.background_worker import BackgroundWorker
 from project_loader import ProjectLoader

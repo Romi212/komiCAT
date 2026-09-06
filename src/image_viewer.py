@@ -8,11 +8,11 @@ from PyQt6.QtCore import Qt, QSize, QRect
 from PIL import Image
 import os
 
-from aux_types.text_box_rect import TextBoxRect
+from image_area_widgets.text_box_rect import TextBoxRect
 from text_extractor import TextExtractor
-from aux_types.text_box import TextBox
-from aux_types.page import Page
-from aux_types.segment import Segment
+from data_structure.text_box import TextBox
+from data_structure.page import Page
+from data_structure.segment import Segment
 
 
 class ImageViewer(QWidget):

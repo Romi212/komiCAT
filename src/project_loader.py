@@ -1,5 +1,5 @@
 
-from aux_types.chapter import Chapter
+from data_structure.chapter import Chapter
 import json
 
 from PyQt6.QtWidgets import QDialog, QFileDialog, QMainWindow
