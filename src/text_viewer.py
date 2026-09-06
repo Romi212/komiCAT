@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QLabel, QPushButton, QHBoxLayout, QWidget, QVBoxLayout, QScrollArea, QSizePolicy
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QKeyEvent
+from text_area_widgets.page_container import PageContainer
 from text_area_widgets.segment_box import SegmentBox
 from spell_checker import SpellChecker
 
@@ -77,15 +78,16 @@ class TextViewer(QWidget):
                 layout.setContentsMargins(8, 8, 8, 8)
                 layout.setSpacing(5)
                 layout.addWidget(segment_box)
+                head_segment = segment_box
                 while (aux.get_child()):
                     aux = aux.get_child()
                     segment_box = self.create_segment(aux)
                     aux.set_segment_box(segment_box)
                     layout.addWidget(segment_box)
                 container.setLayout(layout)
-                page_container.insertWidget(page_container.count() , container)
+                page_container.addCombinedSegment(container,head_segment)
             else:
-                page_container.insertWidget(page_container.count() , segment_box)
+                page_container.addSegment(segment_box)
          # Insert before the stretch (at second-to-last position)
         
     
@@ -100,21 +102,16 @@ class TextViewer(QWidget):
        
         return segment
     
-    def addPageDivision(self, page_number, page_container):
-        # Create a label for the page division
-        self.page_label = QLabel("--------------------------- Page " + str(page_number) + " ----------------------------------")
-        self.page_label.setStyleSheet("font-weight: bold; border: none;")
-        page_container.insertWidget(0, self.page_label)
-
+   
     def load_chapter(self, chapter):
         self.chapter = chapter
         self.spell_checker = SpellChecker(language=chapter.language)  # Initialize the spell checker for Spanish
         
         for page in chapter.pages:
             page_container = self._create_page_container()
-            self.scroll_layout.insertLayout(self.scroll_layout.count() - 1, page_container)
+            self.scroll_layout.insertWidget(self.scroll_layout.count() - 1, page_container)
             self.page_containers.append(page_container)
-            self.addPageDivision(page.page_name, page_container)
+            
 
             to_show= []
             for segment in page.segments:
@@ -199,13 +196,12 @@ class TextViewer(QWidget):
         return super().eventFilter(obj, event)
 
     def _create_page_container(self):
-        page_container = QVBoxLayout()
-        page_container.setSpacing(10)
+        page_container = PageContainer(page=self.chapter.get_current_page(), parent=self)
         return page_container
 
     def _create_page_containers(self):
         self.page_containers = []
         for page in self.chapter.pages:
             page_container = self._create_page_container()
-            self.scroll_layout.insertLayout(self.scroll_layout.count() - 1, page_container)
+            self.scroll_layout.insertWidget(self.scroll_layout.count() - 1, page_container)
             self.page_containers.append(page_container)

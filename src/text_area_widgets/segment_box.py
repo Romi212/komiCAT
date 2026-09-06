@@ -1,9 +1,64 @@
-from PyQt6.QtWidgets import QMenu, QWidget, QVBoxLayout, QLabel, QTextEdit
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QKeyEvent, QTextCursor, QTextCharFormat, QColor
+from PyQt6.QtWidgets import QApplication, QHBoxLayout, QMenu, QWidget, QVBoxLayout, QLabel, QTextEdit
+from PyQt6.QtCore import QMimeData, Qt
+from PyQt6.QtGui import QDrag, QKeyEvent, QTextCursor, QTextCharFormat, QColor
 from text_area_widgets.translation_text_edit import TranslationTextEdit
 
+class DragHandle(QLabel):
+    """Grip icon placed on the left side of SegmentBox to initiate dragging."""
+    def __init__(self, parent_segment_box):
+        super().__init__("⋮⋮")
+        self.segment_box = parent_segment_box
+        self.setFixedWidth(18)
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setCursor(Qt.CursorShape.OpenHandCursor)
+        self.setStyleSheet("""
+            QLabel {
+                color: #888888;
+                font-size: 16px;
+                font-weight: bold;
+                background-color: #e2e2e2;
+                border-radius: 3px;
+            }
+            QLabel:hover {
+                background-color: #cccccc;
+                color: #222222;
+            }
+        """)
+        self._drag_start_pos = None
+        self.callback = None  # Placeholder for the callback function
 
+    def set_drag_callback(self, callback):
+        """Set the callback function to be called when dragging starts."""
+        self.callback = callback
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._drag_start_pos = event.pos()
+            self.setCursor(Qt.CursorShape.ClosedHandCursor)
+
+    def mouseMoveEvent(self, event):
+        if not (event.buttons() & Qt.MouseButton.LeftButton):
+            return
+
+        drag = QDrag(self)
+        
+        # Qt requires a QMimeData object to initiate a QDrag, 
+        # but you can leave it empty or attach a direct reference.
+        mime_data = QMimeData()
+        drag.setMimeData(mime_data)
+
+        # Store a direct Python pointer to the widget on the class or container
+        self.callback(self.segment_box)  # Call the callback to set the active drag widget
+
+        # Optional ghost preview
+        pixmap = self.segment_box.grab()
+        drag.setPixmap(pixmap.scaledToWidth(250, Qt.TransformationMode.SmoothTransformation))
+
+        drag.exec(Qt.DropAction.MoveAction)
+        self.callback(None)  # Clear the active drag widget after the drag operation
+
+    def mouseReleaseEvent(self, event):
+        self.setCursor(Qt.CursorShape.OpenHandCursor)
 
 class SegmentBox(QWidget):
 
@@ -16,6 +71,14 @@ class SegmentBox(QWidget):
         self.segment = logic_segment
         self.text_size = initial_text_size
         self.initial_height = self.text_size * 2  
+
+        main_layout = QHBoxLayout()
+        main_layout.setContentsMargins(5, 5, 5, 5)
+        main_layout.setSpacing(6)
+
+        # Drag Handle on the left
+        self.drag_handle = DragHandle(self)
+        main_layout.addWidget(self.drag_handle, alignment=Qt.AlignmentFlag.AlignVCenter)
 
         layout = QVBoxLayout()
         layout.setContentsMargins(5, 5, 5, 5)
@@ -45,7 +108,8 @@ class SegmentBox(QWidget):
         self.text_area.focusInEvent = self._on_text_area_focus
         self.text_area.focusOutEvent = self._on_text_area_unfocus  # Reuse unfocus for both
         layout.addWidget(self.text_area)
-        
+
+        main_layout.addLayout(layout)
         # Set border style
         self.setStyleSheet("""
             SegmentBox {
@@ -57,12 +121,14 @@ class SegmentBox(QWidget):
             }
         """)
         
-        self.setLayout(layout)
+        self.setLayout(main_layout)
         self.setMinimumHeight(5)
         
         # Adjust initial heights
         self._adjust_label_height()
-    
+    def set_drag_callback(self, callback):
+        """Set the callback function to be called when dragging starts."""
+        self.drag_handle.set_drag_callback(callback)
     def set_japanese_text(self, text):
         self.label.setPlainText(text)
         self._adjust_label_height()

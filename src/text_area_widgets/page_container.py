@@ -1,7 +1,6 @@
 from PyQt6.QtWidgets import QMenu, QWidget, QVBoxLayout, QLabel, QTextEdit
 from PyQt6.QtCore import Qt
-
-from segment_box import SegmentBox
+from text_area_widgets.segment_box import SegmentBox
 
 class PageContainer(QWidget):
     def __init__(self, page, parent=None):
@@ -10,40 +9,47 @@ class PageContainer(QWidget):
         
         # Enable receiving drop events
         self.setAcceptDrops(True)
+        self.acttive_drag_widget = None  
 
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(5, 5, 5, 5)
         self.layout.setSpacing(10)
 
+        self.page_label = QLabel("--------------------------- Page " + self.page.page_name + " ----------------------------------")
+        self.page_label.setStyleSheet("font-weight: bold; border: none;")
+        self.layout.insertWidget(0, self.page_label)
 
+    def addSegment(self, segment_box):
+        self.layout.insertWidget(self.layout.count() , segment_box)
+        segment_box.set_drag_callback(self.set_active_drag_widget)  
+
+    def addCombinedSegment(self, container, head_segment):
+        self.layout.insertWidget(self.layout.count() , container)
+        head_segment.set_drag_callback(self.set_active_drag_widget)  
+
+    def set_active_drag_widget(self, widget):
+        """Set the currently dragged widget."""
+        self.active_drag_widget = widget
     def dragEnterEvent(self, event):
-        if event.mimeData().hasFormat("application/x-segmentbox"):
-            event.acceptProposedAction()
-
-    def dragMoveEvent(self, event):
-        if event.mimeData().hasFormat("application/x-segmentbox"):
+        if self.active_drag_widget is not None:
             event.acceptProposedAction()
 
     def dropEvent(self, event):
-        dragged_box = getattr(event.source(), "segment_box", None)
-        if not dragged_box or not isinstance(dragged_box, SegmentBox):
+        dragged_box = self.active_drag_widget
+        if not dragged_box:
             return
 
         drop_y = event.position().toPoint().y()
         target_index = self._calculate_drop_index(drop_y)
 
-        old_index = self.layout.indexOf(dragged_box)
-        if old_index != -1 and old_index != target_index:
-            # 1. Update UI layout
-            self.layout.removeWidget(dragged_box)
-            if target_index > old_index:
-                target_index -= 1
-            self.layout.insertWidget(target_index, dragged_box)
-
-            # 2. Update logical data structure
-            self.sync_logical_segments()
+        # Move widget in layout directly using Python pointer
+        self.layout.removeWidget(dragged_box)
+        self.layout.insertWidget(target_index, dragged_box)
+        self.sync_logical_segments()
 
         event.acceptProposedAction()
+        
+
 
     def _calculate_drop_index(self, drop_y):
         """Find target layout index based on mouse Y coordinate."""
