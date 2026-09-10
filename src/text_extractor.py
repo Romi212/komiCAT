@@ -97,6 +97,7 @@ class TextExtractor:
     def detect_panels(self, image):
         results = self.panel_detector(image)
         detected_panels = []
+        """"
         for result in results:
             boxes = result.boxes.xyxy.cpu().numpy()  # Get bounding boxes
             for box in boxes:
@@ -104,5 +105,14 @@ class TextExtractor:
                     xmin, ymin, xmax, ymax = box
                     text_box = TextBox(xmin, xmax, ymin, ymax, "panel")
                     detected_panels.append(text_box)
-                    print(f"Detected panel at ({xmin}, {ymin}, {xmax}, {ymax})")
+                    print(f"Detected panel at ({xmin}, {ymin}, {xmax}, {ymax})")"""
+
+        for box in results[0].boxes:
+            cls = int(box.cls)  # 0=panel, 1=text
+            conf = float(box.conf)
+            xmin, ymin, xmax, ymax = box.xyxy[0].tolist()
+            if cls == 0:
+                text_box = TextBox(xmin, xmax, ymin, ymax, "panel")
+                detected_panels.append(text_box)
+                print(f"Detected panel at ({xmin}, {ymin}, {xmax}, {ymax}) w conf {conf}")
         return detected_panels

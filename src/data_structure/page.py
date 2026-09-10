@@ -1,7 +1,9 @@
 import os
 
+from data_structure.panel import Panel
 from data_structure.segment import Segment
 from data_structure.segment_combined import SegmentCombined
+from data_structure.text_box import TextBox
 
 
 class Page:
@@ -14,6 +16,7 @@ class Page:
         self.segments = []
         self.chapter = chapter
         self.extracted_bubbles = 0
+        self.detected_panels = []
     
 
     def store_detected_bubbles(self, detected_bubbles, detected_text_bubbles, detected_free_text):
@@ -28,6 +31,114 @@ class Page:
                     text_bubble.set_bubble_container(bubble)
                     remaining_bubbles.remove(bubble)
                     break
+
+    def store_detected_panels(self, detected_panels):
+        for panel in detected_panels:
+            self.detected_panels.append(Panel(panel))
+
+        self._sort_panels()
+
+    def _sort_panels(self):
+        
+        self.detected_panels = list(self._sort_subset(self.detected_panels))
+
+
+    def _sort_subset(self, panels):
+        #BaseCase only one panel left
+        if len(panels) <= 1:
+            print(f"CB: {len(panels)}")
+            return panels
+
+        #Recursive case: divide horizontaly
+        pivot_h = self._find_pivot_h(panels)
+        if pivot_h:
+            print(f"Found pivot horizontal at height: {pivot_h}:")
+            bottom_subset = list(panels)
+            top_subset = []
+            for panel in panels:
+                if panel.text_box.ymax <= pivot_h:
+                    top_subset.append(panel)
+                    bottom_subset.remove(panel)
+
+            print(top_subset)
+            print(bottom_subset)
+            if  bottom_subset and  top_subset:
+                top_sorted =  self._sort_subset(top_subset)
+                bottom_sorted = self._sort_subset(bottom_subset)
+                return top_sorted + bottom_sorted
+
+        #Recursive case: divide vertically
+        
+        pivot_v = self._find_pivot_v(panels)
+        if pivot_v:
+            print(f"found pivot verically at width: {pivot_v} ")
+            left_subset = list(panels)
+            right_subset = []
+            for panel in panels:
+                if panel.text_box.xmin >= pivot_v:
+                    right_subset.append(panel)
+                    left_subset.remove(panel)
+            print(right_subset)
+            print(left_subset)
+            if right_subset and left_subset:
+                right_sorted = self._sort_subset(right_subset)
+                left_sorted = self._sort_subset(left_subset)
+                return right_sorted + left_sorted
+    #BaseCase: more panels but no straight line can divide them, returns 1 big panel
+        print(f"Couldnt divide {len(panels)} panels")
+        return self._fusion_panels(panels)
+            
+    def _find_pivot_h(self, panels):
+        panels = list(panels)
+        panels.sort(key=lambda panel: panel.text_box.ymax)
+    
+        possible_pivot = 0
+        tolerance = 1
+        while(possible_pivot < len(panels)-1):
+            works = True
+            for i in range(possible_pivot+1, len(panels)):   
+                if panels[i].intersects_h(panels[possible_pivot].text_box.ymax + tolerance):
+                    works = False
+                    break
+            if works:
+                return panels[possible_pivot].text_box.ymax +tolerance
+            else:
+                possible_pivot+=1
+
+        return None
+
+    def _find_pivot_v(self, panels):
+        panels = list(panels)
+        panels.sort(key=lambda panel: panel.text_box.xmax)
+        possible_pivot = 0
+        tolerance = 1
+        while(possible_pivot < len(panels)-1):
+            works = True
+            for i in range(possible_pivot+1, len(panels)):   
+                if panels[i].intersects_v(panels[possible_pivot].text_box.xmax + tolerance):
+                    works = False
+                    break
+            if works:
+                break
+            else:
+                possible_pivot+=1
+
+        if possible_pivot < len(panels)-1:
+            return panels[possible_pivot].text_box.xmax + tolerance
+        else:
+            return None
+
+    def _fusion_panels(self, panels):
+        xmin = min(panel.text_box.xmin for panel in panels)
+        ymin = min(panel.text_box.ymin for panel in panels)
+        xmax = max(panel.text_box.xmax for panel in panels)
+        ymax = max(panel.text_box.ymax for panel in panels)
+        text_box = TextBox(xmin, xmax, ymin, ymax, "panel")
+        new_panel = Panel(text_box)
+        to_return = []
+        to_return.append(new_panel)
+        return to_return
+
 
     def extracted_segments(self, extracted_bubbles):
         segments = []

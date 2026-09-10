@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import (
-    QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QPushButton,
+    QGraphicsSimpleTextItem, QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QPushButton,
     QLabel, QFileDialog, QScrollArea, QGraphicsScene, QGraphicsView,
     QGraphicsPixmapItem, QGraphicsRectItem
 )
@@ -163,6 +163,24 @@ class ImageViewer(QWidget):
                 button.link_on_click(lambda checked, btn=segment.button: self.selected_bubble(btn))
                 self.scene.addItem(button)
                 segment = segment.get_child()
+        i = 0
+        for panel in self.current_page.detected_panels:
+            print(f"Panel {i}")
+            #Create a square to show panel but not button
+            x = panel.text_box.xmin
+            y = panel.text_box.ymin
+            w = panel.text_box.xmax - panel.text_box.xmin
+            h = panel.text_box.ymax - panel.text_box.ymin
+
+            panel_rect = QGraphicsRectItem( x,y,w,h )
+            panel_rect.setPen(QPen(QColor(255, 0, 0), 2))
+            self.scene.addItem(panel_rect)
+            panel_text = QGraphicsSimpleTextItem(f"Panel {i+ 1}")
+            panel_text.setPos(x + 5, y + 5)
+            panel_text.setBrush(QColor(255,0, 0))
+            self.scene.addItem(panel_text)
+            i+=1
+
             
             
     def resize_page(self):
@@ -215,19 +233,23 @@ class ImageViewer(QWidget):
             detected_bubbles, detected_text_bubbles, detected_free_text = \
                 self.text_extractor.detect_speech_bubbles(current_image)
             
-            self.current_page.store_detected_bubbles(detected_bubbles, detected_text_bubbles, detected_free_text)
+            #self.current_page.store_detected_bubbles(detected_bubbles, detected_text_bubbles, detected_free_text)
             detected_panels = self.text_extractor.detect_panels(current_image)
-            for bubble in detected_panels:
+            self.current_page.store_detected_panels(detected_panels)
+            """for bubble in detected_text_bubbles, detected_free_text:
                
                 button = TextBoxRect(
                     bubble,
                     alpha=0.6
                 )
 
-                segment = self.current_page.create_segment()
+                segment = self.current_page.create_segment(text_box=bubble)
                 segment.button = button
-                segment.text_box = bubble
-                button.set_segment(segment)
+                
+                button.set_segment(segment)"""
+
+            
+
 
                 
                 
