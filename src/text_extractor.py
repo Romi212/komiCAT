@@ -7,6 +7,7 @@ from matplotlib import text
 from data_structure.text_box import TextBox
 from transformers import AutoImageProcessor, AutoModelForObjectDetection, pipeline
 from huggingface_hub import login
+from ultralytics import YOLO
 
 load_dotenv()
 
@@ -42,6 +43,10 @@ class TextExtractor:
         self.mocr = MangaOcr(
             pretrained_model_name_or_path=local_ocr_path
         )
+
+        self.panel_detector = YOLO("./models/comic_panel_detection_model_leoxs/manga_panel_detector_fp32.pt")
+
+
 
     def _initialize_hf(self):
         self.mocr = MangaOcr()
@@ -88,4 +93,16 @@ class TextExtractor:
                 print(f"Detected {label} with confidence {score:.2f} at ({box['xmin']}, {box['ymin']}, {box['xmax']}, {box['ymax']})")
         return detected_bubbles, detected_text_bubbles, detected_free_text
     
-    
+
+    def detect_panels(self, image):
+        results = self.panel_detector(image)
+        detected_panels = []
+        for result in results:
+            boxes = result.boxes.xyxy.cpu().numpy()  # Get bounding boxes
+            for box in boxes:
+                if (box.cls == 0):
+                    xmin, ymin, xmax, ymax = box
+                    text_box = TextBox(xmin, xmax, ymin, ymax, "panel")
+                    detected_panels.append(text_box)
+                    print(f"Detected panel at ({xmin}, {ymin}, {xmax}, {ymax})")
+        return detected_panels

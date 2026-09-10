@@ -11,3 +11,4 @@ pillow
 torchvision
 python-dotenv
 symspellpy
+ultralytics

@@ -32,6 +32,17 @@ def setup_local_models():
         local_dir=base_path + "manga_ocr_model"
     )
 
+    print(" -> Downloading best comic panel detection model to "+base_path+"comic_panel_detection_model...")
+    snapshot_download(
+        repo_id="mosesb/best-comic-panel-detection",
+        local_dir=base_path + "comic_panel_detection_model"
+    )
+    print(" -> Downloading leoxs22 comic panel detection model to "+base_path+"comic_panel_detection_model_leoxs...")
+    snapshot_download(
+        repo_id="leoxs22/manga-panel-detector-yolo26n",
+        local_dir=base_path + "comic_panel_detection_model_leoxs"
+    )
+
 if __name__ == "__main__":
     print("Set up Started :3")
 

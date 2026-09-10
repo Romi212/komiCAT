@@ -216,8 +216,8 @@ class ImageViewer(QWidget):
                 self.text_extractor.detect_speech_bubbles(current_image)
             
             self.current_page.store_detected_bubbles(detected_bubbles, detected_text_bubbles, detected_free_text)
-
-            for bubble in detected_text_bubbles + detected_free_text:
+            detected_panels = self.text_extractor.detect_panels(current_image)
+            for bubble in detected_panels:
                
                 button = TextBoxRect(
                     bubble,
