@@ -190,6 +190,7 @@ class TextBoxRect(QGraphicsRectItem):
         painter.drawRoundedRect(rect, 4, 4)
 
         # Draw selection number text
+        self.number = self.text_box.index
         if self.number > 0 and self.state == "not_extracted":
             painter.setPen(QPen(QColor("white")))
             painter.setFont(QFont("Arial", int(min(rect.height() * 0.5, 36)), QFont.Weight.Bold))

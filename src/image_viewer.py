@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import (
     QLabel, QFileDialog, QScrollArea, QGraphicsScene, QGraphicsView,
     QGraphicsPixmapItem, QGraphicsRectItem
 )
-from PyQt6.QtGui import QPixmap, QImage, QColor, QPen, QIcon
+from PyQt6.QtGui import QFont, QPixmap, QImage, QColor, QPen, QIcon
 from PyQt6.QtCore import Qt, QSize, QRect
 from PIL import Image
 import os
@@ -175,11 +175,12 @@ class ImageViewer(QWidget):
             panel_rect = QGraphicsRectItem( x,y,w,h )
             panel_rect.setPen(QPen(QColor(255, 0, 0), 2))
             self.scene.addItem(panel_rect)
-            panel_text = QGraphicsSimpleTextItem(f"Panel {i+ 1}")
+            panel_text = QGraphicsSimpleTextItem(f"Panel {i + 1}")
             panel_text.setPos(x + 5, y + 5)
-            panel_text.setBrush(QColor(255,0, 0))
+            panel_text.setBrush(QColor(255, 0, 0))
+            panel_text.setFont(QFont("Arial", 24, QFont.Weight.Bold))
             self.scene.addItem(panel_text)
-            i+=1
+            i += 1
 
             
             
@@ -230,13 +231,16 @@ class ImageViewer(QWidget):
         
         if self.current_page:
             current_image = self.current_page.image
+            detected_panels = self.text_extractor.detect_panels(current_image)
+            self.current_page.store_detected_panels(detected_panels)
+            
+            
             detected_bubbles, detected_text_bubbles, detected_free_text = \
                 self.text_extractor.detect_speech_bubbles(current_image)
             
-            #self.current_page.store_detected_bubbles(detected_bubbles, detected_text_bubbles, detected_free_text)
-            detected_panels = self.text_extractor.detect_panels(current_image)
-            self.current_page.store_detected_panels(detected_panels)
-            """for bubble in detected_text_bubbles, detected_free_text:
+            self.current_page.store_detected_bubbles(detected_bubbles, detected_text_bubbles, detected_free_text)
+            
+            for bubble in detected_text_bubbles + detected_free_text:
                
                 button = TextBoxRect(
                     bubble,
@@ -246,7 +250,7 @@ class ImageViewer(QWidget):
                 segment = self.current_page.create_segment(text_box=bubble)
                 segment.button = button
                 
-                button.set_segment(segment)"""
+                button.set_segment(segment)
 
             
 

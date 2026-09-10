@@ -32,6 +32,14 @@ class Page:
                     remaining_bubbles.remove(bubble)
                     break
 
+        base= 1
+        for panel in self.detected_panels:
+            for bubble in detected_text_bubbles + detected_free_text:
+                if panel.contains_bubble(bubble):
+                    panel.add_bubble(bubble)
+            base = panel.sort_bubbles(base)
+            
+
     def store_detected_panels(self, detected_panels):
         for panel in detected_panels:
             self.detected_panels.append(Panel(panel))
@@ -46,7 +54,6 @@ class Page:
     def _sort_subset(self, panels):
         #BaseCase only one panel left
         if len(panels) <= 1:
-            print(f"CB: {len(panels)}")
             return panels
 
         #Recursive case: divide horizontaly
@@ -60,15 +67,12 @@ class Page:
                     top_subset.append(panel)
                     bottom_subset.remove(panel)
 
-            print(top_subset)
-            print(bottom_subset)
             if  bottom_subset and  top_subset:
                 top_sorted =  self._sort_subset(top_subset)
                 bottom_sorted = self._sort_subset(bottom_subset)
                 return top_sorted + bottom_sorted
 
         #Recursive case: divide vertically
-        
         pivot_v = self._find_pivot_v(panels)
         if pivot_v:
             print(f"found pivot verically at width: {pivot_v} ")
@@ -78,14 +82,11 @@ class Page:
                 if panel.text_box.xmin >= pivot_v:
                     right_subset.append(panel)
                     left_subset.remove(panel)
-            print(right_subset)
-            print(left_subset)
             if right_subset and left_subset:
                 right_sorted = self._sort_subset(right_subset)
                 left_sorted = self._sort_subset(left_subset)
                 return right_sorted + left_sorted
     #BaseCase: more panels but no straight line can divide them, returns 1 big panel
-        print(f"Couldnt divide {len(panels)} panels")
         return self._fusion_panels(panels)
             
     def _find_pivot_h(self, panels):
@@ -202,9 +203,10 @@ class Page:
                 text_bubble.xmax <= bubble.xmax and
                 text_bubble.ymax <= bubble.ymax)
 
-    def create_segment(self):
+    def create_segment(self, text_box):
         segment = Segment(self, len(self.segments))
         self.segments.append(segment)
+        segment.text_box = text_box
         return segment
     
     def get_data(self):
