@@ -38,7 +38,15 @@ class Page:
                 if panel.contains_bubble(bubble):
                     panel.add_bubble(bubble)
             base = panel.sort_bubbles(base)
-            
+
+    def sort_segments(self):
+        base = 1
+        sorted_segs = []
+        for panel in self.detected_panels:
+            print(f"sorting panel {base}")
+            base, panel_segs = panel.sort_segments(base)
+            sorted_segs += panel_segs
+        self.segments = sorted_segs
 
     def store_detected_panels(self, detected_panels):
         for panel in detected_panels:
@@ -98,7 +106,7 @@ class Page:
         while(possible_pivot < len(panels)-1):
             works = True
             for i in range(possible_pivot+1, len(panels)):   
-                if panels[i].intersects_h(panels[possible_pivot].text_box.ymax + tolerance):
+                if panels[i].text_box.intersects_h(panels[possible_pivot].text_box.ymax + tolerance):
                     works = False
                     break
             if works:
@@ -116,7 +124,7 @@ class Page:
         while(possible_pivot < len(panels)-1):
             works = True
             for i in range(possible_pivot+1, len(panels)):   
-                if panels[i].intersects_v(panels[possible_pivot].text_box.xmax + tolerance):
+                if panels[i].text_box.intersects_v(panels[possible_pivot].text_box.xmax + tolerance):
                     works = False
                     break
             if works:
@@ -207,8 +215,14 @@ class Page:
         segment = Segment(self, len(self.segments))
         self.segments.append(segment)
         segment.text_box = text_box
+        self._asign_panel(segment)
         return segment
-    
+
+    def _asign_panel(self,segment):
+        for panel in self.detected_panels:
+            if panel.contains_segment(segment):
+                panel.add_segment(segment)
+                segment.set_panel(panel)
     def get_data(self):
         return {
             "file_path": self.file_path,

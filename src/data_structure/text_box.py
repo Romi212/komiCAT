@@ -13,10 +13,14 @@ class TextBox:
     def set_bubble_container(self, bubble_container):
         self.bubble_container = bubble_container
 
-
+    def intersects_h(self, line):
+            return (self.ymin < line) and (self.ymax > line)
+    
+    def intersects_v(self, line):
+            return (self.xmin < line) and (self.xmax > line)
     def intersects(self, other):
         #Check if self intersects with another TextBox with a tolerance of 5 pixels
-        tolerance = 5
+        tolerance = 1
         return not (self.xmax + tolerance < other.xmin or
                     self.xmin - tolerance > other.xmax or
                     self.ymax + tolerance < other.ymin or

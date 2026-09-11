@@ -238,7 +238,7 @@ class ImageViewer(QWidget):
             detected_bubbles, detected_text_bubbles, detected_free_text = \
                 self.text_extractor.detect_speech_bubbles(current_image)
             
-            self.current_page.store_detected_bubbles(detected_bubbles, detected_text_bubbles, detected_free_text)
+            #self.current_page.store_detected_bubbles(detected_bubbles, detected_text_bubbles, detected_free_text)
             
             for bubble in detected_text_bubbles + detected_free_text:
                
@@ -252,6 +252,7 @@ class ImageViewer(QWidget):
                 
                 button.set_segment(segment)
 
+            self.current_page.sort_segments()
             
 
 

@@ -192,7 +192,7 @@ class TextBoxRect(QGraphicsRectItem):
         # Draw selection number text
         self.number = self.text_box.index
         if self.number > 0 and self.state == "not_extracted":
-            painter.setPen(QPen(QColor("white")))
+            painter.setPen(QPen(QColor("red")))
             painter.setFont(QFont("Arial", int(min(rect.height() * 0.5, 36)), QFont.Weight.Bold))
             painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, str(self.number))
 

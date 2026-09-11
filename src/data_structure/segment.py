@@ -13,6 +13,18 @@ class Segment:
         self.text_box = None
         self.button = None
         self.segment_box = None 
+        self.panel = None
+
+    def set_panel(self, panel):
+        if not self.panel:
+            self.panel = panel
+        # TODO : si esta en 2 dejar en el que este más proporción
+
+    def set_nro(self, nro):
+        self.nro = nro
+        if self.text_box:
+            self.text_box.index = nro
+        return nro
 
     def set_segment_box(self, segment_box):
         self.segment_box = segment_box

@@ -9,7 +9,13 @@ class SegmentCombined(Segment):
 
     def set_next_segment(self, next_segment):
         self.next_segment = next_segment
-    
+
+    def set_nro(self, nro):
+        super().set_nro(nro)
+        if self.next_segment:
+            return self.next_segment.set_nro(nro+1)
+        else:
+            return nro
 
     def get_data(self):
         
@@ -43,3 +49,14 @@ class SegmentCombined(Segment):
     
     def get_child(self):
         return self.next_segment
+
+    def clone_segment(self, segment):
+        self.page = segment.page
+        self.nro = segment.nro
+        self.source_text = segment.source_text
+        self.translation = segment.translation
+
+        self.text_box = segment.text_box
+        self.button = segment.button
+        self.segment_box = segment.segment_box
+        self.panel = segment.panel
