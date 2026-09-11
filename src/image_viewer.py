@@ -140,6 +140,7 @@ class ImageViewer(QWidget):
                 # Clear scene and add pixmap
                 for item in self.scene.items():
                     self.scene.removeItem(item)
+                self.selected_bubbles = []
                 self.scene.addPixmap(current_pixmap)
                 self.image_index_label.setText(self.current_page.page_name)
                 self.status_label.setText(f"Image loaded: {self.current_page.page_name}")
@@ -150,37 +151,37 @@ class ImageViewer(QWidget):
         #Add bubble butons if it had been detected before
         
         
-        for segment_head in self.current_page.segments:
-            segment = segment_head
-            while(segment):
-                if(segment.button):
-                    button = segment.button
-                else:
-                    button = TextBoxRect(segment.text_box, alpha=0.6)
-                    segment.button = button
-                    button.set_segment(segment)
+            for segment_head in self.current_page.segments:
+                segment = segment_head
+                while(segment):
+                    if(segment.button):
+                        button = segment.button
+                    else:
+                        button = TextBoxRect(segment.text_box, alpha=0.6)
+                        segment.button = button
+                        button.set_segment(segment)
+                    self.selected_bubbles.append(button)
+                    button.link_on_click(lambda checked, btn=segment.button: self.selected_bubble(btn))
+                    self.scene.addItem(button)
+                    segment = segment.get_child()
+            i = 0
+            for panel in self.current_page.detected_panels:
+                print(f"Panel {i}")
+                #Create a square to show panel but not button
+                x = panel.text_box.xmin
+                y = panel.text_box.ymin
+                w = panel.text_box.xmax - panel.text_box.xmin
+                h = panel.text_box.ymax - panel.text_box.ymin
 
-                button.link_on_click(lambda checked, btn=segment.button: self.selected_bubble(btn))
-                self.scene.addItem(button)
-                segment = segment.get_child()
-        i = 0
-        for panel in self.current_page.detected_panels:
-            print(f"Panel {i}")
-            #Create a square to show panel but not button
-            x = panel.text_box.xmin
-            y = panel.text_box.ymin
-            w = panel.text_box.xmax - panel.text_box.xmin
-            h = panel.text_box.ymax - panel.text_box.ymin
-
-            panel_rect = QGraphicsRectItem( x,y,w,h )
-            panel_rect.setPen(QPen(QColor(255, 0, 0), 2))
-            self.scene.addItem(panel_rect)
-            panel_text = QGraphicsSimpleTextItem(f"Panel {i + 1}")
-            panel_text.setPos(x + 5, y + 5)
-            panel_text.setBrush(QColor(255, 0, 0))
-            panel_text.setFont(QFont("Arial", 24, QFont.Weight.Bold))
-            self.scene.addItem(panel_text)
-            i += 1
+                panel_rect = QGraphicsRectItem( x,y,w,h )
+                panel_rect.setPen(QPen(QColor(255, 0, 0), 2))
+                self.scene.addItem(panel_rect)
+                panel_text = QGraphicsSimpleTextItem(f"Panel {i + 1}")
+                panel_text.setPos(x + 5, y + 5)
+                panel_text.setBrush(QColor(255, 0, 0))
+                panel_text.setFont(QFont("Arial", 24, QFont.Weight.Bold))
+                self.scene.addItem(panel_text)
+                i += 1
 
             
             
@@ -264,6 +265,7 @@ class ImageViewer(QWidget):
         if len(self.selected_bubbles) == 0:
             self.status_label.setText("No bubbles selected, please select bubbles")
         else:
+            #Updates actual coordinates if button was moved by user
             for button in self.selected_bubbles:
 
                 scene_rect = button.mapToScene(button.rect()).boundingRect()
@@ -272,7 +274,8 @@ class ImageViewer(QWidget):
                 button.text_box.ymin = scene_rect.top()
                 button.text_box.xmax = scene_rect.right()
                 button.text_box.ymax = scene_rect.bottom()
-                    
+
+            #Extracts texts and stores it directly in text_boxes        
             self.text_extractor.extract_text(
                 self.current_page.image,
                 [button.text_box for button in self.selected_bubbles]

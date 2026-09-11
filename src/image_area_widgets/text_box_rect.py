@@ -16,6 +16,7 @@ class TextBoxRect(QGraphicsRectItem):
 
         self.segment = None
         self.text_box = text_box
+        self.number = self.text_box.index
         self.text = ""
         self.number = 0
         self.onClick = None
@@ -25,6 +26,8 @@ class TextBoxRect(QGraphicsRectItem):
 
         self.has_been_extracted_flag = False
         self.state = "not_extracted" # not_extracted, checked, extracted, focused
+        if self.number >0 :
+            self.state = "checked"
         self.style_config = self.STYLES.get(text_box.label, self.STYLES["other"])
 
                 
@@ -40,6 +43,7 @@ class TextBoxRect(QGraphicsRectItem):
     def link_on_click(self, callback):
             self.onClick = callback
 
+
     def _on_clicked(self):
         """Wrapper that passes the button object (self) to the onClick callback"""
         if self.onClick:
@@ -49,6 +53,7 @@ class TextBoxRect(QGraphicsRectItem):
             print(number)
             self.number = number
             self.text = f"{number}"
+            self.state = "checked"
             self.update()
 
     def uncheck(self):
@@ -190,8 +195,8 @@ class TextBoxRect(QGraphicsRectItem):
         painter.drawRoundedRect(rect, 4, 4)
 
         # Draw selection number text
-        self.number = self.text_box.index
-        if self.number > 0 and self.state == "not_extracted":
+        
+        if self.number > 0 and self.state == "checked":
             painter.setPen(QPen(QColor("red")))
             painter.setFont(QFont("Arial", int(min(rect.height() * 0.5, 36)), QFont.Weight.Bold))
             painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, str(self.number))

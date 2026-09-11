@@ -148,8 +148,19 @@ class Page:
         to_return.append(new_panel)
         return to_return
 
-
     def extracted_segments(self, extracted_bubbles):
+        extracted_segments = []
+        for bubble in extracted_bubbles:
+            segment = bubble.segment
+            segment.nro = bubble.text_box.index
+            segment.text_extracted(bubble.text_box.text)
+            bubble.has_been_extracted()
+            extracted_segments.append(segment)
+        self.extracted_bubbles += len(extracted_bubbles)
+        return extracted_segments
+        
+
+    def extracted_segments_and_combine(self, extracted_bubbles):
         segments = []
         base_index = self.extracted_bubbles
         combined_segment_head = None

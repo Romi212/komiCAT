@@ -24,6 +24,8 @@ class Segment:
         self.nro = nro
         if self.text_box:
             self.text_box.index = nro
+        if self.button:
+            self.button.selected(nro)
         return nro
 
     def set_segment_box(self, segment_box):
