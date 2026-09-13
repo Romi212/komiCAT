@@ -105,3 +105,6 @@ class ProjectWindow(QMainWindow):
     def set_current_page(self, page):
         self.chapter.set_current_page(page)
         self.image_viewer._setup_page()
+
+    def set_panel_zoom(self,panel):
+        self.image_viewer.set_panel_zoom(panel)

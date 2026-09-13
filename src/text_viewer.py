@@ -16,8 +16,8 @@ class TextViewer(QWidget):
         self.drag_start = None
         self.controller = controller
         self.page_containers = []
-        
-        self.text_size = 12  # Default text size
+        self.current_panel = None
+        self.text_size = 14  # Default text size
         
         # Create layout
         layout = QVBoxLayout()
@@ -108,7 +108,7 @@ class TextViewer(QWidget):
         self.spell_checker = SpellChecker(language=chapter.language)  # Initialize the spell checker for Spanish
         
         for page in chapter.pages:
-            page_container = self._create_page_container()
+            page_container = self._create_page_container(page)
             self.scroll_layout.insertWidget(self.scroll_layout.count() - 1, page_container)
             self.page_containers.append(page_container)
             
@@ -155,6 +155,10 @@ class TextViewer(QWidget):
         
         if next_segment.segment.page != self.chapter.current_page:
             self.controller.set_current_page(next_segment.segment.page)  # Switch to the page of the next segment
+        
+        if next_segment.segment.panel != self.current_panel:
+            self.current_panel = next_segment.segment.panel
+            self.controller.set_panel_zoom(next_segment.segment.panel)
         next_segment.text_area.setFocus()
         # Scroll to make it visible
         self.scroll_area.ensureWidgetVisible(next_segment)
@@ -195,13 +199,15 @@ class TextViewer(QWidget):
                         return True
         return super().eventFilter(obj, event)
 
-    def _create_page_container(self):
-        page_container = PageContainer(page=self.chapter.get_current_page(), parent=self)
+    def _create_page_container(self,page = None):
+        if not page:
+            page = self.chapter.get_current_page()
+        page_container = PageContainer(page=page, parent=self)
         return page_container
 
     def _create_page_containers(self):
         self.page_containers = []
         for page in self.chapter.pages:
-            page_container = self._create_page_container()
+            page_container = self._create_page_container(page = page)
             self.scroll_layout.insertWidget(self.scroll_layout.count() - 1, page_container)
             self.page_containers.append(page_container)

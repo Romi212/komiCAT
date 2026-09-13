@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import (
     QGraphicsPixmapItem, QGraphicsRectItem
 )
 from PyQt6.QtGui import QFont, QPixmap, QImage, QColor, QPen, QIcon
-from PyQt6.QtCore import Qt, QSize, QRect
+from PyQt6.QtCore import QRectF, Qt, QSize, QRect
 from PIL import Image
 import os
 
@@ -76,7 +76,7 @@ class ImageViewer(QWidget):
 
         self.batch_extract_text_button = QPushButton("Extract all text")
         self.batch_extract_text_button.clicked.connect(self.batch_extract_text)
-        
+        self.button_layout.addWidget(self.batch_extract_text_button)
         
         
         self.extract_text_button = QPushButton("Extract Text")
@@ -316,8 +316,8 @@ class ImageViewer(QWidget):
             self.detect_bubbles()
         self.current_page = self.chapter.get_current_page()
         self._setup_page()
-        self.button_layout.removeWidget(self.detect_bubbles_button)
-        self.button_layout.addWidget(self.batch_extract_text_button)
+        
+        
 
     def detect_page_bubbles(self):
         if self.current_page:
@@ -345,3 +345,28 @@ class ImageViewer(QWidget):
         # add a QGraphicsRectItem
         self.scene.addItem(rect)
         rect.link_on_click(lambda checked, btn=rect: self.selected_bubble(btn))
+
+
+    def set_panel_zoom(self,panel):
+        if not panel:
+            print("Panel null")
+
+        # Extract panel coordinates
+        x = panel.text_box.xmin
+        y = panel.text_box.ymin
+        w = panel.text_box.xmax - panel.text_box.xmin
+        h = panel.text_box.ymax - panel.text_box.ymin
+
+        # Define panel target rectangle in scene coordinates
+        panel_rect = QRectF(x, y, w, h)
+
+        # Optional: Add padding around panel (e.g., 20px) so borders aren't clipped
+        margin = 20
+        panel_rect_padded = panel_rect.adjusted(-margin, -margin, margin, margin)
+
+        # Scale view to fit the panel area
+        self.view.fitInView(panel.panel_rect, Qt.AspectRatioMode.KeepAspectRatio)
+
+        # Sync internal zoom factor with current transform matrix
+        self.zoom_factor = self.view.transform().m11()
+        self.status_label.setText(f"Focused on panel | Zoom: {self.zoom_factor:.2f}x")
