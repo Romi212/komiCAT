@@ -16,6 +16,7 @@ class Page:
         self.segments = []
         self.chapter = chapter
         self.extracted_bubbles = 0
+        self.segments_amount = 0
         self.detected_panels = []
     
 
@@ -148,18 +149,27 @@ class Page:
         to_return.append(new_panel)
         return to_return
 
-    def extracted_segments(self, extracted_bubbles):
-        extracted_segments = []
-        for bubble in extracted_bubbles:
-            segment = bubble.segment
-            segment.nro = bubble.text_box.index
-            segment.text_extracted(bubble.text_box.text)
-            bubble.has_been_extracted()
-            extracted_segments.append(segment)
-        self.extracted_bubbles += len(extracted_bubbles)
-        return extracted_segments
-        
+    def get_boxes_to_extract(self, all_segments):
+        boxes = []
+        for seg in self.segments:
+            child = seg
+            while (child):
+                boxes.append(child.text_box)
+                child = child.get_child()
+        return boxes
 
+    def extracted_segments(self, extracted_bubbles):
+        if(self.segments_amount == len(extracted_bubbles)):
+            for bubble in extracted_bubbles:
+                segment = bubble.segment
+                if(not (segment.nro == bubble.index)):
+                    print("has been edited")
+                segment.text_extracted(bubble.text)
+                if segment.button:
+                    segment.button.has_been_extracted()
+            self.extracted_bubbles += len(extracted_bubbles)
+        return self.segments
+        
     def extracted_segments_and_combine(self, extracted_bubbles):
         segments = []
         base_index = self.extracted_bubbles
@@ -226,7 +236,9 @@ class Page:
         segment = Segment(self, len(self.segments))
         self.segments.append(segment)
         segment.text_box = text_box
+        text_box.segment = segment
         self._asign_panel(segment)
+        self.segments_amount +=1
         return segment
 
     def _asign_panel(self,segment):

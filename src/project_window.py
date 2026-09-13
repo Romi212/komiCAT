@@ -36,6 +36,9 @@ class ProjectWindow(QMainWindow):
         load_action = file_menu.addAction("Load Project")
         load_action.triggered.connect(self.load_project)
 
+        file_menu = self.menu_bar.addMenu("Project")
+        
+
         load_action = file_menu.addAction("Export Translation")
         load_action.triggered.connect(self.export_translation)
 
@@ -70,9 +73,9 @@ class ProjectWindow(QMainWindow):
 
   
 
-    def extracted(self, extracted_bubbles):
-        segments = self.chapter.get_current_page().extracted_segments(extracted_bubbles)
-        self.text_viewer.add_extracted_segments(segments)
+    def extracted(self, page, extracted_bubbles):
+        segments = page.extracted_segments(extracted_bubbles)
+        self.text_viewer.add_extracted_segments(page,segments)
 
 
     def save_project(self):

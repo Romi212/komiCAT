@@ -57,6 +57,8 @@ class SegmentCombined(Segment):
         self.translation = segment.translation
 
         self.text_box = segment.text_box
+        self.text_box.segment = self
         self.button = segment.button
+        self.button.segment = self
         self.segment_box = segment.segment_box
         self.panel = segment.panel

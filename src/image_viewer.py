@@ -60,33 +60,38 @@ class ImageViewer(QWidget):
         layout.addWidget(self.status_label)
         
         # TODO change text to include translations
-        button_layout = QHBoxLayout()
+        self.button_layout = QHBoxLayout()
         
         self.open_button = QPushButton("Open Images")
         self.open_button.clicked.connect(self.open_images)
-        button_layout.addWidget(self.open_button)
+        self.button_layout.addWidget(self.open_button)
+
+        self.detect_bubbles_button = QPushButton("Batch detect Bubbles")
+        self.detect_bubbles_button.clicked.connect(self.detect_all_pages)
+        self.button_layout.addWidget(self.detect_bubbles_button)
         
         self.reset_zoom_button = QPushButton("Detect page Bubbles")
         self.reset_zoom_button.clicked.connect(self.detect_page_bubbles)
-        button_layout.addWidget(self.reset_zoom_button)
+        self.button_layout.addWidget(self.reset_zoom_button)
+
+        self.batch_extract_text_button = QPushButton("Extract all text")
+        self.batch_extract_text_button.clicked.connect(self.batch_extract_text)
         
-        self.detect_bubbles_button = QPushButton("Batch detect Bubbles")
-        self.detect_bubbles_button.clicked.connect(self.detect_all_pages)
-        button_layout.addWidget(self.detect_bubbles_button)
+        
         
         self.extract_text_button = QPushButton("Extract Text")
         self.extract_text_button.clicked.connect(self.extract_text)
-        button_layout.addWidget(self.extract_text_button)
+        self.button_layout.addWidget(self.extract_text_button)
 
         self.clear_selection_button = QPushButton("Clear Selection")
         self.clear_selection_button.clicked.connect(self.clear_selection)
-        button_layout.addWidget(self.clear_selection_button)
+        #button_layout.addWidget(self.clear_selection_button)
 
         self.add_bubble_button = QPushButton("Add Bubble")
         self.add_bubble_button.clicked.connect(self.add_bubble)
-        button_layout.addWidget(self.add_bubble_button)
+        #button_layout.addWidget(self.add_bubble_button)
         
-        layout.addLayout(button_layout)
+        layout.addLayout(self.button_layout)
         self.setLayout(layout)
         self.setWindowTitle("Image Viewer")
         self.resize(1000, 800)
@@ -160,7 +165,7 @@ class ImageViewer(QWidget):
                         button = TextBoxRect(segment.text_box, alpha=0.6)
                         segment.button = button
                         button.set_segment(segment)
-                    self.selected_bubbles.append(button)
+                    
                     button.link_on_click(lambda checked, btn=segment.button: self.selected_bubble(btn))
                     self.scene.addItem(button)
                     segment = segment.get_child()
@@ -263,7 +268,9 @@ class ImageViewer(QWidget):
     def extract_text(self):
         
         if len(self.selected_bubbles) == 0:
-            self.status_label.setText("No bubbles selected, please select bubbles")
+            bubbles = self.current_page.get_boxes_to_extract(all_segments = True)
+            self.text_extractor.extract_text(self.current_page.image,bubbles)
+            self.controller.extracted(self.current_page, bubbles)
         else:
             #Updates actual coordinates if button was moved by user
             for button in self.selected_bubbles:
@@ -280,7 +287,7 @@ class ImageViewer(QWidget):
                 self.current_page.image,
                 [button.text_box for button in self.selected_bubbles]
             )
-            self.controller.extracted(self.selected_bubbles)
+            self.controller.extracted(self.current_page,self.selected_bubbles)
             self.selected_bubbles = []  # Clear selection after extraction
 
     def clear_selection(self):
@@ -309,11 +316,21 @@ class ImageViewer(QWidget):
             self.detect_bubbles()
         self.current_page = self.chapter.get_current_page()
         self._setup_page()
+        self.button_layout.removeWidget(self.detect_bubbles_button)
+        self.button_layout.addWidget(self.batch_extract_text_button)
 
     def detect_page_bubbles(self):
         if self.current_page:
             self.detect_bubbles()
             self._setup_page()
+
+    def batch_extract_text(self):
+        for page in self.chapter.pages:
+            self.current_page = page
+            self.extract_text()
+        self.current_page = self.chapter.get_current_page()
+        self._setup_page()
+
 
     def add_bubble(self):
        

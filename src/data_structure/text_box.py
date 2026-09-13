@@ -8,6 +8,7 @@ class TextBox:
         self.label = label
         self.text = ""
         self.index = 0
+        self.segment = None
         
 
     def set_bubble_container(self, bubble_container):

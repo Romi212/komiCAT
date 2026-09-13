@@ -42,7 +42,8 @@ class Panel:
     def _sort_subset(self, segments):
 
         if len(segments) <= 1:
-            
+            if segments: 
+                print(segments[0].text_box.xmin,segments[0].text_box.ymin)
             return segments
 
 
@@ -51,7 +52,7 @@ class Panel:
             print(f"found v pivot in: {pivot_v} ")
             left_segs = segments.copy()
             right_segs = []
-            for seg in left_segs:
+            for seg in segments:
                 if seg.text_box.xmin >= pivot_v:
                     right_segs.append(seg)
                     left_segs.remove(seg)
@@ -69,7 +70,7 @@ class Panel:
             top_segs = segments.copy()
             bottom_segs = []
 
-            for seg in top_segs:
+            for seg in segments:
                 if seg.text_box.ymin >= pivot_h:
                     bottom_segs.append(seg) 
                     top_segs.remove(seg)   

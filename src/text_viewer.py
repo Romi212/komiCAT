@@ -57,10 +57,10 @@ class TextViewer(QWidget):
         
         layout.addLayout(button_layout)
 
-    def add_extracted_segments(self, segments):
+    def add_extracted_segments(self,page, segments):
         if not self.page_containers:
             self._create_page_containers()
-        page_container = self.page_containers[self.chapter.current_page]
+        page_container = self.page_containers[page.number]
         self.create_segment_boxes(segments, page_container)
 
     #Called from ProjectWindow when the user clicks the "Extract" button, passing the list of segments with the source text gud

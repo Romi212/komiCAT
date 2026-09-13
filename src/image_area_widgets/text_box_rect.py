@@ -24,12 +24,16 @@ class TextBoxRect(QGraphicsRectItem):
         self._is_dragging = False
         self._has_moved = False
 
-        self.has_been_extracted_flag = False
-        self.state = "not_extracted" # not_extracted, checked, extracted, focused
-        if self.number >0 :
-            self.state = "checked"
+        if(self.text_box.text == ""):
+            self.has_been_extracted_flag = False
+            self.state = "not_extracted" # not_extracted, checked, extracted, focused
+            if self.number >0 :
+                self.state = "checked"
+        else:
+            self.has_been_extracted_flag = True
+            self.state = "extracted" # not_extracted, checked, extracted, focused
         self.style_config = self.STYLES.get(text_box.label, self.STYLES["other"])
-
+        
                 
         self.setPos(text_box.xmin, text_box.ymin)
         self.setFlags(
