@@ -12,3 +12,5 @@ torchvision
 python-dotenv
 symspellpy
 ultralytics
+jamdict
+gdown

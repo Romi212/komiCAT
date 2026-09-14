@@ -365,7 +365,7 @@ class ImageViewer(QWidget):
         panel_rect_padded = panel_rect.adjusted(-margin, -margin, margin, margin)
 
         # Scale view to fit the panel area
-        self.view.fitInView(panel.panel_rect, Qt.AspectRatioMode.KeepAspectRatio)
+        self.view.fitInView(panel_rect_padded, Qt.AspectRatioMode.KeepAspectRatio)
 
         # Sync internal zoom factor with current transform matrix
         self.zoom_factor = self.view.transform().m11()

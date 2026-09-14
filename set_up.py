@@ -2,6 +2,10 @@
 import os
 import subprocess
 import sys
+import re
+import requests
+import gdown,lzma
+import tarfile
 
 def install_dependencies():
     try:
@@ -12,7 +16,56 @@ def install_dependencies():
         print(f"Error: Failed to install dependencies. {e}")
         sys.exit(1)
 
+def install_jamdict_db():
+    drive_url_or_id = "https://drive.google.com/file/d/1QZRzOoMF4CGlkdl0FyU7ledAZLRlpoom/view?usp=sharing"
+    # Extract file ID from Drive link if a full URL is provided
+    drive_url = "https://drive.google.com/file/d/1QZRzOoMF4CGlkdl0FyU7ledAZLRlpoom/view?usp=sharing"
+    
+    target_dir = os.path.expanduser("~\\.jamdict\\data")
+    os.makedirs(target_dir, exist_ok=True)
+    
+    temp_download = os.path.join(target_dir, "jamdict_download.tmp")
+    db_path = os.path.join(target_dir, "jamdict.db")
 
+    print("Downloading database from Google Drive...")
+    gdown.download(url=drive_url, output=temp_download, quiet=False)
+
+    # 1. Verify the download isn't an HTML error page
+    with open(temp_download, "rb") as f:
+        header = f.read(100)
+        if b"<html" in header.lower() or b"<!doctype html" in header.lower():
+            raise RuntimeError("Downloaded file is an HTML page instead of the database archive. Check Drive link permissions.")
+
+    print("Decompressing database...")
+
+    # 2. Try raw .xz decompression first (using built-in lzma)
+    decompressed = False
+    try:
+        with lzma.open(temp_download, "rb") as f_in, open(db_path, "wb") as f_out:
+            f_out.write(f_in.read())
+        print(f"Successfully decompressed raw .xz file to {db_path}")
+        decompressed = True
+    except Exception:
+        pass
+
+    # 3. Fallback to .tar.xz archive extraction if raw .xz failed
+    if not decompressed:
+        try:
+            with tarfile.open(temp_download, "r:xz") as tar:
+                for member in tar.getmembers():
+                    if member.name.endswith("jamdict.db"):
+                        member.name = os.path.basename(member.name)
+                        tar.extract(member, path=target_dir)
+                        break
+            print(f"Successfully extracted .tar.xz archive to {db_path}")
+        except Exception as e:
+            if os.path.exists(temp_download):
+                os.remove(temp_download)
+            raise RuntimeError(f"Could not extract or decompress archive: {e}")
+
+    # Clean up temporary download file
+    if os.path.exists(temp_download):
+        os.remove(temp_download)
 
 def setup_local_models():
     from huggingface_hub import snapshot_download
@@ -48,5 +101,7 @@ if __name__ == "__main__":
 
     print("Downloading required libraries...")
     install_dependencies()
+    print("Downloading jmdict database")
+    install_jamdict_db()
     print("Setting up local models...")
     setup_local_models()
