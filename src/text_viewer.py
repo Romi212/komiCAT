@@ -3,7 +3,8 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QKeyEvent
 from text_area_widgets.page_container import PageContainer
 from text_area_widgets.segment_box import SegmentBox
-from spell_checker import SpellChecker
+from tools.jp_dictionaries import JPDictionary
+from tools.spell_checker import SpellChecker
 
 
 class TextViewer(QWidget):
@@ -92,7 +93,7 @@ class TextViewer(QWidget):
         
     
     def create_segment(self, logic_segment):
-        segment = SegmentBox(self.spell_checker,logic_segment, self.text_size)
+        segment = SegmentBox(self.spell_checker, self.jp_dict,logic_segment, self.text_size)
         
         self.segment_boxes.append(segment)
         # Install event filter to intercept Tab key presses
@@ -106,6 +107,7 @@ class TextViewer(QWidget):
     def load_chapter(self, chapter):
         self.chapter = chapter
         self.spell_checker = SpellChecker(language=chapter.language)  # Initialize the spell checker for Spanish
+        self.jp_dict = JPDictionary()
         
         for page in chapter.pages:
             page_container = self._create_page_container(page)

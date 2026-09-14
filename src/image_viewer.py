@@ -9,7 +9,7 @@ from PIL import Image
 import os
 
 from image_area_widgets.text_box_rect import TextBoxRect
-from text_extractor import TextExtractor
+from tools.text_extractor import TextExtractor
 from data_structure.text_box import TextBox
 from data_structure.page import Page
 from data_structure.segment import Segment

@@ -6,7 +6,7 @@ from create_project_window import CreateProjectWindow
 from process.background_worker import BackgroundWorker
 from project_loader import ProjectLoader
 from project_window import ProjectWindow
-from text_extractor import TextExtractor
+from tools.text_extractor import TextExtractor
 from PyQt6.QtCore import QThreadPool
 
 

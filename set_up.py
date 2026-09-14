@@ -2,9 +2,7 @@
 import os
 import subprocess
 import sys
-import re
-import requests
-import gdown,lzma
+import lzma
 import tarfile
 
 def install_dependencies():
@@ -17,6 +15,8 @@ def install_dependencies():
         sys.exit(1)
 
 def install_jamdict_db():
+
+    import gdown
     drive_url_or_id = "https://drive.google.com/file/d/1QZRzOoMF4CGlkdl0FyU7ledAZLRlpoom/view?usp=sharing"
     # Extract file ID from Drive link if a full URL is provided
     drive_url = "https://drive.google.com/file/d/1QZRzOoMF4CGlkdl0FyU7ledAZLRlpoom/view?usp=sharing"

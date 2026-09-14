@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QApplication, QHBoxLayout, QMenu, QWidget, QVBoxLayo
 from PyQt6.QtCore import QMimeData, Qt
 from PyQt6.QtGui import QDrag, QKeyEvent, QTextCursor, QTextCharFormat, QColor
 from text_area_widgets.translation_text_edit import TranslationTextEdit
+from text_area_widgets.source_text_edit import SourceTextEdit
 
 class DragHandle(QLabel):
     """Grip icon placed on the left side of SegmentBox to initiate dragging."""
@@ -63,9 +64,10 @@ class DragHandle(QLabel):
 class SegmentBox(QWidget):
 
 
-    def __init__(self, spell_checker, logic_segment, initial_text_size=12):
+    def __init__(self, spell_checker, jp_dict, logic_segment, initial_text_size=12):
         super().__init__()
         self.spell_checker = spell_checker
+        self.jp_dict = jp_dict
         self.on_focused = None  
         self.on_unfocused = None  
         self.segment = logic_segment
@@ -86,7 +88,7 @@ class SegmentBox(QWidget):
         
         
         # TextEdit for Japanese text (editable)
-        self.label = TranslationTextEdit(spell_checker=self.spell_checker)
+        self.label = SourceTextEdit(jmdict=jp_dict)
         self.label.setPlainText(self.segment.source_text)
         self.label.setReadOnly(False)
         self.label.setMinimumHeight(5)
