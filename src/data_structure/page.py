@@ -248,7 +248,7 @@ class Page:
     def load_panels(self, panels_data):
         for panel_data in panels_data:
             new_panel = Panel(None)
-            new_panel.load_segments(panel_data)
+            new_panel.load_segments(panel_data,self)
             self.detected_panels.append(new_panel)
             self.segments += new_panel.segments
         self.detected_panels.sort(key=lambda p: p.nro)

@@ -136,21 +136,21 @@ class TextViewer(QWidget):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Tab:
-            self.focus_next_segment()
+            self.focus_next_segment((self.current_index +1) % len(self.segment_boxes))
             event.accept()
         elif event.key() == Qt.Key.Key_Backtab:  # Shift+Tab
-            self.focus_previous_segment()
+            self.focus_next_segment((self.current_index - 1) % len(self.segment_boxes))
             event.accept()
         else:
             super().keyPressEvent(event)
 
-    def focus_next_segment(self):
+    def focus_next_segment(self, next):
         if not self.segment_boxes:
             return
         
         # Find currently focused segment box
         current_index = self.current_segment_index
-        next_index = (current_index + 1) % len(self.segment_boxes)
+        next_index = next
         
         self.current_segment_index = next_index
         next_segment = self.segment_boxes[next_index]
@@ -191,13 +191,13 @@ class TextViewer(QWidget):
                 for i, segment in enumerate(self.segment_boxes):
                     if segment.isAncestorOf(obj) or segment == obj:
                         self.current_segment_index = i
-                        self.focus_next_segment()
+                        self.focus_next_segment((i + 1) % len(self.segment_boxes))
                         return True
             elif event.key() == Qt.Key.Key_Backtab:  # Shift+Tab
                 for i, segment in enumerate(self.segment_boxes):
                     if segment.isAncestorOf(obj) or segment == obj:
                         self.current_segment_index = i
-                        self.focus_previous_segment()
+                        self.focus_next_segment((i - 1) % len(self.segment_boxes))
                         return True
         return super().eventFilter(obj, event)
 

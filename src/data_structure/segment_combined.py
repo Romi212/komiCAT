@@ -36,6 +36,8 @@ class SegmentCombined(Segment):
             self.next_segment = SegmentCombined(self.page, -1)
         else:
             self.next_segment = Segment(self.page, -1)
+        self.next_segment.page = self.page
+        self.next_segment.panel = self.panel
         if data["next_segment"]:
             self.next_segment.load_data(data["next_segment"])
 

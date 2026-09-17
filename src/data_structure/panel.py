@@ -160,7 +160,7 @@ class Panel:
                     "segments": [segment.get_data() for segment in self.segments]   
                 }
 
-    def load_segments(self, panel_data):
+    def load_segments(self, panel_data, page):
         self.text_box = TextBox(
                     panel_data["bounds"]["xmin"],
                     panel_data["bounds"]["xmax"],
@@ -176,6 +176,9 @@ class Panel:
                 segment = SegmentCombined(self, segment_data["nro"])
             else:
                 segment = Segment(self, segment_data["nro"])
+            segment.page = page
+            segment.panel = self
             segment.load_data(segment_data)
             self.segments.append(segment)
+            
         self.segments.sort(key=lambda s: s.nro)
