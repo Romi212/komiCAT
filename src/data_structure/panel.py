@@ -1,5 +1,7 @@
 
+from data_structure.segment import Segment
 from data_structure.segment_combined import SegmentCombined
+from data_structure.text_box import TextBox
 
 
 class Panel:
@@ -8,6 +10,7 @@ class Panel:
         self.text_box = text_box
         self.bubbles = []
         self.segments = []
+        self.nro = 0
 
     def contains_bubble(self, bubble):
         return self.text_box.intersects(bubble)
@@ -149,3 +152,30 @@ class Panel:
                 return segments[possible_pivot].text_box.xmax + tolerance
             else:
                 return None  
+
+    def get_data(self):
+        return {
+                    "bounds": {"xmin": self.text_box.xmin, "ymin": self.text_box.ymin, "xmax": self.text_box.xmax, "ymax": self.text_box.ymax},
+                    "nro": self.nro,
+                    "segments": [segment.get_data() for segment in self.segments]   
+                }
+
+    def load_segments(self, panel_data):
+        self.text_box = TextBox(
+                    panel_data["bounds"]["xmin"],
+                    panel_data["bounds"]["xmax"],
+                    panel_data["bounds"]["ymin"],
+                    panel_data["bounds"]["ymax"], 
+                    "panel"
+                )
+        self.nro = panel_data["nro"]
+        segments_data = panel_data["segments"]
+        for segment_data in segments_data:
+            if segment_data["next_segment"]:
+                print("loading combined")
+                segment = SegmentCombined(self, segment_data["nro"])
+            else:
+                segment = Segment(self, segment_data["nro"])
+            segment.load_data(segment_data)
+            self.segments.append(segment)
+        self.segments.sort(key=lambda s: s.nro)

@@ -31,7 +31,11 @@ class Segment:
     def set_segment_box(self, segment_box):
         self.segment_box = segment_box
         self.source_text = segment_box.get_japanese_text()
-
+    def has_been_extracted(self):
+        self.source_text = self.text_box.text
+        if(self.button):
+            self.button.has_been_extracted()
+            
     def text_extracted(self, text):
         self.source_text = text
 
@@ -48,7 +52,6 @@ class Segment:
         
         return {
             "nro": self.nro,
-            "is_extracted": self.source_text is not None,
             "bounds": {"xmin": self.text_box.xmin, "ymin": self.text_box.ymin, "xmax": self.text_box.xmax, "ymax": self.text_box.ymax},
             "label" : self.text_box.label,
             "source_text": self.source_text,
@@ -75,9 +78,7 @@ class Segment:
         )
         self.text_box = text_box
         self.button = button
-        button.segment = self
-        if data["is_extracted"]:
-            button.has_been_extracted()
+        button.set_segment(self)
 
     def get_translation(self):
         if(self.nro == -1): 

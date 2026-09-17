@@ -14,7 +14,6 @@ from data_structure.text_box import TextBox
 from data_structure.page import Page
 from data_structure.segment import Segment
 
-
 class ImageViewer(QWidget):
     def __init__(self, controller, parent=None, chapter=None, text_extractor=None):
         super().__init__(parent)
@@ -230,48 +229,34 @@ class ImageViewer(QWidget):
             bubble_button.selected(len(self.selected_bubbles))
             
     
-    #Extractor devuelve 3 arrelgos de textBox, creo los buttons por cada textBox, creo los segmentos y los relaciono
-    #Button conoce al segmento, 
+    
     def detect_bubbles(self):
-        
         
         if self.current_page:
             current_image = self.current_page.image
-            detected_panels = self.text_extractor.detect_panels(current_image)
-            self.current_page.store_detected_panels(detected_panels)
             
+            detected_panels = self.text_extractor.detect_panels(current_image)
             
             detected_bubbles, detected_text_bubbles, detected_free_text = \
-                self.text_extractor.detect_speech_bubbles(current_image)
-            
-            #self.current_page.store_detected_bubbles(detected_bubbles, detected_text_bubbles, detected_free_text)
-            
-            for bubble in detected_text_bubbles + detected_free_text:
-               
-                button = TextBoxRect(
-                    bubble,
-                    alpha=0.6
-                )
+                            self.text_extractor.detect_speech_bubbles(current_image)
 
-                segment = self.current_page.create_segment(text_box=bubble)
-                segment.button = button
-                
-                button.set_segment(segment)
+            #Stores everything in current page and sorts them
+            self.current_page.store_detected_bubbles(detected_bubbles, detected_text_bubbles, detected_free_text, detected_panels)
 
-            self.current_page.sort_segments()
-            
-
-
-                
-                
-    
     def extract_text(self):
-        
-        if len(self.selected_bubbles) == 0:
-            bubbles = self.current_page.get_boxes_to_extract(all_segments = True)
-            self.text_extractor.extract_text(self.current_page.image,bubbles)
-            self.controller.extracted(self.current_page, bubbles)
-        else:
+        segments = self.current_page.get_segments_to_extract(all_segments = True)
+        for segment in segments:
+            next = segment
+            while(next):
+                text_box = next.text_box
+                self.text_extractor.extract_text(self.current_page.image,[text_box])
+                next.has_been_extracted()
+                next = next.get_child()
+
+        self.controller.extracted(self.current_page, segments)
+
+
+        """else:
             #Updates actual coordinates if button was moved by user
             for button in self.selected_bubbles:
 
@@ -288,7 +273,7 @@ class ImageViewer(QWidget):
                 [button.text_box for button in self.selected_bubbles]
             )
             self.controller.extracted(self.current_page,self.selected_bubbles)
-            self.selected_bubbles = []  # Clear selection after extraction
+            self.selected_bubbles = []  # Clear selection after extraction"""
 
     def clear_selection(self):
         for button in self.selected_bubbles:

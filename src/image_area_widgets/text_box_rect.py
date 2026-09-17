@@ -24,11 +24,9 @@ class TextBoxRect(QGraphicsRectItem):
         self._is_dragging = False
         self._has_moved = False
 
-        if(self.text_box.text == ""):
+        if(not self.text_box.text or self.text_box.text == ""):
             self.has_been_extracted_flag = False
             self.state = "not_extracted" # not_extracted, checked, extracted, focused
-            if self.number >0 :
-                self.state = "checked"
         else:
             self.has_been_extracted_flag = True
             self.state = "extracted" # not_extracted, checked, extracted, focused
@@ -183,12 +181,13 @@ class TextBoxRect(QGraphicsRectItem):
         """Replaces QSS completely with fast, native vector painting."""
         rect = self.rect()
 
-        if self.state == "extracted":
-            pen = QPen(QColor("gray"), 1, Qt.PenStyle.SolidLine)
-            brush = QBrush(QColor(0, 0, 0, 0))
-        elif self.state == "focused":
-            pen = QPen(QColor("blue"), 4, Qt.PenStyle.SolidLine)
-            brush = QBrush(QColor(0, 0, 0, 0))
+        if self.has_been_extracted_flag:                
+            if self.state == "focused":
+                pen = QPen(QColor("blue"), 4, Qt.PenStyle.SolidLine)
+                brush = QBrush(QColor(0, 0, 0, 0))
+            else:
+                pen = QPen(QColor("gray"), 1, Qt.PenStyle.SolidLine)
+                brush = QBrush(QColor(0, 0, 0, 0))
         else:
             border_width = 6 if self.isSelected() else 2
             pen = QPen(self.style_config["border"], border_width)
@@ -200,7 +199,7 @@ class TextBoxRect(QGraphicsRectItem):
 
         # Draw selection number text
         
-        if self.number > 0 and self.state == "checked":
+        if not self.has_been_extracted_flag and self.number > 0 and self.state == "checked":
             painter.setPen(QPen(QColor("red")))
             painter.setFont(QFont("Arial", int(min(rect.height() * 0.5, 36)), QFont.Weight.Bold))
             painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, str(self.number))
@@ -217,3 +216,6 @@ class TextBoxRect(QGraphicsRectItem):
 
     def set_segment(self, segment):
         self.segment = segment
+        if self.number != segment.nro:
+            self.number = segment.nro
+            self.state = "checked"

@@ -4,6 +4,7 @@ from data_structure.panel import Panel
 from data_structure.segment import Segment
 from data_structure.segment_combined import SegmentCombined
 from data_structure.text_box import TextBox
+from image_area_widgets.text_box_rect import TextBoxRect
 
 
 class Page:
@@ -20,7 +21,12 @@ class Page:
         self.detected_panels = []
     
 
-    def store_detected_bubbles(self, detected_bubbles, detected_text_bubbles, detected_free_text):
+    def store_detected_bubbles(self, detected_bubbles, detected_text_bubbles, detected_free_text, detected_panels):
+
+        self.store_detected_panels(detected_panels)
+
+        self._sort_panels()
+
         self.detected_bubbles = detected_bubbles
         self.detected_text_bubbles = detected_text_bubbles
         self.detected_free_text = detected_free_text
@@ -33,12 +39,10 @@ class Page:
                     remaining_bubbles.remove(bubble)
                     break
 
-        base= 1
-        for panel in self.detected_panels:
-            for bubble in detected_text_bubbles + detected_free_text:
-                if panel.contains_bubble(bubble):
-                    panel.add_bubble(bubble)
-            base = panel.sort_bubbles(base)
+        for bubble in detected_text_bubbles + detected_free_text:             
+            self.create_segment(text_box=bubble)
+            
+        self.sort_segments()
 
     def sort_segments(self):
         base = 1
@@ -53,7 +57,7 @@ class Page:
         for panel in detected_panels:
             self.detected_panels.append(Panel(panel))
 
-        self._sort_panels()
+        
 
     def _sort_panels(self):
         
@@ -149,25 +153,8 @@ class Page:
         to_return.append(new_panel)
         return to_return
 
-    def get_boxes_to_extract(self, all_segments):
-        boxes = []
-        for seg in self.segments:
-            child = seg
-            while (child):
-                boxes.append(child.text_box)
-                child = child.get_child()
-        return boxes
-
-    def extracted_segments(self, extracted_bubbles):
-        if(self.segments_amount == len(extracted_bubbles)):
-            for bubble in extracted_bubbles:
-                segment = bubble.segment
-                if(not (segment.nro == bubble.index)):
-                    print("has been edited")
-                segment.text_extracted(bubble.text)
-                if segment.button:
-                    segment.button.has_been_extracted()
-            self.extracted_bubbles += len(extracted_bubbles)
+    def get_segments_to_extract(self, all_segments):
+        
         return self.segments
         
     def extracted_segments_and_combine(self, extracted_bubbles):
@@ -237,6 +224,12 @@ class Page:
         self.segments.append(segment)
         segment.text_box = text_box
         text_box.segment = segment
+        button = TextBoxRect(
+                        text_box,
+                        alpha=0.6
+                    )
+        segment.button = button
+        button.set_segment(segment)
         self._asign_panel(segment)
         self.segments_amount +=1
         return segment
@@ -249,21 +242,18 @@ class Page:
     def get_data(self):
         return {
             "file_path": self.file_path,
-            "segments": [segment.get_data() for segment in self.segments]
+            "panels": [panel.get_data() for panel in self.detected_panels]   
         }
+
+    def load_panels(self, panels_data):
+        for panel_data in panels_data:
+            new_panel = Panel(None)
+            new_panel.load_segments(panel_data)
+            self.detected_panels.append(new_panel)
+            self.segments += new_panel.segments
+        self.detected_panels.sort(key=lambda p: p.nro)
+
     
-    def load_segments(self, segments_data):
-        for segment_data in segments_data:
-            if segment_data["next_segment"]:
-                print("loading combined")
-                segment = SegmentCombined(self, segment_data["nro"])
-            else:
-                segment = Segment(self, segment_data["nro"])
-            segment.load_data(segment_data)
-            if segment.source_text:
-                self.extracted_bubbles += 1
-            self.segments.append(segment)
-            self.segments.sort(key=lambda s: s.nro)
 
     def get_translation_text(self):
         translation_text = f"---------------------------{self.page_name}----------------------------------\n"

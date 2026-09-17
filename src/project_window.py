@@ -19,7 +19,7 @@ class ProjectWindow(QMainWindow):
         self.project_loader = project_loader;
         # Create main window
         
-        self.setWindowTitle("Text and Image Viewer")
+        self.setWindowTitle("KomiCAT")
         self.resize(1600, 900)
 
         #Create menu bar
@@ -73,8 +73,7 @@ class ProjectWindow(QMainWindow):
 
   
 
-    def extracted(self, page, extracted_bubbles):
-        segments = page.extracted_segments(extracted_bubbles)
+    def extracted(self, page, segments):
         self.text_viewer.add_extracted_segments(page,segments)
 
 
