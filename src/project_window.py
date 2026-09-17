@@ -36,11 +36,13 @@ class ProjectWindow(QMainWindow):
         load_action = file_menu.addAction("Load Project")
         load_action.triggered.connect(self.load_project)
 
-        file_menu = self.menu_bar.addMenu("Project")
+        project_menu = self.menu_bar.addMenu("Project")
         
 
-        load_action = file_menu.addAction("Export Translation")
-        load_action.triggered.connect(self.export_translation)
+        export_action = project_menu.addAction("Export Translation")
+        export_action.triggered.connect(self.export_translation)
+
+        
 
         # Create central widget with splitter
         central_widget = QWidget()
@@ -55,6 +57,9 @@ class ProjectWindow(QMainWindow):
         self.image_viewer = ImageViewer(controller=self, chapter=self.chapter, text_extractor=self.text_extractor)
         self.image_viewer.load_chapter(self.chapter)
         self.text_viewer.load_chapter(self.chapter)
+
+        open_images = project_menu.addAction("Open Images")
+        open_images.triggered.connect(self.image_viewer.open_images)
         
         # Add to splitter
         splitter.addWidget(self.text_viewer)

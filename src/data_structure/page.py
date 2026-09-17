@@ -19,6 +19,7 @@ class Page:
         self.extracted_bubbles = 0
         self.segments_amount = 0
         self.detected_panels = []
+        self.has_been_processed = False
     
 
     def store_detected_bubbles(self, detected_bubbles, detected_text_bubbles, detected_free_text, detected_panels):
@@ -43,6 +44,7 @@ class Page:
             self.create_segment(text_box=bubble)
             
         self.sort_segments()
+        self.has_been_processed = True
 
     def sort_segments(self):
         base = 1
@@ -260,3 +262,9 @@ class Page:
         for segment in self.segments:
             translation_text += segment.get_translation() + "\n\n"
         return translation_text
+
+
+    def set_edit_mode(self, can_edit):
+        for segment in self.segments:
+            segment.set_edit_mode(can_edit)
+            

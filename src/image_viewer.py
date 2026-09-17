@@ -63,15 +63,15 @@ class ImageViewer(QWidget):
         
         self.open_button = QPushButton("Open Images")
         self.open_button.clicked.connect(self.open_images)
-        self.button_layout.addWidget(self.open_button)
+        #self.button_layout.addWidget(self.open_button)
 
         self.detect_bubbles_button = QPushButton("Batch detect Bubbles")
         self.detect_bubbles_button.clicked.connect(self.detect_all_pages)
         self.button_layout.addWidget(self.detect_bubbles_button)
         
-        self.reset_zoom_button = QPushButton("Detect page Bubbles")
-        self.reset_zoom_button.clicked.connect(self.detect_page_bubbles)
-        self.button_layout.addWidget(self.reset_zoom_button)
+        self.detect_page_bubbles_button = QPushButton("Detect page Bubbles")
+        self.detect_page_bubbles_button.clicked.connect(self.detect_page_bubbles)
+        self.button_layout.addWidget(self.detect_page_bubbles_button)
 
         self.batch_extract_text_button = QPushButton("Extract all text")
         self.batch_extract_text_button.clicked.connect(self.batch_extract_text)
@@ -81,6 +81,11 @@ class ImageViewer(QWidget):
         self.extract_text_button = QPushButton("Extract Text")
         self.extract_text_button.clicked.connect(self.extract_text)
         self.button_layout.addWidget(self.extract_text_button)
+
+        self.edition_mode_button = QPushButton("Edition Mode")
+        self.edition_mode_button.setCheckable(True)  # Enables checkable/toggle state
+        self.edition_mode_button.toggled.connect(self.edit_mode)  # Sends boolean (True/False)
+        self.button_layout.addWidget(self.edition_mode_button)
 
         self.clear_selection_button = QPushButton("Clear Selection")
         self.clear_selection_button.clicked.connect(self.clear_selection)
@@ -145,6 +150,7 @@ class ImageViewer(QWidget):
                 for item in self.scene.items():
                     self.scene.removeItem(item)
                 self.selected_bubbles = []
+                self.detect_page_bubbles_button.setDisabled(self.current_page.has_been_processed)
                 self.scene.addPixmap(current_pixmap)
                 self.image_index_label.setText(self.current_page.page_name)
                 self.status_label.setText(f"Image loaded: {self.current_page.page_name}")
@@ -232,7 +238,7 @@ class ImageViewer(QWidget):
     
     def detect_bubbles(self):
         
-        if self.current_page:
+        if self.current_page and not self.current_page.has_been_processed:
             current_image = self.current_page.image
             
             detected_panels = self.text_extractor.detect_panels(current_image)
@@ -296,6 +302,7 @@ class ImageViewer(QWidget):
         
 
     def detect_all_pages(self):
+        self.detect_bubbles_button.setDisabled(True)
         for page in self.chapter.pages:
             self.current_page = page
             self.detect_bubbles()
@@ -355,3 +362,13 @@ class ImageViewer(QWidget):
         # Sync internal zoom factor with current transform matrix
         self.zoom_factor = self.view.transform().m11()
         self.status_label.setText(f"Focused on panel | Zoom: {self.zoom_factor:.2f}x")
+
+
+    def edit_mode(self, checked):
+        if checked:
+            self.can_edit = True
+            self.current_page.set_edit_mode(True)
+
+        else:
+            self.can_edit = False
+            self.current_page.set_edit_mode(False)

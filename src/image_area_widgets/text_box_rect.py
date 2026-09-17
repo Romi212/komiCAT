@@ -23,6 +23,7 @@ class TextBoxRect(QGraphicsRectItem):
 
         self._is_dragging = False
         self._has_moved = False
+        self.edit_mode = False
 
         if(not self.text_box.text or self.text_box.text == ""):
             self.has_been_extracted_flag = False
@@ -97,7 +98,7 @@ class TextBoxRect(QGraphicsRectItem):
         self.setCursor(cursors.get(zone, Qt.CursorShape.ArrowCursor))
 
     def hoverMoveEvent(self, event):
-        if self.state == "not_extracted":
+        if not self.has_been_extracted_flag and self.edit_mode:
             zone = self._get_hit_zone(event.pos())
             self._update_cursor(zone)
         else:
@@ -105,7 +106,7 @@ class TextBoxRect(QGraphicsRectItem):
         super().hoverMoveEvent(event)
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.MouseButton.LeftButton and self.state == "not_extracted":
+        if event.button() == Qt.MouseButton.LeftButton and not self.has_been_extracted_flag and self.edit_mode:
             self._is_dragging = True
             self._has_moved = False
             self._drag_start_scene = event.scenePos()
@@ -219,3 +220,7 @@ class TextBoxRect(QGraphicsRectItem):
         if self.number != segment.nro:
             self.number = segment.nro
             self.state = "checked"
+
+    def set_edit_mode(self, enabled: bool):
+        self.edit_mode = enabled
+        self.update()

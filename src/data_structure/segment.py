@@ -87,3 +87,14 @@ class Segment:
     
     def get_child(self):
         return None
+
+    def set_edit_mode(self, value):
+        if self.button:
+            self.button.set_edit_mode(value)
+            if not value:
+                scene_rect = self.button.mapToScene(self.button.rect()).boundingRect()   
+                self.text_box.xmin = scene_rect.left()
+                self.text_box.ymin = scene_rect.top()
+                self.text_box.xmax = scene_rect.right()
+                self.text_box.ymax = scene_rect.bottom()
+                
