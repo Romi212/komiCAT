@@ -213,3 +213,10 @@ class TextViewer(QWidget):
             page_container = self._create_page_container(page = page)
             self.scroll_layout.insertWidget(self.scroll_layout.count() - 1, page_container)
             self.page_containers.append(page_container)
+
+    def delete_segment(self, segment):
+        segment_box = segment.segment_box
+        if(segment_box):
+            container = self.page_containers[segment.page.number]
+            container.remove_segment(segment_box)
+            self.segment_boxes.remove(segment_box)

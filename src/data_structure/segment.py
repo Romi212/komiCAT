@@ -97,4 +97,6 @@ class Segment:
                 self.text_box.ymin = scene_rect.top()
                 self.text_box.xmax = scene_rect.right()
                 self.text_box.ymax = scene_rect.bottom()
-                
+
+    def delete_self(self):
+        self.page.delete_segment(self)

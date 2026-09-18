@@ -267,4 +267,22 @@ class Page:
     def set_edit_mode(self, can_edit):
         for segment in self.segments:
             segment.set_edit_mode(can_edit)
-            
+
+    def delete_segment(self, segment):
+        if segment.panel:
+            segment.panel.delete_segment(segment)
+        if segment.get_child():
+            self.segments.insert(self.segments.index(segment),segment.get_child())
+        self.segments.remove(segment)
+        self.recount_segments()
+        
+    def recount_segments(self):
+        index = 1
+        for seg in self.segments:
+            child = seg
+            while(child):
+                if(child.nro != index):
+                    child.set_nro(index)
+                child = child.get_child()
+                index +=1
+        

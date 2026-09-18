@@ -182,3 +182,8 @@ class Panel:
             self.segments.append(segment)
             
         self.segments.sort(key=lambda s: s.nro)
+
+    def delete_segment(self,segment):
+        if segment.get_child():
+            self.segments.insert(self.segments.index(segment),segment.get_child())
+        self.segments.remove(segment)

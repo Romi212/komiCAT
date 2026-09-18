@@ -81,3 +81,6 @@ class PageContainer(QWidget):
         if hasattr(self.page, "segments"):
             if isinstance(self.page.segments, list):
                 self.page.segments = ordered_segments
+
+    def remove_segment(self, segment):
+        self.layout.removeWidget(segment)

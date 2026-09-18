@@ -112,3 +112,6 @@ class ProjectWindow(QMainWindow):
 
     def set_panel_zoom(self,panel):
         self.image_viewer.set_panel_zoom(panel)
+
+    def delete_segment(self, segment):
+        self.text_viewer.delete_segment(segment)

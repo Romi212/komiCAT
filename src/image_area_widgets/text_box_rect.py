@@ -1,6 +1,10 @@
-from PyQt6.QtWidgets import QGraphicsRectItem, QGraphicsItem
+from PyQt6.QtWidgets import QGraphicsRectItem, QGraphicsItem, QMenu
 from PyQt6.QtGui import QPen, QBrush, QColor, QFont, QCursor
-from PyQt6.QtCore import Qt, QRectF
+from PyQt6.QtCore import QObject, Qt, QRectF, pyqtSignal
+
+class TextBoxRectSignals(QObject):
+    delete_requested = pyqtSignal(object)
+    combine_requested = pyqtSignal(object)
 
 class TextBoxRect(QGraphicsRectItem):
     STYLES = {
@@ -24,6 +28,8 @@ class TextBoxRect(QGraphicsRectItem):
         self._is_dragging = False
         self._has_moved = False
         self.edit_mode = False
+        self.signals = TextBoxRectSignals()
+        self.signals_conected = False
 
         if(not self.text_box.text or self.text_box.text == ""):
             self.has_been_extracted_flag = False
@@ -224,3 +230,26 @@ class TextBoxRect(QGraphicsRectItem):
     def set_edit_mode(self, enabled: bool):
         self.edit_mode = enabled
         self.update()
+
+    def contextMenuEvent(self, event):
+        if self.edit_mode:
+            menu = QMenu()
+
+            combine_action = menu.addAction("Combine")
+            delete_action = menu.addAction("Delete")
+
+            # Show menu at the mouse screen location
+            selected_action = menu.exec(event.screenPos())
+
+            if selected_action == combine_action:
+                self.signals.combine_requested.emit(self)
+            elif selected_action == delete_action:
+                self.signals.delete_requested.emit(self)
+
+
+    def conect_signals(self, delete_action, combine_action):
+        if not self.signals_conected:
+            self.signals.delete_requested.connect(delete_action)
+            self.signals.combine_requested.connect(combine_action)
+            self.signals_conected = True
+    
