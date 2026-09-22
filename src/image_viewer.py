@@ -161,22 +161,21 @@ class ImageViewer(QWidget):
         #Add bubble butons if it had been detected before
         
         
-            for segment_head in self.current_page.segments:
-                segment = segment_head
-                while(segment):
-                    if(segment.button):
-                        button = segment.button
-                    else:
-                        button = TextBoxRect(segment.text_box, alpha=0.6)
-                        segment.button = button
-                        button.set_segment(segment)
+            for segment in self.current_page.segments:
+                
+                if(segment.button):
+                    button = segment.button
+                else:
+                    button = TextBoxRect(segment.text_box, alpha=0.6)
+                    segment.button = button
+                    button.set_segment(segment)
 
+                
+                button.link_on_click(lambda checked, btn=segment.button: self.selected_bubble(btn))
+                button.conect_signals(self.prompt_and_delete_segment, self.combine_segments)
+                
+                self.scene.addItem(button)
                     
-                    button.link_on_click(lambda checked, btn=segment.button: self.selected_bubble(btn))
-                    button.conect_signals(self.prompt_and_delete_segment, self.combine_segments)
-                    
-                    self.scene.addItem(button)
-                    segment = segment.get_child()
             i = 0
             for panel in self.current_page.detected_panels:
                 print(f"Panel {i}")
@@ -256,12 +255,9 @@ class ImageViewer(QWidget):
         if self._finish_editing_mode():
             segments = self.current_page.get_segments_to_extract(all_segments = True)
             for segment in segments:
-                next = segment
-                while(next):
-                    text_box = next.text_box
-                    self.text_extractor.extract_text(self.current_page.image,[text_box])
-                    next.has_been_extracted()
-                    next = next.get_child()
+                text_box = segment.text_box
+                self.text_extractor.extract_text(self.current_page.image,[text_box])
+                segment.has_been_extracted()
 
             self.controller.extracted(self.current_page, segments)
 

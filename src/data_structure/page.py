@@ -3,6 +3,7 @@ import os
 from data_structure.panel import Panel
 from data_structure.segment import Segment
 from data_structure.segment_combined import SegmentCombined
+from data_structure.segment_list import SegmentList
 from data_structure.text_box import TextBox
 from image_area_widgets.text_box_rect import TextBoxRect
 
@@ -14,7 +15,7 @@ class Page:
         self.image = image
         self.page_name = os.path.basename(file_path)
         self.number = number
-        self.segments = []
+        self.segments = SegmentList()
         self.chapter = chapter
         self.extracted_bubbles = 0
         self.segments_amount = 0
@@ -48,12 +49,12 @@ class Page:
 
     def sort_segments(self):
         base = 1
-        sorted_segs = []
+        self.segments = SegmentList()
         for panel in self.detected_panels:
             print(f"sorting panel {base}")
             base, panel_segs = panel.sort_segments(base)
-            sorted_segs += panel_segs
-        self.segments = sorted_segs
+            self.segments.append_segments(panel_segs)
+        
 
     def store_detected_panels(self, detected_panels):
         for panel in detected_panels:
@@ -159,61 +160,7 @@ class Page:
         
         return self.segments
         
-    def extracted_segments_and_combine(self, extracted_bubbles):
-        segments = []
-        base_index = self.extracted_bubbles
-        combined_segment_head = None
-        print("--------------------------EXTRACTED SEGMENTS--------------------------------")
-        for i in range(1, len(extracted_bubbles)):
-            bubble_button = extracted_bubbles[i-1]
-            if extracted_bubbles[i].text_box.intersects(bubble_button.text_box):
-                segment = SegmentCombined(self, -1)
-                self.segments.remove(bubble_button.segment)
-                bubble_button.segment = segment
-                segment.button = bubble_button
-                segment.text_box = bubble_button.text_box
-                if combined_segment_head:
-                    print("Segment "+ bubble_button.text + " " + bubble_button.text_box.text + " ~continua~")
-                    combined_segment_head.set_next_segment(segment)
-                    combined_segment_head = segment
-                else:
-                    print("Segment "+ bubble_button.text+ " " + bubble_button.text_box.text + "EMPEZO COMBINADO OwO")
-                    combined_segment_head = segment
-                    segments.append(segment)
-                    self.segments.append(segment)
-            else:
-                segment = bubble_button.segment
-                if combined_segment_head:
-                    print("Segment "+ bubble_button.text + " " + bubble_button.text_box.text + "~TERMINO//")
-                    combined_segment_head.set_next_segment(segment)
-                    combined_segment_head = None
-                    self.segments.remove(segment)
-                else:
-                    print("Segment "+ bubble_button.text + " " + bubble_button.text_box.text + "")
-                    segments.append(segment)
-            
-            segment.nro = base_index + int(bubble_button.text)
-            segment.text_extracted(bubble_button.text_box.text)
-            
-            bubble_button.has_been_extracted()
-
-        last_button = extracted_bubbles[len(extracted_bubbles)-1]
-        segment = last_button.segment
-        segment.nro = base_index + int(last_button.text)
-        segment.text_extracted(last_button.text_box.text)
-
-        if combined_segment_head:
-            combined_segment_head.set_next_segment(segment)
-            self.segments.remove(segment)
-        else:
-            segments.append(segment)
-
-        last_button.has_been_extracted()
-        self.extracted_bubbles += len(extracted_bubbles)
-        print("--------------------------EXTRACTED SEGMENTS--------------------------------")
-        for segment in self.segments:
-            print(f"Segment {segment.nro}: {segment.source_text} ")
-        return segments
+    
 
     def _is_within(self, text_bubble, bubble):
         return (text_bubble.xmin >= bubble.xmin and
@@ -223,7 +170,7 @@ class Page:
 
     def create_segment(self, text_box):
         segment = Segment(self, len(self.segments))
-        self.segments.append(segment)
+        self.segments.add_segment(segment)
         segment.text_box = text_box
         text_box.segment = segment
         button = TextBoxRect(
@@ -252,14 +199,14 @@ class Page:
             new_panel = Panel(None)
             new_panel.load_segments(panel_data,self)
             self.detected_panels.append(new_panel)
-            self.segments += new_panel.segments
+            self.segments.append_segments(new_panel.segments) 
         self.detected_panels.sort(key=lambda p: p.nro)
 
     
 
     def get_translation_text(self):
         translation_text = f"---------------------------{self.page_name}----------------------------------\n"
-        for segment in self.segments:
+        for segment in self.segments.heads:
             translation_text += segment.get_translation() + "\n\n"
         return translation_text
 
@@ -271,18 +218,8 @@ class Page:
     def delete_segment(self, segment):
         if segment.panel:
             segment.panel.delete_segment(segment)
-        if segment.get_child():
-            self.segments.insert(self.segments.index(segment),segment.get_child())
-        self.segments.remove(segment)
-        self.recount_segments()
+        self.segments.remove_segment(segment)
+        self.segments.recount_segments()
         
-    def recount_segments(self):
-        index = 1
-        for seg in self.segments:
-            child = seg
-            while(child):
-                if(child.nro != index):
-                    child.set_nro(index)
-                child = child.get_child()
-                index +=1
+    
         

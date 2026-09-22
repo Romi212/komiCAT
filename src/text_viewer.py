@@ -66,30 +66,31 @@ class TextViewer(QWidget):
 
     #Called from ProjectWindow when the user clicks the "Extract" button, passing the list of segments with the source text gud
     def create_segment_boxes(self, segments, page_container):
-        for segment in segments:
-            aux = segment
-            segment_box = self.create_segment(segment)
-            segment.set_segment_box(segment_box)
-            if(aux.get_child()):
-                # Create a container widget for combined segments
-                container = QWidget()
-                container.setObjectName("combinedSegmentContainer")
-                container.setStyleSheet("#combinedSegmentContainer { border: 2px solid #6e2130; border-radius: 5px; }")
-                layout = QVBoxLayout()
-                layout.setContentsMargins(8, 8, 8, 8)
-                layout.setSpacing(5)
-                layout.addWidget(segment_box)
-                head_segment = segment_box
-                while (aux.get_child()):
-                    aux = aux.get_child()
-                    segment_box = self.create_segment(aux)
-                    aux.set_segment_box(segment_box)
+        for segment in segments.heads:
+            if segment.source_text: 
+                aux = segment
+                segment_box = self.create_segment(segment)
+                segment.set_segment_box(segment_box)
+                if(aux.get_child()):
+                    # Create a container widget for combined segments
+                    container = QWidget()
+                    container.setObjectName("combinedSegmentContainer")
+                    container.setStyleSheet("#combinedSegmentContainer { border: 2px solid #6e2130; border-radius: 5px; }")
+                    layout = QVBoxLayout()
+                    layout.setContentsMargins(8, 8, 8, 8)
+                    layout.setSpacing(5)
                     layout.addWidget(segment_box)
-                container.setLayout(layout)
-                page_container.addCombinedSegment(container,head_segment)
-            else:
-                page_container.addSegment(segment_box)
-         # Insert before the stretch (at second-to-last position)
+                    head_segment = segment_box
+                    while (aux.get_child()):
+                        aux = aux.get_child()
+                        segment_box = self.create_segment(aux)
+                        aux.set_segment_box(segment_box)
+                        layout.addWidget(segment_box)
+                    container.setLayout(layout)
+                    page_container.addCombinedSegment(container,head_segment)
+                else:
+                    page_container.addSegment(segment_box)
+            # Insert before the stretch (at second-to-last position)
         
     
     def create_segment(self, logic_segment):
@@ -114,12 +115,7 @@ class TextViewer(QWidget):
             self.scroll_layout.insertWidget(self.scroll_layout.count() - 1, page_container)
             self.page_containers.append(page_container)
             
-
-            to_show= []
-            for segment in page.segments:
-                if segment.source_text:  
-                    to_show.append(segment)
-            self.create_segment_boxes(to_show, page_container)
+            self.create_segment_boxes(page.segments, page_container)
             
 
     def zoom_in(self):
