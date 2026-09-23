@@ -158,8 +158,11 @@ class Page:
         return to_return
 
     def get_segments_to_extract(self, all_segments):
-        
-        return self.segments
+        segments_not_extracted = SegmentList()
+        for segment in self.segments.heads:
+            if not segment.is_extracted():
+                segments_not_extracted.add_segment(segment)
+        return segments_not_extracted
         
     
 

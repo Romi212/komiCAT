@@ -35,7 +35,9 @@ class Segment:
         self.source_text = self.text_box.text
         if(self.button):
             self.button.has_been_extracted()
-            
+
+    def is_extracted(self):
+        return self.source_text
     def text_extracted(self, text):
         self.source_text = text
 
