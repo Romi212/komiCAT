@@ -23,6 +23,7 @@ class ImageViewer(QWidget):
         self.current_page = None
         self.can_edit = False
         self.selected_bubbles = []
+        self.edit_menu = None
         
         self.zoom_factor = 1.0
         
@@ -53,6 +54,37 @@ class ImageViewer(QWidget):
         self.view.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
         self.view.wheelEvent = self.on_mouse_wheel
         layout.addWidget(self.view)
+
+        self.edit_menu = QWidget(self.view)
+        self.edit_menu.setObjectName("editMenu")
+        self.edit_menu.setVisible(False)
+        self.edit_menu.setStyleSheet(
+            """
+            QWidget#editMenu {
+                background: rgba(25, 25, 25, 180);
+                border: 1px solid rgba(255, 255, 255, 120);
+                border-radius: 8px;
+            }
+            QWidget#editMenu QPushButton {
+                min-width: 110px;
+                padding: 8px 10px;
+                border-radius: 6px;
+            }
+            """
+        )
+        edit_menu_layout = QVBoxLayout(self.edit_menu)
+        edit_menu_layout.setContentsMargins(8, 8, 8, 8)
+        edit_menu_layout.setSpacing(6)
+
+        self.add_segment_button = QPushButton("Add Segment")
+        self.add_segment_button.clicked.connect(self.add_segment)
+        edit_menu_layout.addWidget(self.add_segment_button)
+
+        self.reorder_button = QPushButton("Reorder")
+        self.reorder_button.clicked.connect(self.reorder_segments)
+        edit_menu_layout.addWidget(self.reorder_button)
+
+        self._update_edit_menu_position()
         
         # Status label
         self.status_label = QLabel("Ready")
@@ -346,20 +378,42 @@ class ImageViewer(QWidget):
             self._setup_page()
 
 
-    def add_bubble(self):
-       
-        text_box = TextBox(63, 1618, 119, 1746,"manual")
+    def add_segment(self):
+        if not self.current_page:
+            return
+
+        text_box = TextBox(63, 618, 119, 746, "manual")
         rect = TextBoxRect(text_box, alpha=0.6)
 
-        segment = self.current_page.create_segment()
+        segment = self.current_page.create_segment(text_box)
         segment.button = rect
-        segment.text_box = text_box
         rect.set_segment(segment)
-
-        # add a QGraphicsRectItem
-        self.scene.addItem(rect)
         rect.link_on_click(lambda checked, btn=rect: self.selected_bubble(btn))
+        self.scene.addItem(rect)
 
+    def add_bubble(self):
+        self.add_segment()
+
+    def reorder_segments(self):
+        if not self.current_page:
+            return
+        self.current_page.sort_segments()
+        self._setup_page()
+
+    def _update_edit_menu_position(self):
+        if not self.edit_menu or not self.view:
+            return
+
+        margin = 12
+        menu_width = 140
+        menu_height = 100
+        x = self.view.width() - menu_width - margin
+        y = margin
+        self.edit_menu.setGeometry(x, y, menu_width, menu_height)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._update_edit_menu_position()
 
     def set_panel_zoom(self,panel):
         if not panel:
@@ -387,13 +441,13 @@ class ImageViewer(QWidget):
 
 
     def edit_mode(self, checked):
-        if checked:
-            self.can_edit = True
-            self.current_page.set_edit_mode(True)
-
-        else:
-            self.can_edit = False
-            self.current_page.set_edit_mode(False)
+        self.can_edit = checked
+        if self.current_page:
+            self.current_page.set_edit_mode(checked)
+        if self.edit_menu:
+            self.edit_menu.setVisible(checked)
+            self.edit_menu.raise_()
+            self._update_edit_menu_position()
 
     def prompt_and_delete_segment(self, button):
         print("Entre")

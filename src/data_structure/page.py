@@ -179,7 +179,10 @@ class Page:
                     )
         segment.button = button
         button.set_segment(segment)
-        self._asign_panel(segment)
+        if(text_box.label == "manual"):
+            self.outside_segments.append(segment)
+        else:
+            self._asign_panel(segment)
         self.segments_amount +=1
         return segment
 
