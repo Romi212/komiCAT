@@ -383,10 +383,10 @@ class ImageViewer(QWidget):
             return
 
         text_box = TextBox(63, 618, 119, 746, "manual")
-        rect = TextBoxRect(text_box, alpha=0.6)
+        
 
         segment = self.current_page.create_segment(text_box)
-        segment.button = rect
+        rect = segment.button
         rect.set_segment(segment)
         rect.link_on_click(lambda checked, btn=rect: self.selected_bubble(btn))
         self.scene.addItem(rect)
@@ -397,7 +397,7 @@ class ImageViewer(QWidget):
     def reorder_segments(self):
         if not self.current_page:
             return
-        self.current_page.sort_segments()
+        self.current_page.automatic_sort()
         self._setup_page()
 
     def _update_edit_menu_position(self):

@@ -16,6 +16,7 @@ class Page:
         self.page_name = os.path.basename(file_path)
         self.number = number
         self.segments = SegmentList()
+        self.outside_segments = []
         self.chapter = chapter
         self.extracted_bubbles = 0
         self.segments_amount = 0
@@ -181,9 +182,11 @@ class Page:
         button.set_segment(segment)
         if(text_box.label == "manual"):
             self.outside_segments.append(segment)
+            segment.set_edit_mode(True)
         else:
             self._asign_panel(segment)
         self.segments_amount +=1
+        
         return segment
 
     def _asign_panel(self,segment):
@@ -217,12 +220,29 @@ class Page:
     def set_edit_mode(self, can_edit):
         for segment in self.segments:
             segment.set_edit_mode(can_edit)
+        if not can_edit:
+            self.reasign_panels()
 
     def delete_segment(self, segment):
         if segment.panel:
             segment.panel.delete_segment(segment)
         self.segments.remove_segment(segment)
         self.segments.recount_segments()
+
+    def reasign_panels(self):
+        for segment in self.segments:
+            if segment.panel and not segment.panel.contains_segment(segment):
+                segment.panel.delete_segment(segment)
+                segment.panel = None
+                self._asign_panel(segment)
+            if not segment.panel:
+                self._asign_panel(segment)
+
         
+
+
+    def automatic_sort(self):
+        self.reasign_panels()
+        self.sort_segments()
     
         

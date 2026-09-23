@@ -33,6 +33,7 @@ class SegmentList:
             if segment.get_child():
                 self.segments.insert(self.segments.index(segment),segment.get_child())
             self.segments.remove(segment)
+            print(f"removed segment {segment.nro}")
         except ValueError:
             print(f"Warning: Segment {segment} not found in list.")
 
