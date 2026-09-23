@@ -92,11 +92,15 @@ class Segment:
         if self.button:
             self.button.set_edit_mode(value)
             if not value:
-                scene_rect = self.button.mapToScene(self.button.rect()).boundingRect()   
-                self.text_box.xmin = scene_rect.left()
-                self.text_box.ymin = scene_rect.top()
-                self.text_box.xmax = scene_rect.right()
-                self.text_box.ymax = scene_rect.bottom()
+                self.update_coordinates()
+
+    def update_coordinates(self):
+        if self.button:
+            scene_rect = self.button.mapToScene(self.button.rect()).boundingRect()   
+            self.text_box.xmin = scene_rect.left()
+            self.text_box.ymin = scene_rect.top()
+            self.text_box.xmax = scene_rect.right()
+            self.text_box.ymax = scene_rect.bottom()
 
     def delete_self(self):
         self.page.delete_segment(self)

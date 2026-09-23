@@ -180,9 +180,10 @@ class Page:
                     )
         segment.button = button
         button.set_segment(segment)
-        if(text_box.label == "manual"):
+        if(str(text_box.label) == "manual"):
             self.outside_segments.append(segment)
             segment.set_edit_mode(True)
+            print("YAY SEGMENTO MANUAL")
         else:
             self._asign_panel(segment)
         self.segments_amount +=1
@@ -231,6 +232,7 @@ class Page:
 
     def reasign_panels(self):
         for segment in self.segments:
+            segment.update_coordinates()
             if segment.panel and not segment.panel.contains_segment(segment):
                 segment.panel.delete_segment(segment)
                 segment.panel = None
