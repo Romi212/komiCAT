@@ -162,3 +162,10 @@ class SegmentList:
         for index, seg in enumerate(self, start=1):
             if seg.nro != index:
                 seg.set_nro(index)
+
+    def get_head_index(self, segment):
+        nro = self.segments.index(segment)
+        if nro:
+            return nro
+        else:
+            return len(self.segments)

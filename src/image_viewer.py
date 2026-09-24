@@ -286,7 +286,7 @@ class ImageViewer(QWidget):
     def extract_text(self):
         if self._finish_editing_mode():
             segments = self.current_page.get_segments_to_extract(all_segments = True)
-            for segment in segments:
+            for segment in segments:        
                 text_box = segment.text_box
                 self.text_extractor.extract_text(self.current_page.image,[text_box])
                 segment.has_been_extracted()

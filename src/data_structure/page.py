@@ -159,9 +159,10 @@ class Page:
 
     def get_segments_to_extract(self, all_segments):
         segments_not_extracted = SegmentList()
-        for segment in self.segments.heads:
+        for index, segment in enumerate(self.segments.heads, start=0):
             if not segment.is_extracted():
                 segments_not_extracted.add_segment(segment)
+                segment.set_head_index(index)
         return segments_not_extracted
         
     

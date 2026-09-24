@@ -71,6 +71,7 @@ class TextViewer(QWidget):
                 aux = segment
                 segment_box = self.create_segment(segment)
                 segment.set_segment_box(segment_box)
+                
                 if(aux.get_child()):
                     # Create a container widget for combined segments
                     container = QWidget()

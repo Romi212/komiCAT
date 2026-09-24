@@ -20,11 +20,11 @@ class PageContainer(QWidget):
         self.layout.insertWidget(0, self.page_label)
 
     def addSegment(self, segment_box):
-        self.layout.insertWidget(self.layout.count() , segment_box)
+        self.layout.insertWidget(segment_box.get_index()+1, segment_box)
         segment_box.set_drag_callback(self.set_active_drag_widget)  
 
     def addCombinedSegment(self, container, head_segment):
-        self.layout.insertWidget(self.layout.count() , container)
+        self.layout.insertWidget(head_segment.get_index()+1, container)
         head_segment.set_drag_callback(self.set_active_drag_widget)  
 
     def set_active_drag_widget(self, widget):

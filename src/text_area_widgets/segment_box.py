@@ -81,6 +81,7 @@ class SegmentBox(QWidget):
         # Drag Handle on the left
         self.drag_handle = DragHandle(self)
         main_layout.addWidget(self.drag_handle, alignment=Qt.AlignmentFlag.AlignVCenter)
+        self.drag_handle.setVisible(False)
 
         layout = QVBoxLayout()
         layout.setContentsMargins(5, 5, 5, 5)
@@ -128,6 +129,9 @@ class SegmentBox(QWidget):
         
         # Adjust initial heights
         self._adjust_label_height()
+
+    def get_index(self):
+        return self.segment.get_head_index()
     def set_drag_callback(self, callback):
         """Set the callback function to be called when dragging starts."""
         self.drag_handle.set_drag_callback(callback)
@@ -187,6 +191,12 @@ class SegmentBox(QWidget):
         self.text_area.setStyleSheet(f"font-size: {self.text_size}px;")
         self._adjust_label_height()
         self._adjust_text_area_height()
+
+    def set_edit_mode(self, enabled: bool):
+        self._edit_mode = enabled
+        
+        # Toggle drag handle visibility
+        self.drag_handle.setVisible(enabled)
 
     def check_spelling(self):
         if not self.get_translation().strip():  # Only check if there's text

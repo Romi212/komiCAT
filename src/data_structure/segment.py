@@ -7,6 +7,7 @@ class Segment:
     def __init__(self, page, segment_nro):
         self.page = page
         self.nro = segment_nro
+        self.head_index = segment_nro
         self.source_text = None
         self.translation = ""
 
@@ -41,6 +42,12 @@ class Segment:
     def text_extracted(self, text):
         self.source_text = text
 
+    def set_head_index(self, i):
+        self.head_index = i
+
+    def get_head_index(self):
+        return self.head_index
+    
     def update_source_text(self, new_text):
         self.source_text = new_text
         if self.segment_box:
@@ -95,6 +102,8 @@ class Segment:
             self.button.set_edit_mode(value)
             if not value:
                 self.update_coordinates()
+        if self.segment_box:
+            self.segment_box.set_edit_mode(value)
 
     def update_coordinates(self):
         if self.button:
