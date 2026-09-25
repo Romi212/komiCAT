@@ -55,6 +55,12 @@ class ImageViewer(QWidget):
         self.view.wheelEvent = self.on_mouse_wheel
         layout.addWidget(self.view)
 
+        
+
+        self.open_image_button = QPushButton("Open Images",self.view)
+        self.open_image_button.clicked.connect(self.open_images)
+        self.open_image_button.setVisible(False)
+
         self.edit_menu = QWidget(self.view)
         self.edit_menu.setObjectName("editMenu")
         self.edit_menu.setVisible(False)
@@ -142,6 +148,7 @@ class ImageViewer(QWidget):
         )
         if file_paths:
             self.load_pages(file_paths)
+            self.open_image_button.setVisible(False)
         
     def load_chapter(self, chapter):
         self.chapter = chapter
@@ -149,7 +156,23 @@ class ImageViewer(QWidget):
         if len(chapter.pages) > 0:
             self.current_page = chapter.get_current_page()
             self._setup_page()
-    
+        else:
+            self._update_open_images_button_position()
+            
+    def _update_open_images_button_position(self):
+        self.open_image_button.setVisible(True)
+        
+        btn_width = 140
+        btn_height = 40
+
+        # Calculate centered (x, y) coordinates relative to self.view
+        x = (self.view.width() - btn_width) // 2
+        y = (self.view.height() - btn_height) // 2
+
+        self.open_image_button.setGeometry(x, y, btn_width, btn_height)
+
+     
+
     def load_pages(self, file_paths):
         for file_path in file_paths:
             try:
@@ -414,6 +437,7 @@ class ImageViewer(QWidget):
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self._update_edit_menu_position()
+        self._update_open_images_button_position()
 
     def set_panel_zoom(self,panel):
         if not panel:
