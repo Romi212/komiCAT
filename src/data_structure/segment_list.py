@@ -5,6 +5,7 @@ from data_structure.segment_combined import SegmentCombined
 class SegmentList:
     def __init__(self):
         self.segments = []
+        self.segments_indexes = {}
 
     #Iters trough all segments
     def __iter__(self):
@@ -24,9 +25,13 @@ class SegmentList:
 
     def add_segment(self, segment):
         self.segments.append(segment)
+        self.segments_indexes[int(segment.nro)] = segment
 
     def append_segments(self, toAppend):
         self.segments += toAppend.segments
+
+    def get_segment(self, index):
+        return self.segments_indexes[index]
         
     def remove_segment(self, segment):
         try:
@@ -162,6 +167,10 @@ class SegmentList:
         for index, seg in enumerate(self, start=1):
             if seg.nro != index:
                 seg.set_nro(index)
+            self.segments_indexes[index] = seg
+            print(f"{index} - {self.segments_indexes[index]}")
+
+        
 
     def get_head_index(self, segment):
         nro = self.segments.index(segment)
@@ -169,3 +178,9 @@ class SegmentList:
             return nro
         else:
             return len(self.segments)
+
+    def get_last_segment(self):
+        if self.segments_indexes:
+            return self.segments_indexes[max(self.segments_indexes)]
+        else:
+            return None

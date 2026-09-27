@@ -63,6 +63,7 @@ class TextViewer(QWidget):
             self._create_page_containers()
         page_container = self.page_containers[page.number]
         self.create_segment_boxes(segments, page_container)
+        self.update_tab_order(page)
 
     #Called from ProjectWindow when the user clicks the "Extract" button, passing the list of segments with the source text gud
     def create_segment_boxes(self, segments, page_container):
@@ -93,7 +94,15 @@ class TextViewer(QWidget):
                     page_container.addSegment(segment_box)
             # Insert before the stretch (at second-to-last position)
         
-    
+        
+
+    def update_tab_order(self,page):
+        previous = page.get_previous_page_last_segment()
+        for segment in page.segments:
+            if previous:
+                segment.segment_box.set_prev_focus(previous)
+            previous = segment
+
     def create_segment(self, logic_segment):
         segment = SegmentBox(self.spell_checker, self.jp_dict,logic_segment, self.text_size)
         
@@ -102,7 +111,7 @@ class TextViewer(QWidget):
         segment.installEventFilter(self)
 
         segment.check_spelling()
-       
+        segment.focused.connect(self.focus_next_segment)
         return segment
     
    
@@ -117,6 +126,7 @@ class TextViewer(QWidget):
             self.page_containers.append(page_container)
             
             self.create_segment_boxes(page.segments, page_container)
+            self.update_tab_order(page)
             
 
     def zoom_in(self):
@@ -131,36 +141,15 @@ class TextViewer(QWidget):
         for segment in self.segment_boxes:
             segment.zoom(self.text_size)  # Zoom out by adjusting the text size
 
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key.Key_Tab:
-            self.focus_next_segment((self.current_index +1) % len(self.segment_boxes))
-            event.accept()
-        elif event.key() == Qt.Key.Key_Backtab:  # Shift+Tab
-            self.focus_next_segment((self.current_index - 1) % len(self.segment_boxes))
-            event.accept()
-        else:
-            super().keyPressEvent(event)
-
-    def focus_next_segment(self, next):
-        if not self.segment_boxes:
-            return
+    def focus_next_segment(self, next_segment):
+                
+        if next_segment.page != self.chapter.current_page:
+            self.controller.set_current_page(next_segment.page)  # Switch to the page of the next segment
         
-        # Find currently focused segment box
-        current_index = self.current_segment_index
-        next_index = next
+        if next_segment.panel != self.current_panel:
+            self.current_panel = next_segment.panel
+            self.controller.set_panel_zoom(next_segment.panel)
         
-        self.current_segment_index = next_index
-        next_segment = self.segment_boxes[next_index]
-        
-        if next_segment.segment.page != self.chapter.current_page:
-            self.controller.set_current_page(next_segment.segment.page)  # Switch to the page of the next segment
-        
-        if next_segment.segment.panel != self.current_panel:
-            self.current_panel = next_segment.segment.panel
-            self.controller.set_panel_zoom(next_segment.segment.panel)
-        next_segment.text_area.setFocus()
-        # Scroll to make it visible
-        self.scroll_area.ensureWidgetVisible(next_segment)
 
     def focus_previous_segment(self):
         if not self.segment_boxes:
@@ -180,23 +169,6 @@ class TextViewer(QWidget):
         # Scroll to make it visible
         self.scroll_area.ensureWidgetVisible(prev_segment)
 
-    def eventFilter(self, obj, event):
-        """Handle Tab key presses from segment boxes"""
-        if event.type() == 6:  # QEvent.KeyPress
-            if event.key() == Qt.Key.Key_Tab:
-                # Find which segment box this came from
-                for i, segment in enumerate(self.segment_boxes):
-                    if segment.isAncestorOf(obj) or segment == obj:
-                        self.current_segment_index = i
-                        self.focus_next_segment((i + 1) % len(self.segment_boxes))
-                        return True
-            elif event.key() == Qt.Key.Key_Backtab:  # Shift+Tab
-                for i, segment in enumerate(self.segment_boxes):
-                    if segment.isAncestorOf(obj) or segment == obj:
-                        self.current_segment_index = i
-                        self.focus_next_segment((i - 1) % len(self.segment_boxes))
-                        return True
-        return super().eventFilter(obj, event)
 
     def _create_page_container(self,page = None):
         if not page:
