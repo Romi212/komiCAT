@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import (
     QGraphicsPixmapItem, QGraphicsRectItem
 )
 from PyQt6.QtGui import QFont, QPixmap, QImage, QColor, QPen, QIcon
-from PyQt6.QtCore import QRectF, Qt, QSize, QRect
+from PyQt6.QtCore import QRectF, Qt, QSize, QRect, pyqtSignal
 from PIL import Image
 import os
 
@@ -15,6 +15,7 @@ from data_structure.page import Page
 from data_structure.segment import Segment
 
 class ImageViewer(QWidget):
+    
     def __init__(self, controller, parent=None, chapter=None, text_extractor=None):
         super().__init__(parent)
         self.text_extractor = text_extractor 
@@ -124,6 +125,7 @@ class ImageViewer(QWidget):
         self.edition_mode_button.setCheckable(True)  # Enables checkable/toggle state
         self.edition_mode_button.toggled.connect(self.edit_mode)  # Sends boolean (True/False)
         self.button_layout.addWidget(self.edition_mode_button)
+       
 
         self.clear_selection_button = QPushButton("Clear Selection")
         self.clear_selection_button.clicked.connect(self.clear_selection)
@@ -466,8 +468,9 @@ class ImageViewer(QWidget):
 
     def edit_mode(self, checked):
         self.can_edit = checked
+        
         if self.current_page:
-            self.current_page.set_edit_mode(checked)
+            self.controller.change_edit_mode(self.current_page, checked)
         if self.edit_menu:
             self.edit_menu.setVisible(checked)
             self.edit_menu.raise_()

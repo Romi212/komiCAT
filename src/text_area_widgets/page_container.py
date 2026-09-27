@@ -1,5 +1,7 @@
 from PyQt6.QtWidgets import QMenu, QWidget, QVBoxLayout, QLabel, QTextEdit
 from PyQt6.QtCore import Qt
+from data_structure.segment_list import SegmentList
+from text_area_widgets.combined_container import CombinedContainer
 from text_area_widgets.segment_box import SegmentBox
 
 class PageContainer(QWidget):
@@ -9,7 +11,7 @@ class PageContainer(QWidget):
         
         # Enable receiving drop events
         self.setAcceptDrops(True)
-        self.acttive_drag_widget = None  
+        self.active_drag_widget = None  
 
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(5, 5, 5, 5)
@@ -24,8 +26,8 @@ class PageContainer(QWidget):
         segment_box.set_drag_callback(self.set_active_drag_widget)  
 
     def addCombinedSegment(self, container, head_segment):
-        self.layout.insertWidget(head_segment.get_index()+1, container)
-        head_segment.set_drag_callback(self.set_active_drag_widget)  
+        self.layout.insertWidget(head_segment.get_index() + 1, container)
+        container.set_container_drag_callback(self.set_active_drag_widget) 
 
     def set_active_drag_widget(self, widget):
         """Set the currently dragged widget."""
@@ -45,7 +47,7 @@ class PageContainer(QWidget):
         # Move widget in layout directly using Python pointer
         self.layout.removeWidget(dragged_box)
         self.layout.insertWidget(target_index, dragged_box)
-        self.sync_logical_segments()
+        
 
         event.acceptProposedAction()
         
@@ -64,23 +66,24 @@ class PageContainer(QWidget):
 
     def sync_logical_segments(self):
         """Re-orders logical segments in self.page to match visual layout order."""
-        ordered_segments = []
-        for i in range(self.layout.count()):
+        ordered_segments = SegmentList()
+        index = 1
+        for i in range(1,self.layout.count()):
             widget = self.layout.itemAt(i).widget()
-            if isinstance(widget, SegmentBox) and widget.segment:
-                widget.segment.nro = i + 1  # Update number sequence
-                ordered_segments.append(widget.segment)
-
-        # Update pointers for linked list structures
-        for i, seg in enumerate(ordered_segments):
-            next_seg = ordered_segments[i + 1] if i + 1 < len(ordered_segments) else None
-            if hasattr(seg, "set_child"):
-                seg.set_child(next_seg)
-
-        # Update root list if page uses a list
-        if hasattr(self.page, "segments"):
-            if isinstance(self.page.segments, list):
-                self.page.segments = ordered_segments
+            
+            if widget.segment:
+                segment = widget.segment
+                index = segment.set_nro(index) +1
+                ordered_segments.add_segment(segment)
+        self.page.update_segments(ordered_segments)
 
     def remove_segment(self, segment):
         self.layout.removeWidget(segment)
+
+    def set_edit_mode(self, page, enabled: bool):
+        if page.number == self.page.number:
+            for container in self.findChildren(CombinedContainer):
+                container.set_edit_mode(enabled)
+            if not enabled:
+                self.sync_logical_segments()
+            

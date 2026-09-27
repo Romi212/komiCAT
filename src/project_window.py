@@ -1,7 +1,8 @@
 import sys
 from PyQt6.QtWidgets import QApplication, QDialog, QFileDialog, QMainWindow, QSplitter, QVBoxLayout, QWidget, QMenuBar
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 
+from data_structure.page import Page
 from data_structure.segment_combined import SegmentCombined
 from create_project_window import CreateProjectWindow
 from image_viewer import ImageViewer
@@ -10,7 +11,7 @@ from text_viewer import TextViewer
 from data_structure.chapter import Chapter
 
 class ProjectWindow(QMainWindow):
-
+    edit_mode_changed = pyqtSignal(Page, bool)
     def __init__(self, text_extractor=None, chapter=None, project_loader=None):
         super().__init__()
         
@@ -115,3 +116,9 @@ class ProjectWindow(QMainWindow):
 
     def delete_segment(self, segment):
         self.text_viewer.delete_segment(segment)
+
+    def change_edit_mode(self, page, can_edit):
+            page.set_edit_mode(can_edit)
+            self.edit_mode_changed.emit(page, can_edit)
+            if not can_edit:
+                self.text_viewer.update_tab_order(page)

@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QLabel, QPushButton, QHBoxLayout, QWidget, QVBoxLayout, QScrollArea, QSizePolicy
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QKeyEvent
+from text_area_widgets.combined_container import CombinedContainer
 from text_area_widgets.page_container import PageContainer
 from text_area_widgets.segment_box import SegmentBox
 from tools.jp_dictionaries import JPDictionary
@@ -75,20 +76,15 @@ class TextViewer(QWidget):
                 
                 if(aux.get_child()):
                     # Create a container widget for combined segments
-                    container = QWidget()
-                    container.setObjectName("combinedSegmentContainer")
-                    container.setStyleSheet("#combinedSegmentContainer { border: 2px solid #6e2130; border-radius: 5px; }")
-                    layout = QVBoxLayout()
-                    layout.setContentsMargins(8, 8, 8, 8)
-                    layout.setSpacing(5)
-                    layout.addWidget(segment_box)
+                    container = CombinedContainer(segment_box)
+                    
                     head_segment = segment_box
                     while (aux.get_child()):
                         aux = aux.get_child()
                         segment_box = self.create_segment(aux)
                         aux.set_segment_box(segment_box)
-                        layout.addWidget(segment_box)
-                    container.setLayout(layout)
+                        container.addChild(segment_box)
+                    
                     page_container.addCombinedSegment(container,head_segment)
                 else:
                     page_container.addSegment(segment_box)
@@ -151,29 +147,12 @@ class TextViewer(QWidget):
             self.controller.set_panel_zoom(next_segment.panel)
         
 
-    def focus_previous_segment(self):
-        if not self.segment_boxes:
-            return
-        
-        # Find currently focused segment box
-        current_index = self.current_segment_index
-        prev_index = (current_index - 1) % len(self.segment_boxes)
-        
-        self.current_segment_index = prev_index
-        prev_segment = self.segment_boxes[prev_index]
-        prev_segment.text_area.setFocus()
-
-        if prev_segment.segment.page != self.chapter.current_page:
-            self.controller.set_current_page(prev_segment.segment.page)  # Switch to the page of the previous segment
-        
-        # Scroll to make it visible
-        self.scroll_area.ensureWidgetVisible(prev_segment)
-
 
     def _create_page_container(self,page = None):
         if not page:
             page = self.chapter.get_current_page()
         page_container = PageContainer(page=page, parent=self)
+        self.controller.edit_mode_changed.connect(page_container.set_edit_mode)
         return page_container
 
     def _create_page_containers(self):

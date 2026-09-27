@@ -1,5 +1,4 @@
 import os
-
 from data_structure.panel import Panel
 from data_structure.segment import Segment
 from data_structure.segment_combined import SegmentCombined
@@ -9,6 +8,7 @@ from image_area_widgets.text_box_rect import TextBoxRect
 
 
 class Page:
+    
     def __init__(self, file_path=None, image=None, chapter=None, number=0):
         
         self.file_path = file_path
@@ -22,6 +22,7 @@ class Page:
         self.segments_amount = 0
         self.detected_panels = []
         self.has_been_processed = False
+        self.segments_to_update = SegmentList()
     
 
     def store_detected_bubbles(self, detected_bubbles, detected_text_bubbles, detected_free_text, detected_panels):
@@ -222,6 +223,8 @@ class Page:
             translation_text += segment.get_translation() + "\n\n"
         return translation_text
 
+    def update_segments(self, to_update):
+        self.segments = to_update
 
     def set_edit_mode(self, can_edit):
         for segment in self.segments:
