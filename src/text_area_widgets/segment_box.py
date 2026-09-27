@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QApplication, QHBoxLayout, QMenu, QWidget, QVBoxLayout, QLabel, QTextEdit
-from PyQt6.QtCore import QMimeData, Qt
+from PyQt6.QtCore import QMimeData, Qt, pyqtSignal
 from PyQt6.QtGui import QDrag, QKeyEvent, QTextCursor, QTextCharFormat, QColor
 from text_area_widgets.translation_text_edit import TranslationTextEdit
 from text_area_widgets.source_text_edit import SourceTextEdit
@@ -63,7 +63,8 @@ class DragHandle(QLabel):
 
 class SegmentBox(QWidget):
 
-
+    focused = pyqtSignal(object)
+    
     def __init__(self, spell_checker, jp_dict, logic_segment, initial_text_size=12):
         super().__init__()
         self.spell_checker = spell_checker
@@ -86,6 +87,8 @@ class SegmentBox(QWidget):
         layout = QVBoxLayout()
         layout.setContentsMargins(5, 5, 5, 5)
         layout.setSpacing(5)
+
+        
         
         
         # TextEdit for Japanese text (editable)
@@ -96,8 +99,10 @@ class SegmentBox(QWidget):
         self.label.setStyleSheet(f"font-weight: bold; font-size: {self.text_size}px;")
         self.label.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.label.textChanged.connect(self._adjust_label_height)
+
         self.label.focusInEvent = self._on_label_focus
         self.label.focusOutEvent = self._on_label_unfocus
+        self.label.setTabChangesFocus(True)
         layout.addWidget(self.label)
         
         # Text area for translation
@@ -108,8 +113,12 @@ class SegmentBox(QWidget):
         self.text_area.setStyleSheet(f"font-size: {self.text_size}px;")
         self.text_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.text_area.textChanged.connect(self._adjust_text_area_height)
+
         self.text_area.focusInEvent = self._on_text_area_focus
         self.text_area.focusOutEvent = self._on_text_area_unfocus  # Reuse unfocus for both
+        self.text_area.setTabChangesFocus(True)
+        
+        
         layout.addWidget(self.text_area)
 
         main_layout.addLayout(layout)
@@ -130,6 +139,11 @@ class SegmentBox(QWidget):
         # Adjust initial heights
         self._adjust_label_height()
 
+    def set_prev_focus(self, segment):
+        if segment:
+            if segment.segment_box:
+                prev = segment.segment_box.text_area
+                QWidget.setTabOrder(prev,self.text_area)
     def get_index(self):
         return self.segment.get_head_index()
     def set_drag_callback(self, callback):
@@ -173,6 +187,7 @@ class SegmentBox(QWidget):
 
     def _on_text_area_focus(self, event):
         self.segment.show_focus(True)
+        self.focused.emit(self.segment)
         QTextEdit.focusInEvent(self.text_area, event)
 
 

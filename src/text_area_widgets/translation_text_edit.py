@@ -8,13 +8,6 @@ class TranslationTextEdit(QTextEdit):
         super().__init__(parent)
         self.spell_checker = spell_checker
 
-    """QTextEdit that ignores Tab and Shift+Tab to allow focus navigation"""
-    def keyPressEvent(self, event: QKeyEvent):
-        if event.key() in (Qt.Key.Key_Tab, Qt.Key.Key_Backtab):
-            # Don't insert tab, let it propagate to parent for focus navigation
-            event.ignore()
-        else:
-            super().keyPressEvent(event)
 
     def mouseDoubleClickEvent(self, event):
         # Let default double-click behavior run first so PyQt selects the word

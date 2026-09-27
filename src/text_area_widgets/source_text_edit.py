@@ -70,13 +70,13 @@ class SourceTextEdit(QTextEdit):
         self.dictionary = jmdict
         self._popup = None
 
-    """QTextEdit that ignores Tab and Shift+Tab to allow focus navigation"""
+    """QTextEdit that ignores Tab and Shift+Tab to allow focus navigation
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() in (Qt.Key.Key_Tab, Qt.Key.Key_Backtab):
             # Don't insert tab, let it propagate to parent for focus navigation
             event.ignore()
         else:
-            super().keyPressEvent(event)
+            super().keyPressEvent(event)"""
 
     def mouseReleaseEvent(self, event):
         # Let default double-click behavior run first so PyQt selects the word

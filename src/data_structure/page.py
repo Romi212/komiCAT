@@ -55,6 +55,7 @@ class Page:
             print(f"sorting panel {base}")
             base, panel_segs = panel.sort_segments(base)
             self.segments.append_segments(panel_segs)
+        self.segments.recount_segments()
         
 
     def store_detected_panels(self, detected_panels):
@@ -251,4 +252,13 @@ class Page:
         self.reasign_panels()
         self.sort_segments()
     
-        
+
+    def get_last_segment(self):
+        return self.segments.get_last_segment()
+    
+    def get_previous_page_last_segment(self):
+        if self.number<1:
+            #return self.chapter.pages[len(self.chapter.pages)-1].get_last_segment()
+            return None
+        else:
+            return self.chapter.pages[self.number-1].get_last_segment()
