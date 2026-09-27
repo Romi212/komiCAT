@@ -1,10 +1,12 @@
 from PyQt6.QtWidgets import QMenu, QWidget, QVBoxLayout, QLabel, QTextEdit
 from PyQt6.QtCore import Qt
+from data_structure.segment_combined import SegmentCombined
 from data_structure.segment_list import SegmentList
 from text_area_widgets.combined_container import CombinedContainer
 from text_area_widgets.segment_box import SegmentBox
 
 class PageContainer(QWidget):
+    
     def __init__(self, page, parent=None):
         super().__init__(parent)
         self.page = page
@@ -20,15 +22,96 @@ class PageContainer(QWidget):
         self.page_label = QLabel("--------------------------- Page " + self.page.page_name + " ----------------------------------")
         self.page_label.setStyleSheet("font-weight: bold; border: none;")
         self.layout.insertWidget(0, self.page_label)
+          
+        COMBINE_ACCENT = "#6e2130"       # base accent, matches CombinedContainer border
+        COMBINE_ACCENT_HOVER = "#8a2e40"  # lighter tint for hover state
+        COMBINE_ACCENT_DIM = "#4a1620"    # darker, for pressed/disabled
+        self.combine_highlight = QWidget(self)
+        self.combine_highlight.setFixedHeight(6)
+        self.combine_highlight.setStyleSheet(f"background-color: {COMBINE_ACCENT_HOVER}; border-radius: 3px;")
+        self.combine_highlight.hide()
+        self.combine_highlight.setCursor(Qt.CursorShape.PointingHandCursor)
 
+        self._hover_pair = None  # (top_widget, bottom_widget) currently highlighted
+
+    def mouseMoveEvent(self, event):
+        pos = event.position().toPoint()
+        pair, gap_y, gap_height = self._find_gap_at(pos)
+
+        if pair:
+            self._hover_pair = pair
+            self.combine_highlight.setGeometry(10, gap_y, self.width() - 20, gap_height)
+            self.combine_highlight.show()
+        else:
+            self._hover_pair = None
+            self.combine_highlight.hide()
+
+        super().mouseMoveEvent(event)
+
+    def leaveEvent(self, event):
+        self._hover_pair = None
+        self.combine_highlight.hide()
+        super().leaveEvent(event)
+
+    def mousePressEvent(self, event):
+        if self._hover_pair and self.combine_highlight.geometry().contains(event.position().toPoint()):
+            top, bottom = self._hover_pair
+            self.combine_adjacent(top, bottom)
+        super().mousePressEvent(event)
+
+    def combine_adjacent(self,top, bottom):
+        if isinstance(top,CombinedContainer):
+            top.addChild(bottom)
+        else:
+            index = self.layout.indexOf(top)
+            head_segment = SegmentCombined(None,-1)
+            head_segment.clone_segment(top.segment)
+            top.segment = head_segment
+            container = CombinedContainer(top)
+            container.addChild(bottom)
+            head_segment.set_next_segment(bottom.segment)
+            
+            self.layout.insertWidget(index, container)
+            container.set_combine_callback(self.combine_segments)
+            container.set_container_drag_callback(self.set_active_drag_widget) 
+            self.layout.removeWidget(top)
+        self.layout.removeWidget(bottom)
+
+    def _find_gap_at(self, pos):
+        """Return ((top_widget, bottom_widget), gap_y, gap_height) if pos.y() sits in a gap, else (None, 0, 0)."""
+        widgets = [
+            self.layout.itemAt(i).widget()
+            for i in range(self.layout.count())
+            if self.layout.itemAt(i).widget() is not self.page_label
+        ]
+
+        margin = self.layout.spacing()
+        for i in range(len(widgets) - 1):
+            top, bottom = widgets[i], widgets[i + 1]
+            gap_top = top.geometry().bottom()
+            gap_bottom = bottom.geometry().top()
+            if gap_top <= pos.y() <= gap_bottom:
+                return (top, bottom), gap_top, gap_bottom - gap_top
+
+        return None, 0, 0
     def addSegment(self, segment_box):
         self.layout.insertWidget(segment_box.get_index()+1, segment_box)
         segment_box.set_drag_callback(self.set_active_drag_widget)  
 
     def addCombinedSegment(self, container, head_segment):
         self.layout.insertWidget(head_segment.get_index() + 1, container)
+        container.set_combine_callback(self.combine_segments)
         container.set_container_drag_callback(self.set_active_drag_widget) 
 
+    def combine_segments(self, container):
+        segs = container.segment_boxes
+        index = self.layout.indexOf(container)
+        self.layout.removeWidget(container)
+        container.setParent(None)
+        for seg in segs:
+            self.layout.insertWidget(index,seg)
+            index+=1
+            
     def set_active_drag_widget(self, widget):
         """Set the currently dragged widget."""
         self.active_drag_widget = widget
@@ -82,6 +165,7 @@ class PageContainer(QWidget):
 
     def set_edit_mode(self, page, enabled: bool):
         if page.number == self.page.number:
+            self.setMouseTracking(enabled)
             for container in self.findChildren(CombinedContainer):
                 container.set_edit_mode(enabled)
             if not enabled:

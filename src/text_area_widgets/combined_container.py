@@ -1,7 +1,26 @@
-from PyQt6.QtWidgets import QHBoxLayout, QMenu, QWidget, QVBoxLayout, QLabel, QTextEdit
+from PyQt6.QtWidgets import QHBoxLayout, QMenu, QPushButton, QWidget, QVBoxLayout, QLabel, QTextEdit
 from PyQt6.QtCore import Qt
 from data_structure.segment_combined import SegmentCombined
 from text_area_widgets.segment_box import DragHandle, SegmentBox
+
+class DecombineButton(QPushButton):
+    """Floating button to split a CombinedContainer back into individual segments."""
+    def __init__(self, parent=None):
+        super().__init__("⛓️‍💥", parent)  # broken-chain emoji as a placeholder icon
+        self.setFixedSize(18, 18)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setToolTip("Split combined segments")
+        self.setStyleSheet("""
+            QPushButton {
+                border: none;
+                border-radius: 3px;
+                background-color: #e2e2e2;
+                font-size: 11px;
+            }
+            QPushButton:hover {
+                background-color: #cccccc;
+            }
+        """)
 
 class CombinedContainer(QWidget):
     def __init__(self, segment_head, parent=None):
@@ -28,14 +47,29 @@ class CombinedContainer(QWidget):
         self.drag_handle.raise_()
         self.drag_handle.setVisible(False)
 
+        self.decombine_button = DecombineButton(self)
+        
+        self.decombine_button.raise_()
+        self.decombine_button.setVisible(False)
+        self._position_decombine_button()
+
         # --- drag/drop for children INSIDE this container ---
         self.setAcceptDrops(True)
         self.active_drag_widget = None
         segment_head.set_drag_callback(self.set_active_drag_widget)
 
+    def _position_decombine_button(self):
+        margin = 4
+        x = self.width() - self.decombine_button.width() - margin
+        self.decombine_button.move(x, margin)
+
+    def set_combine_callback(self, callback):
+        self.decombine_button.clicked.connect(lambda: callback(self))
+        
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.drag_handle.move(4, 4)  # keep it pinned top-left on resize
+        self._position_decombine_button()
 
     def set_container_drag_callback(self, callback):
         self.drag_handle.set_drag_callback(callback)
@@ -43,6 +77,7 @@ class CombinedContainer(QWidget):
     def set_edit_mode(self, enabled: bool):
         self._edit_mode = enabled
         self.drag_handle.setVisible(enabled)
+        self.decombine_button.setVisible(enabled)
         if not enabled:
             self.recreate_segment()
 
