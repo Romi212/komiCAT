@@ -9,6 +9,7 @@ from image_viewer import ImageViewer
 from project_loader import ProjectLoader
 from text_viewer import TextViewer
 from data_structure.chapter import Chapter
+from tool_windows.termbase_panel import TermbasePanel
 
 class ProjectWindow(QMainWindow):
     edit_mode_changed = pyqtSignal(Page, bool)
@@ -18,6 +19,8 @@ class ProjectWindow(QMainWindow):
         self.text_extractor = text_extractor;
         self.chapter = chapter;
         self.project_loader = project_loader;
+        self.termbase = self.chapter.get_termbase()
+        self.termbase_panel = None
         # Create main window
         
         self.setWindowTitle("KomiCAT")
@@ -42,6 +45,9 @@ class ProjectWindow(QMainWindow):
 
         export_action = project_menu.addAction("Export Translation")
         export_action.triggered.connect(self.export_translation)
+
+        termbase_action = project_menu.addAction("Termbase")
+        termbase_action.triggered.connect(self.show_termbase)
 
         
 
@@ -97,6 +103,13 @@ class ProjectWindow(QMainWindow):
     def export_translation(self):
         export_path = QFileDialog.getSaveFileName()
         self.project_loader.export_translation(export_path[0])
+
+    def show_termbase(self):
+        if self.termbase_panel is None:
+            self.termbase_panel = TermbasePanel(self.termbase, self)
+        self.termbase_panel.show()
+        self.termbase_panel.raise_()
+        self.termbase_panel.activateWindow()
 
     def create_new_project(self):
         self.create_project_window = CreateProjectWindow()

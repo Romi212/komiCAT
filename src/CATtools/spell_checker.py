@@ -3,13 +3,14 @@ import re
 from symspellpy import SymSpell, Verbosity
 
 class SpellChecker:
-    def __init__(self, language='es'):
+    def __init__(self, language='es', termbase = None):
         self.language = 'es'
         dict_path = f"./dictionaries/{language}_frequency_dictionary.txt"
         self.sym_spell = SymSpell(
             max_dictionary_edit_distance=2, 
             prefix_length=7
         )
+        self.termbase = termbase
         
         # Load Spanish frequency dictionary (Format: "word frequency")
         if os.path.exists(dict_path):
@@ -69,14 +70,20 @@ class SpellChecker:
 
     def get_suggestions(self, word: str, max_suggestions: int = 5) -> list[str]:
         """Returns a list of suggested corrections for a misspelled word."""
+
+        
         suggestions = self.sym_spell.lookup(
             word.lower(),
             Verbosity.CLOSEST,
             max_edit_distance=2,
             transfer_casing=True # Preserves initial capitals if present
         )
+        suggestions = [item.term for item in suggestions[:max_suggestions]]
+        closest = self.termbase.find_closest_target(word, max_distance=2)
+        if closest:
+            suggestions.insert(0,closest)
         
-        return [item.term for item in suggestions[:max_suggestions]]
+        return suggestions
 
     def add_custom_word(self, word: str, frequency: int = 1000):
         """Add character names or Manga slang dynamically to memory."""

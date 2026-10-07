@@ -2,6 +2,7 @@
 
 from PIL import Image
 
+from CATtools.termbase import Termbase
 from data_structure.page import Page
 
 
@@ -13,6 +14,7 @@ class Chapter:
         self.pages = []
         self.current_page = 0
         self.language = language 
+        self.termbase = None
 
 
     def add_page(self, page):
@@ -20,6 +22,9 @@ class Chapter:
 
 
     def load_chapter(self, data):
+        if "termbase" in data and data["termbase"]:
+            self.termbase = Termbase(data["termbase"]["source_lan"], data["termbase"]["target_lan"])
+            self.termbase.load_data(data["termbase"])
         for page_data in data["pages"]:
             image = Image.open(page_data["file_path"])
             page = Page(file_path=page_data["file_path"], image=image, chapter=self, number=len(self.pages))
@@ -50,6 +55,7 @@ class Chapter:
             "name": self.name,
             "series_name": self.series_name,
             "number": self.number,
+            "termbase": self.termbase.get_data() if self.termbase else None,
             "pages": [page.get_data() for page in self.pages]
         }
     
@@ -61,3 +67,8 @@ class Chapter:
     
     def set_current_page(self, page):
         self.current_page = self.pages.index(page)
+
+    def get_termbase(self):
+        if self.termbase is None:
+            self.termbase = Termbase("jp", self.language)
+        return self.termbase

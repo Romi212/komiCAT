@@ -1,6 +1,6 @@
-from PyQt6.QtWidgets import QMenu,  QTextEdit
+from PyQt6.QtWidgets import QLabel, QMenu,  QTextEdit
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QKeyEvent,  QTextCharFormat
+from PyQt6.QtGui import QColor, QKeyEvent,  QTextCharFormat, QTextCursor
 
 from PyQt6.QtWidgets import QTextEdit, QWidget, QVBoxLayout, QTextBrowser
 from PyQt6.QtCore import Qt, QPoint
@@ -62,14 +62,74 @@ class DictPopup(QWidget):
             html_lines.append("</ol>")
         
         return "".join(html_lines)
+class TermPopup(QLabel):
+    def __init__(self, parent=None):
+        super().__init__(parent, Qt.WindowType.ToolTip)
+        self.setStyleSheet("""
+            QLabel {
+                background-color: #2b2b2b;
+                color: #f0f0f0;
+                border: 1px solid #444;
+                border-radius: 4px;
+                padding: 4px 8px;
+            }
+        """)
 
+    def show_term(self, global_pos, source_term, target_term):
+        self.setText(f"{source_term} → {target_term}")
+        self.adjustSize()
+        self.move(global_pos + QPoint(10, 10))
+        self.show()
 class SourceTextEdit(QTextEdit):
 
-    def __init__(self, jmdict=None, parent=None):
+    def __init__(self, jmdict=None, parent=None, termbase=None):
         super().__init__(parent)
         self.dictionary = jmdict
+        self.termbase = termbase
         self._popup = None
+        self._term_matches = []
+        self._hover_match = None
 
+        self.setMouseTracking(True)
+        self._term_popup = None
+
+    def set_source_text(self, text):
+        self.setPlainText(text)
+        if self.termbase:
+            self.highlight_terms()
+
+    def mouseMoveEvent(self, event):
+        super().mouseMoveEvent(event)
+
+        cursor = self.cursorForPosition(event.pos())
+        pos = cursor.position()
+
+        match = next(
+            (m for m in self._term_matches if m[0] <= pos < m[1]),
+            None
+        )
+
+        if match != self._hover_match:
+            self._hover_match = match
+            if match:
+                self._show_term_popup(event.globalPosition().toPoint(), match)
+            else:
+                self._hide_term_popup()
+
+    def leaveEvent(self, event):
+        self._hover_match = None
+        self._hide_term_popup()
+        super().leaveEvent(event)
+
+    def _show_term_popup(self, global_pos, match):
+        start, end, source_term, target_term = match
+        if self._term_popup is None:
+            self._term_popup = TermPopup(self)
+        self._term_popup.show_term(global_pos, source_term, target_term)
+
+    def _hide_term_popup(self):
+        if self._term_popup:
+            self._term_popup.hide()
     """QTextEdit that ignores Tab and Shift+Tab to allow focus navigation
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() in (Qt.Key.Key_Tab, Qt.Key.Key_Backtab):
@@ -106,4 +166,39 @@ class SourceTextEdit(QTextEdit):
             self._popup = DictPopup(self)
         self._popup.show_definition(global_pos, word, entry)
 
-    
+    def highlight_terms(self):
+        text = self.toPlainText()
+        self._term_matches = self.termbase.find_terms_in(text)
+
+        fmt = QTextCharFormat()
+        fmt.setBackground(QColor("#6e2130"))
+        fmt.setForeground(QColor("white"))
+
+        # Clear previous term highlighting first
+        clear_fmt = QTextCharFormat()
+        cursor = QTextCursor(self.document())
+        cursor.select(QTextCursor.SelectionType.Document)
+        cursor.setCharFormat(clear_fmt)
+
+        for start, end, source_term, target_term in self._term_matches:
+            cursor = QTextCursor(self.document())
+            cursor.setPosition(start)
+            cursor.setPosition(end, QTextCursor.MoveMode.KeepAnchor)
+            cursor.mergeCharFormat(fmt)
+
+    def remove_match(self, term_target):
+        """Dims a term's highlight once the user has translated it correctly.
+        term_target is the target_term (translation) associated with the match to dim."""
+        matched = [m for m in self._term_matches if m[3] == term_target]
+        if not matched:
+            return
+
+        dim_fmt = QTextCharFormat()
+        dim_fmt.setBackground(QColor("transparent"))
+        dim_fmt.setForeground(QColor())  # reset to default text color
+
+        for start, end, source_term, target_term in matched:
+            cursor = QTextCursor(self.document())
+            cursor.setPosition(start)
+            cursor.setPosition(end, QTextCursor.MoveMode.KeepAnchor)
+            cursor.setCharFormat(dim_fmt)

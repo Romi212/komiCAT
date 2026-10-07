@@ -92,8 +92,9 @@ class SegmentBox(QWidget):
         
         
         # TextEdit for Japanese text (editable)
-        self.label = SourceTextEdit(jmdict=jp_dict)
-        self.label.setPlainText(self.segment.source_text)
+        self.termbase = self.segment.page.chapter.get_termbase()
+        self.label = SourceTextEdit(jmdict=jp_dict, termbase=self.termbase)
+        self.label.set_source_text(self.segment.source_text)
         self.label.setReadOnly(False)
         self.label.setMinimumHeight(5)
         self.label.setStyleSheet(f"font-weight: bold; font-size: {self.text_size}px;")
@@ -220,6 +221,7 @@ class SegmentBox(QWidget):
         text = self.get_translation()
         misspelled_words = self.spell_checker.get_misspelled_words(text)
 
+
         if misspelled_words:
             print(f"Misspelled words in segment {self.segment.nro}: {misspelled_words}")
  
@@ -234,17 +236,18 @@ class SegmentBox(QWidget):
             doc = self.text_area.document()
 
             for word in misspelled_words:
-                # Clear previous cursor adjustments and search from beginning
-                cursor = QTextCursor(doc)
-                while True:
-                    # Find the next occurrence of the word
-                    cursor = doc.find(word, cursor)
-                    
-                    # If no more matches are found, break loop
-                    if cursor.isNull():
-                        break
+                if not self.termbase.look_up_source(word):
+                    # Clear previous cursor adjustments and search from beginning
+                    cursor = QTextCursor(doc)
+                    while True:
+                        # Find the next occurrence of the word
+                        cursor = doc.find(word, cursor)
                         
-                    # Apply formatting specifically to the matched cursor selection
-                    cursor.mergeCharFormat(fmt)
-
-            
+                        # If no more matches are found, break loop
+                        if cursor.isNull():
+                            break
+                            
+                        # Apply formatting specifically to the matched cursor selection
+                        cursor.mergeCharFormat(fmt)
+                else:
+                    self.label.remove_match(word)
