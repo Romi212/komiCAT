@@ -1,4 +1,4 @@
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
 	QDialog,
 	QDialogButtonBox,
@@ -37,9 +37,11 @@ class AddTermDialog(QDialog):
 
 
 class TermbasePanel(QDialog):
+	termbase_changed = pyqtSignal() 
 	def __init__(self, termbase, parent=None):
 		super().__init__(parent)
 		self.termbase = termbase
+		self.termbase.panel = self
 		self.setWindowTitle("Termbase")
 		self.setWindowFlags(
 			Qt.WindowType.Window | Qt.WindowType.WindowStaysOnTopHint
@@ -74,6 +76,7 @@ class TermbasePanel(QDialog):
 		for row, (source_term, target_term) in enumerate(entries):
 			self.table.setItem(row, 0, QTableWidgetItem(source_term))
 			self.table.setItem(row, 1, QTableWidgetItem(target_term))
+		self.termbase_changed.emit()
 
 	def _add_entry(self):
 		dialog = AddTermDialog(self)

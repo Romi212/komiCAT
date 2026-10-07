@@ -26,6 +26,8 @@ class Termbase:
 
         self.termbase_dict[source_term] = target_term
         self.reverse_termbase_dict.setdefault(target_term, []).append(source_term)
+        if self.panel: 
+            self.panel._refresh_table()
 
     def look_up(self, source_term):
         return self.termbase_dict.get(source_term)
@@ -40,6 +42,8 @@ class Termbase:
 
         target_term = self.termbase_dict.pop(source_term)
         self._remove_reverse_entry(source_term, target_term)
+        if self.panel: 
+                    self.panel._refresh_table()
         return True
 
     def source_in(self, source_term):

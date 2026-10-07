@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QLabel, QMenu,  QTextEdit
+from PyQt6.QtWidgets import QInputDialog, QLabel, QLineEdit, QMenu,  QTextEdit
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QKeyEvent,  QTextCharFormat, QTextCursor
 
@@ -86,6 +86,10 @@ class SourceTextEdit(QTextEdit):
         super().__init__(parent)
         self.dictionary = jmdict
         self.termbase = termbase
+
+        if self.termbase:
+            self.termbase.panel.termbase_changed.connect(self.highlight_terms)
+
         self._popup = None
         self._term_matches = []
         self._hover_match = None
@@ -202,3 +206,29 @@ class SourceTextEdit(QTextEdit):
             cursor.setPosition(start)
             cursor.setPosition(end, QTextCursor.MoveMode.KeepAnchor)
             cursor.setCharFormat(dim_fmt)
+    def contextMenuEvent(self, event):
+        menu = self.createStandardContextMenu()
+
+        cursor = self.textCursor()
+        selected_word = cursor.selectedText().strip()
+
+        if selected_word and self.termbase:
+            menu.addSeparator()
+            if self.termbase.source_in(selected_word):
+                action = menu.addAction(f'"{selected_word}" already in termbase')
+                action.setEnabled(False)
+            else:
+                action = menu.addAction(f'Add "{selected_word}" to termbase')
+                action.triggered.connect(lambda: self._add_term(selected_word))
+
+        menu.exec(event.globalPos())
+
+    def _add_term(self, source_word):
+        target_word, ok = QInputDialog.getText(
+            self,
+            "Add Termbase Entry",
+            f'Translation for "{source_word}":',
+            QLineEdit.EchoMode.Normal
+        )
+        if ok and target_word.strip():
+            self.termbase.add_entry(source_word, target_word.strip())

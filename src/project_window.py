@@ -20,7 +20,8 @@ class ProjectWindow(QMainWindow):
         self.chapter = chapter;
         self.project_loader = project_loader;
         self.termbase = self.chapter.get_termbase()
-        self.termbase_panel = None
+        self.termbase_panel = TermbasePanel(self.termbase, self)
+        
         # Create main window
         
         self.setWindowTitle("KomiCAT")
@@ -105,8 +106,6 @@ class ProjectWindow(QMainWindow):
         self.project_loader.export_translation(export_path[0])
 
     def show_termbase(self):
-        if self.termbase_panel is None:
-            self.termbase_panel = TermbasePanel(self.termbase, self)
         self.termbase_panel.show()
         self.termbase_panel.raise_()
         self.termbase_panel.activateWindow()
