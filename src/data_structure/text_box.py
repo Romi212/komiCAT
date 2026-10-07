@@ -1,4 +1,7 @@
 
+from aux_types.segment_types import SEGMENT_TYPE_FORMAT, SegmentType
+
+
 class TextBox:
     def __init__(self, xmin,xmax,ymin,ymax,label):
         self.xmin = xmin
@@ -8,6 +11,13 @@ class TextBox:
         self.label = label
         self.text = ""
         self.index = 0
+        self.text_type = SegmentType.BUBBLE
+        if(label == "text_free"):
+             self.text_type = SegmentType.FREE
+        if(label == "sfx"):
+             self.text_type = SegmentType.SFX
+
+        self.text_type_format = SEGMENT_TYPE_FORMAT[self.text_type]
         
 
     def set_bubble_container(self, bubble_container):
@@ -25,3 +35,8 @@ class TextBox:
                     self.xmin - tolerance > other.xmax or
                     self.ymax + tolerance < other.ymin or
                     self.ymin - tolerance > other.ymax)
+
+    def update_text_type(self, type):
+        self.text_type = type
+        self.text_type_format = SEGMENT_TYPE_FORMAT[self.text_type]
+        self.label = type

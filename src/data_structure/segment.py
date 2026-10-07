@@ -1,7 +1,7 @@
 
 from data_structure.text_box import TextBox
 from image_area_widgets.text_box_rect import TextBoxRect
-
+from aux_types.segment_types import SEGMENT_TYPE_FORMAT, SegmentType
 
 class Segment:
     def __init__(self, page, segment_nro):
@@ -15,7 +15,26 @@ class Segment:
         self.button = None
         self.segment_box = None 
         self.panel = None
+        self.text_type = SegmentType.BUBBLE
 
+    def set_text_box(self, text_box):
+        self.text_box = text_box
+        self.text_type = text_box.text_type
+
+    def change_type(self, segment_type):
+        if self.text_type == segment_type:
+            return
+        self.text_type = segment_type
+        self.text_box.update_text_type(segment_type)
+
+    @property
+    def segment_type(self):
+        return self._segment_type
+
+    @property
+    def type_policy(self):
+        return SEGMENT_TYPE_FORMAT[self._segment_type]
+    
     def set_panel(self, panel):
         if not self.panel:
             self.panel = panel

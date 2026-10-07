@@ -2,16 +2,13 @@ from PyQt6.QtWidgets import QGraphicsRectItem, QGraphicsItem, QMenu
 from PyQt6.QtGui import QPen, QBrush, QColor, QFont, QCursor
 from PyQt6.QtCore import QObject, Qt, QRectF, pyqtSignal
 
+from aux_types.segment_types import SEGMENT_TYPE_FORMAT
+
 class TextBoxRectSignals(QObject):
     delete_requested = pyqtSignal(object)
     combine_requested = pyqtSignal(object)
 
 class TextBoxRect(QGraphicsRectItem):
-    STYLES = {
-        "text_bubble": {"bg": QColor(200, 0, 0, 50), "border": QColor(255, 0, 0)},
-        "free_text":   {"bg": QColor(0, 0, 200, 50), "border": QColor(0, 0, 255)},
-        "other":       {"bg": QColor(0, 200, 0, 50), "border": QColor(0, 255, 0)},
-    }
 
     def __init__(self, text_box, parent = None,  alpha=0.6):
         w = text_box.xmax - text_box.xmin
@@ -37,8 +34,7 @@ class TextBoxRect(QGraphicsRectItem):
         else:
             self.has_been_extracted_flag = True
             self.state = "extracted" # not_extracted, checked, extracted, focused
-        self.style_config = self.STYLES.get(text_box.label, self.STYLES["other"])
-        
+       
                 
         self.setPos(text_box.xmin, text_box.ymin)
         self.setFlags(
@@ -48,6 +44,12 @@ class TextBoxRect(QGraphicsRectItem):
         self.setAcceptHoverEvents(True)
         self._resize_edge = None        
 
+    @property
+    def style_config(self):
+        if self.text_box:
+            format = self.text_box.text_type_format
+            return {"bg": format.bg_color, "border": format.border_color}
+        return {"bg": QColor(0, 200, 0, 50), "border": QColor(0, 255, 0)}  # default before segment attached
 
     def link_on_click(self, callback):
             self.onClick = callback
