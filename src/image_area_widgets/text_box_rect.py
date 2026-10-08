@@ -7,6 +7,7 @@ from aux_types.segment_types import SEGMENT_TYPE_FORMAT
 class TextBoxRectSignals(QObject):
     delete_requested = pyqtSignal(object)
     combine_requested = pyqtSignal(object)
+    moved = pyqtSignal() 
 
 class TextBoxRect(QGraphicsRectItem):
 
@@ -54,7 +55,12 @@ class TextBoxRect(QGraphicsRectItem):
     def link_on_click(self, callback):
             self.onClick = callback
 
-
+    def itemChange(self, change, value):
+        if change in (QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged,
+                    QGraphicsItem.GraphicsItemChange.ItemTransformHasChanged):
+            self.signals.moved.emit()
+        return super().itemChange(change, value)
+    
     def _on_clicked(self):
         """Wrapper that passes the button object (self) to the onClick callback"""
         if self.onClick:

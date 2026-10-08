@@ -1,14 +1,17 @@
 from data_structure.text_box import TextBox
 from data_structure.segment import Segment
+from image_area_widgets.combine_arrow import CombineArrow
 
 class SegmentCombined(Segment):
     
     def __init__(self, page, segment_nro):
         super().__init__(page, segment_nro)
         self.next_segment = None
+        self.next_arrow = None
 
     def set_next_segment(self, next_segment):
         self.next_segment = next_segment
+        self.next_arrow = CombineArrow(self,next_segment)
 
     def set_nro(self, nro):
         super().set_nro(nro)
@@ -33,13 +36,14 @@ class SegmentCombined(Segment):
         super().load_data(data)
         
         if data["next_segment"]["next_segment"]:
-            self.next_segment = SegmentCombined(self.page, -1)
+            next_segment = SegmentCombined(self.page, -1)
         else:
-            self.next_segment = Segment(self.page, -1)
-        self.next_segment.page = self.page
-        self.next_segment.panel = self.panel
+            next_segment = Segment(self.page, -1)
+        next_segment.page = self.page
+        next_segment.panel = self.panel
         if data["next_segment"]:
-            self.next_segment.load_data(data["next_segment"])
+            next_segment.load_data(data["next_segment"])
+        self.set_next_segment(next_segment)
 
     def get_translation(self):
         if(self.nro == -1): 
@@ -64,3 +68,8 @@ class SegmentCombined(Segment):
         self.button.segment = self
         self.segment_box = segment.segment_box
         self.panel = segment.panel
+
+    def set_edit_mode(self, value):
+        super.set_edit_mode(value)
+        if self.next_arrow:
+            self.next_arrow.set_edit_mode(value)

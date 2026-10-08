@@ -232,6 +232,8 @@ class ImageViewer(QWidget):
                 button.conect_signals(self.prompt_and_delete_segment, self.combine_segments)
                 
                 self.scene.addItem(button)
+                if(segment.next_arrow):
+                    self.scene.addItem(segment.next_arrow)
                     
             i = 0
             for panel in self.current_page.detected_panels:

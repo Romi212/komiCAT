@@ -16,6 +16,7 @@ class Segment:
         self.segment_box = None 
         self.panel = None
         self.text_type = SegmentType.BUBBLE
+        self.next_arrow = None
 
     def set_text_box(self, text_box):
         self.text_box = text_box
