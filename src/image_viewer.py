@@ -150,20 +150,22 @@ class ImageViewer(QWidget):
         )
         if file_paths:
             self.load_pages(file_paths)
-            self.open_image_button.setVisible(False)
         
     def load_chapter(self, chapter):
         self.chapter = chapter
+        self._update_open_images_button_visibility()
         #self.load_pages([page.file_path for page in chapter.pages])
         if len(chapter.pages) > 0:
             self.current_page = chapter.get_current_page()
             self._setup_page()
-        else:
+
+    def _update_open_images_button_visibility(self):
+        has_pages = self.chapter is not None and bool(self.chapter.pages)
+        self.open_image_button.setVisible(not has_pages)
+        if not has_pages:
             self._update_open_images_button_position()
             
     def _update_open_images_button_position(self):
-        self.open_image_button.setVisible(True)
-        
         btn_width = 140
         btn_height = 40
 
@@ -188,6 +190,7 @@ class ImageViewer(QWidget):
         self.zoom_factor = 1.0
         if file_paths:
             self._setup_page()
+        self._update_open_images_button_visibility()
 
     def _setup_page(self):
         self.current_page = self.chapter.get_current_page()
