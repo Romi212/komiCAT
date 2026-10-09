@@ -99,7 +99,7 @@ class Segment:
             data["bounds"]["ymax"], 
             data["label"]
         )
-        print(f"Loaded TextBox for Segment {self.nro}: ({text_box.xmin}, {text_box.ymin}, {text_box.xmax}, {text_box.ymax}) with label '{text_box.label}'")
+        #print(f"Loaded TextBox for Segment {self.nro}: ({text_box.xmin}, {text_box.ymin}, {text_box.xmax}, {text_box.ymax}) with label '{text_box.label}'")
         text_box.text = self.source_text
         button = TextBoxRect(
             text_box,

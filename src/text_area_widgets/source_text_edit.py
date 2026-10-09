@@ -6,6 +6,8 @@ from PyQt6.QtWidgets import QTextEdit, QWidget, QVBoxLayout, QTextBrowser
 from PyQt6.QtCore import Qt, QPoint
 from PyQt6.QtGui import QKeyEvent
 
+from ui.theme import current
+
 class DictPopup(QWidget):
     """Floating popup container for displaying dictionary definitions."""
     def __init__(self, parent=None):
@@ -18,20 +20,9 @@ class DictPopup(QWidget):
         self.browser = QTextBrowser(self)
         self.browser.setOpenExternalLinks(True)
         layout.addWidget(self.browser)
-        
+        self.setObjectName("dictPopup")
         # Style the popup square
-        self.setStyleSheet("""
-            QWidget {
-                background-color: #2b2b2b;
-                color: #f0f0f0;
-                border: 1px solid #444;
-                border-radius: 6px;
-            }
-            QTextBrowser {
-                border: none;
-                background: transparent;
-            }
-        """)
+        
         self.resize(320, 200)
 
     def show_definition(self, global_pos: QPoint, word,result):
@@ -43,7 +34,8 @@ class DictPopup(QWidget):
 
     def _format_jmdict_result(self, word: str, result) -> str:
         """Formats Jamdict lookup entries into HTML for the QTextBrowser."""
-        html_lines = [f"<h3 style='margin:0; color:#4a90e2;'>{word}</h3><hr/>"]
+        theme = current()
+        html_lines = [f"<h3 style='margin:0; color:{theme.dict_word};'>{word}</h3><hr/>"]
         
     
         for entry in result.entries:
@@ -65,15 +57,8 @@ class DictPopup(QWidget):
 class TermPopup(QLabel):
     def __init__(self, parent=None):
         super().__init__(parent, Qt.WindowType.ToolTip)
-        self.setStyleSheet("""
-            QLabel {
-                background-color: #2b2b2b;
-                color: #f0f0f0;
-                border: 1px solid #444;
-                border-radius: 4px;
-                padding: 4px 8px;
-            }
-        """)
+        self.setObjectName("termPopup")
+        
 
     def show_term(self, global_pos, source_term, target_term):
         self.setText(f"{source_term} → {target_term}")
@@ -174,9 +159,10 @@ class SourceTextEdit(QTextEdit):
         text = self.toPlainText()
         self._term_matches = self.termbase.find_terms_in(text)
 
+        theme = current()
         fmt = QTextCharFormat()
-        fmt.setBackground(QColor("#6e2130"))
-        fmt.setForeground(QColor("white"))
+        fmt.setBackground(QColor(theme.accent))
+        #fmt.setForeground(QColor(theme.text))
 
         # Clear previous term highlighting first
         clear_fmt = QTextCharFormat()
@@ -197,9 +183,10 @@ class SourceTextEdit(QTextEdit):
         if not matched:
             return
 
+        
         dim_fmt = QTextCharFormat()
         dim_fmt.setBackground(QColor("transparent"))
-        dim_fmt.setForeground(QColor())  # reset to default text color
+        #dim_fmt.setForeground(QColor())  # reset to default text color
 
         for start, end, source_term, target_term in matched:
             cursor = QTextCursor(self.document())

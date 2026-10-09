@@ -10,17 +10,6 @@ class DecombineButton(QPushButton):
         self.setFixedSize(18, 18)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setToolTip("Split combined segments")
-        self.setStyleSheet("""
-            QPushButton {
-                border: none;
-                border-radius: 3px;
-                background-color: #e2e2e2;
-                font-size: 11px;
-            }
-            QPushButton:hover {
-                background-color: #cccccc;
-            }
-        """)
 
 class CombinedContainer(QWidget):
     def __init__(self, segment_head, parent=None):
@@ -31,7 +20,7 @@ class CombinedContainer(QWidget):
 
         self.setObjectName("combinedSegmentContainer")
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        self.setStyleSheet("#combinedSegmentContainer { border: 2px solid #6e2130; border-radius: 5px; }")
+        
 
         self.layout = QVBoxLayout()
         self.layout.setContentsMargins(8, 8, 8, 8)

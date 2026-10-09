@@ -52,7 +52,7 @@ class SpellChecker:
             Verbosity.TOP, 
             max_edit_distance=0
         )
-        print(f"Checking word: '{word}', Suggestions: {[item.term for item in suggestions]}")
+        #print(f"Checking word: '{word}', Suggestions: {[item.term for item in suggestions]}")
         return len(suggestions) > 0
 
     def get_misspelled_words(self, text: str) -> list[str]:

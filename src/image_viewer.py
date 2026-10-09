@@ -64,21 +64,9 @@ class ImageViewer(QWidget):
 
         self.edit_menu = QWidget(self.view)
         self.edit_menu.setObjectName("editMenu")
+        self.edit_menu.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.edit_menu.setVisible(False)
-        self.edit_menu.setStyleSheet(
-            """
-            QWidget#editMenu {
-                background: rgba(25, 25, 25, 180);
-                border: 1px solid rgba(255, 255, 255, 120);
-                border-radius: 8px;
-            }
-            QWidget#editMenu QPushButton {
-                min-width: 110px;
-                padding: 8px 10px;
-                border-radius: 6px;
-            }
-            """
-        )
+        
         edit_menu_layout = QVBoxLayout(self.edit_menu)
         edit_menu_layout.setContentsMargins(8, 8, 8, 8)
         edit_menu_layout.setSpacing(6)

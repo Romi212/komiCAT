@@ -25,6 +25,7 @@ class Theme:
     input_bg: str
     scroll_handle: str
     scroll_handle_hover: str
+    dict_word: str
     # segment types: role -> (bg hex, bg alpha, border hex)
     segment_colors: dict = field(default_factory=dict)
     
@@ -46,6 +47,7 @@ DARK = Theme(
     scroll_handle="#555555", scroll_handle_hover="#777777",
     accent="#6e2130", accent_hover="#8a2e40", accent_dim="#4a1620",
     term_highlight="#ffeb3b", term_highlight_alpha=140,
+    dict_word= "#4791ca",
     segment_colors={
         "text_bubble": ("#c80000", 50, "#ff0000"),
         "text_free":   ("#0000c8", 50, "#0000ff"),
@@ -118,6 +120,57 @@ def build_qss(t):
     QScrollBar::handle:horizontal:hover {{ background: {t.scroll_handle_hover}; }}
     QScrollBar::add-line, QScrollBar::sub-line {{ width: 0; height: 0; }}
     QScrollBar::add-page, QScrollBar::sub-page {{ background: none; }}
+    SegmentBox {{
+                    border: 1px solid {t.border};
+                    border-radius: 4px;
+                    background-color:{t.surface};
+                    
+                              
+    }}
+    #combinedSegmentContainer {{ border: 2px solid {t.accent}; border-radius: 5px; }}
+    #PageDivisionLabel {{font-weight: bold; border: none;}}
+    #combineHighlight {{
+        background-color: {t.accent_hover};
+        border-radius: 3px;
+    }}
+    QLabel#DragHandle {{
+        color:{t.text} ;
+        font-size: 16px;
+        font-weight: bold;
+        background-color: {t.scroll_handle};
+        border-radius: 3px;
+    }}
+    QLabel#DragHandle:hover {{
+        background-color: {t.scroll_handle_hover};
+        color: {t.text};
+    }}
+    QWidget#dictPopup {{  background-color: {t.popup_bg};
+                        color: {t.popup_bg};
+                        border: 1px solid #444;
+                        border-radius: 6px; }}
+
+    QTextBrowser#dictPopup {{ border: none;
+                        background: transparent;
+                        }}
+    #termPopup {{
+                    background-color: {t.button_bg};
+                    color: {t.popup_text};
+                    border: 1px solid #444;
+                    border-radius: 4px;
+                    padding: 4px 8px;
+                }}
+    QWidget#editMenu {{
+                    background-color: {t.input_bg};
+                    border: 1px solid {t.border};
+                    border-radius: 8px;
+                }}
+    QWidget#editMenu QPushButton {{
+                    min-width: 110px;
+                    padding: 8px 10px;
+                    border-radius: 6px;
+                }}
+                
+           
     """
 
 def apply(app):

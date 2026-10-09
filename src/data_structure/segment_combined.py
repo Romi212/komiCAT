@@ -70,6 +70,6 @@ class SegmentCombined(Segment):
         self.panel = segment.panel
 
     def set_edit_mode(self, value):
-        super.set_edit_mode(value)
+        super().set_edit_mode(value)
         if self.next_arrow:
             self.next_arrow.set_edit_mode(value)

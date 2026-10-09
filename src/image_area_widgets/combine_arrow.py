@@ -5,7 +5,9 @@ from PyQt6.QtWidgets import QGraphicsEllipseItem, QGraphicsItem, QGraphicsPathIt
 from PyQt6.QtGui import QFont, QPainterPath, QPainterPathStroker, QPen, QBrush, QColor, QPolygonF
 from PyQt6.QtCore import QPointF, Qt
 
-ARROW_COLOR = QColor("#6e2130")  # same accent as CombinedContainer
+from ui.theme import current
+
+ARROW_COLOR = QColor(current().accent)  
 
 class UnlinkButton(QGraphicsEllipseItem):
     """Small round ✕ button shown at the middle of a CombineArrow while hovered."""
@@ -33,7 +35,7 @@ class UnlinkButton(QGraphicsEllipseItem):
         self.hide()
 
     def _set_hovered(self, hovered):
-        self.setBrush(QBrush(QColor("#8a2e40") if hovered else ARROW_COLOR))
+        self.setBrush(QBrush(QColor(current().accent_hover) if hovered else ARROW_COLOR))
         self.setPen(QPen(QColor("white"), 1.5))
 
     def hoverEnterEvent(self, event):
@@ -85,8 +87,9 @@ class CombineArrow(QGraphicsPathItem):
         # Follow both bubbles when they are moved or resized
         if self.parent_seg.button:
             self.parent_seg.button.signals.moved.connect(self.update_geometry)
-        if self.child_seg.button:
-            self.child_seg.button.signals.moved.connect(self.update_geometry)
+        if self.child_seg:
+            if self.child_seg.button:
+                self.child_seg.button.signals.moved.connect(self.update_geometry)
 
         self.update_geometry()
 
@@ -160,3 +163,6 @@ class CombineArrow(QGraphicsPathItem):
                     pass  # already disconnected
         if self.scene():
             self.scene().removeItem(self)
+
+    def set_edit_mode(self, value):
+        self.edit_mode = value

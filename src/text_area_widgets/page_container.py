@@ -19,18 +19,16 @@ class PageContainer(QWidget):
         self.layout.setContentsMargins(5, 5, 5, 5)
         self.layout.setSpacing(10)
 
-        self.page_label = QLabel("--------------------------- Page " + self.page.page_name + " ----------------------------------")
-        self.page_label.setStyleSheet("font-weight: bold; border: none;")
+        self.page_label = QLabel("---------------------------  " + self.page.page_name + " ----------------------------------")
+        self.page_label.setObjectName("PageDivisionLabel")
         self.layout.insertWidget(0, self.page_label)
           
-        COMBINE_ACCENT = "#6e2130"       # base accent, matches CombinedContainer border
-        COMBINE_ACCENT_HOVER = "#8a2e40"  # lighter tint for hover state
-        COMBINE_ACCENT_DIM = "#4a1620"    # darker, for pressed/disabled
+        
         self.combine_highlight = QWidget(self)
         self.combine_highlight.setFixedHeight(6)
-        self.combine_highlight.setStyleSheet(f"background-color: {COMBINE_ACCENT_HOVER}; border-radius: 3px;")
         self.combine_highlight.hide()
         self.combine_highlight.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.combine_highlight.setObjectName("combineHighlight")
 
         self._hover_pair = None  # (top_widget, bottom_widget) currently highlighted
 

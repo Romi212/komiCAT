@@ -12,19 +12,8 @@ class DragHandle(QLabel):
         self.setFixedWidth(18)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setCursor(Qt.CursorShape.OpenHandCursor)
-        self.setStyleSheet("""
-            QLabel {
-                color: #888888;
-                font-size: 16px;
-                font-weight: bold;
-                background-color: #e2e2e2;
-                border-radius: 3px;
-            }
-            QLabel:hover {
-                background-color: #cccccc;
-                color: #222222;
-            }
-        """)
+        self.setObjectName("DragHandle")
+        
         self._drag_start_pos = None
         self.callback = None  # Placeholder for the callback function
 
@@ -124,15 +113,7 @@ class SegmentBox(QWidget):
 
         main_layout.addLayout(layout)
         # Set border style
-        self.setStyleSheet("""
-            SegmentBox {
-                border: 1px solid #cccccc;
-                border-radius: 4px;
-                background-color: #f9f9f9;
-                
-                           
-            }
-        """)
+        
         
         self.setLayout(main_layout)
         self.setMinimumHeight(5)
