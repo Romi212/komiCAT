@@ -98,6 +98,8 @@ class CombineArrow(QGraphicsPathItem):
     @staticmethod
     def _corner(seg):
         """Top-left corner of a segment's rect in scene coordinates."""
+        if not seg:
+            return QPointF(0,0)
         btn = seg.button
         if btn:
             return btn.mapToScene(btn.rect().topLeft())

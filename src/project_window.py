@@ -17,10 +17,8 @@ class ProjectWindow(QMainWindow):
         super().__init__()
         
         self.text_extractor = text_extractor;
-        self.chapter = chapter;
         self.project_loader = project_loader;
-        self.termbase = self.chapter.get_termbase()
-        self.termbase_panel = TermbasePanel(self.termbase, self)
+        
         
         # Create main window
         
@@ -61,10 +59,10 @@ class ProjectWindow(QMainWindow):
 
         
         # Create viewers
-        self.text_viewer = TextViewer(controller=self, chapter=self.chapter)
-        self.image_viewer = ImageViewer(controller=self, chapter=self.chapter, text_extractor=self.text_extractor)
-        self.image_viewer.load_chapter(self.chapter)
-        self.text_viewer.load_chapter(self.chapter)
+        self.text_viewer = TextViewer(controller=self, chapter=chapter)
+        self.image_viewer = ImageViewer(controller=self, chapter=chapter, text_extractor=self.text_extractor)
+        
+        self.set_up_chapter(chapter)
 
         open_images = project_menu.addAction("Open Images")
         open_images.triggered.connect(self.image_viewer.open_images)
@@ -84,7 +82,12 @@ class ProjectWindow(QMainWindow):
         self.show()
        
 
-  
+    def set_up_chapter(self, chapter):
+        self.chapter = chapter
+        self.termbase = self.chapter.get_termbase()
+        self.termbase_panel = TermbasePanel(self.termbase, self)
+        self.image_viewer.load_chapter(self.chapter)
+        self.text_viewer.load_chapter(self.chapter)
 
     def extracted(self, page, segments):
         self.text_viewer.add_extracted_segments(page,segments)
@@ -95,11 +98,11 @@ class ProjectWindow(QMainWindow):
         self.image_viewer.status_label.setText("Project saved successfully! in " + self.project_loader.save_path)   
 
     def load_project(self):
-        load_path = QFileDialog.getOpenFileName()
-        self.chapter = self.project_loader.load_project(load_path[0])
 
-        self.image_viewer.load_chapter(self.chapter)
-        self.text_viewer.load_chapter(self.chapter)
+        chapter = self.project_loader.load_project()
+        if(chapter):
+            self.set_up_chapter(chapter)
+        #TODO ELSE TIRAR ERROR CANT OPEN PROJECT
 
     def export_translation(self):
         export_path = QFileDialog.getSaveFileName()
@@ -111,13 +114,11 @@ class ProjectWindow(QMainWindow):
         self.termbase_panel.activateWindow()
 
     def create_new_project(self):
-        self.create_project_window = CreateProjectWindow()
-        data = self.create_project_window.exec()
-        if data == QDialog.DialogCode.Accepted:
-            project_data = self.create_project_window.get_project_data()
-            self.chapter = self.project_loader.create_project(project_data)
-            self.image_viewer.chapter = self.chapter
-            self.text_viewer.chapter = self.chapter
+        
+        chapter = self.project_loader.create_new_project()
+        if(chapter):
+            self.set_up_chapter(chapter)
+        #TODO: ELSE mostrar error creando nuevo
 
     def set_current_page(self, page):
         self.chapter.set_current_page(page)

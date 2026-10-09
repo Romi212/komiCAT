@@ -60,8 +60,8 @@ class TextViewer(QWidget):
         layout.addLayout(button_layout)
 
     def add_extracted_segments(self,page, segments):
-        if not self.page_containers:
-            self._create_page_containers()
+        if len(self.page_containers) < len(self.chapter.pages):
+            self._update_page_containers()
         page_container = self.page_containers[page.number]
         self.create_segment_boxes(segments, page_container)
         self.update_tab_order(page)
@@ -155,9 +155,9 @@ class TextViewer(QWidget):
         self.controller.edit_mode_changed.connect(page_container.set_edit_mode)
         return page_container
 
-    def _create_page_containers(self):
-        self.page_containers = []
-        for page in self.chapter.pages:
+    def _update_page_containers(self):
+        index = len(self.page_containers)
+        for page in self.chapter.pages[index:]:
             page_container = self._create_page_container(page = page)
             self.scroll_layout.insertWidget(self.scroll_layout.count() - 1, page_container)
             self.page_containers.append(page_container)
