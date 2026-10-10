@@ -30,7 +30,7 @@ class Segment:
 
     @property
     def segment_type(self):
-        return self._segment_type
+        return self.text_box.text_type
 
     @property
     def type_policy(self):

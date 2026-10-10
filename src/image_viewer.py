@@ -486,3 +486,5 @@ class ImageViewer(QWidget):
 
     def combine_segments(self, button):
         print("Combine")
+
+   

@@ -28,7 +28,10 @@ class Theme:
     dict_word: str
     # segment types: role -> (bg hex, bg alpha, border hex)
     segment_colors: dict = field(default_factory=dict)
-    
+
+    def segment_style(self, seg_type):
+            bg_hex, alpha, border_hex = self.segment_colors[seg_type.key]
+            return {"bg": self.qcolor(bg_hex, alpha), "border": QColor(border_hex)}
 
     def qcolor(self, hex_str, alpha=255):
         c = QColor(hex_str)

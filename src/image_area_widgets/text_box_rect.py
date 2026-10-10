@@ -1,8 +1,9 @@
 from PyQt6.QtWidgets import QGraphicsRectItem, QGraphicsItem, QMenu
-from PyQt6.QtGui import QPen, QBrush, QColor, QFont, QCursor
+from PyQt6.QtGui import QActionGroup, QPen, QBrush, QColor, QFont, QCursor
 from PyQt6.QtCore import QObject, Qt, QRectF, pyqtSignal
 
-from aux_types.segment_types import SEGMENT_TYPE_FORMAT
+from aux_types.segment_types import SEGMENT_TYPE_FORMAT, SegmentType
+from ui import theme
 
 class TextBoxRectSignals(QObject):
     delete_requested = pyqtSignal(object)
@@ -47,11 +48,10 @@ class TextBoxRect(QGraphicsRectItem):
 
     @property
     def style_config(self):
-        if self.text_box:
-            format = self.text_box.text_type_format
-            return {"bg": format.bg_color, "border": format.border_color}
-        return {"bg": QColor(0, 200, 0, 50), "border": QColor(0, 255, 0)}  # default before segment attached
-
+        t = theme.current()
+        if self.segment:
+            return t.segment_style(self.segment.segment_type)
+        return t.segment_style(SegmentType.OUTSIDE)   # before a segment is attached
     def link_on_click(self, callback):
             self.onClick = callback
 
@@ -245,14 +245,29 @@ class TextBoxRect(QGraphicsRectItem):
 
             combine_action = menu.addAction("Combine")
             delete_action = menu.addAction("Delete")
+            menu.addSeparator()
 
-            # Show menu at the mouse screen location
-            selected_action = menu.exec(event.screenPos())
+            # "Type >" submenu, shows on hover
+            type_menu = menu.addMenu("Type")
+            group = QActionGroup(type_menu)
+            group.setExclusive(True)
+            type_actions = {}
+            current = self.segment.segment_type if self.segment else None
+            for seg_type in SegmentType:
+                action = type_menu.addAction(str(seg_type))
+                action.setCheckable(True)
+                action.setChecked(seg_type == current)
+                group.addAction(action)
+                type_actions[action] = seg_type
 
-            if selected_action == combine_action:
+            selected = menu.exec(event.screenPos())
+
+            if selected == combine_action:
                 self.signals.combine_requested.emit(self)
-            elif selected_action == delete_action:
+            elif selected == delete_action:
                 self.signals.delete_requested.emit(self)
+            elif selected in type_actions:
+                self.change_type(type_actions[selected])
 
 
     def conect_signals(self, delete_action, combine_action):
@@ -260,4 +275,6 @@ class TextBoxRect(QGraphicsRectItem):
             self.signals.delete_requested.connect(delete_action)
             self.signals.combine_requested.connect(combine_action)
             self.signals_conected = True
-    
+
+    def change_type(self, new_type):
+        self.segment.change_type(new_type)
