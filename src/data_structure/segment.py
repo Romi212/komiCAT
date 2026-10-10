@@ -81,6 +81,7 @@ class Segment:
         
         return {
             "nro": self.nro,
+            "panel": self.panel.nro,
             "bounds": {"xmin": self.text_box.xmin, "ymin": self.text_box.ymin, "xmax": self.text_box.xmax, "ymax": self.text_box.ymax},
             "label" : self.text_box.label,
             "source_text": self.source_text,
@@ -90,6 +91,9 @@ class Segment:
     
     def load_data(self, data):
         self.nro = data["nro"]
+        print(data["panel"])
+        self.panel = self.page.get_panel(data["panel"])
+        self.panel.add_segment(self)
         self.source_text = data["source_text"]
         self.translation = data["translation"]
         text_box = TextBox(
@@ -108,6 +112,7 @@ class Segment:
         self.text_box = text_box
         self.button = button
         button.set_segment(self)
+        
 
     def get_translation(self):
         if(self.nro == -1): 

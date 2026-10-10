@@ -70,7 +70,7 @@ class PageContainer(QWidget):
             head_segment.set_next_segment(bottom.segment)
             
             self.layout.insertWidget(index, container)
-            container.set_combine_callback(self.combine_segments)
+            container.set_combine_callback(self.decombine_segments)
             container.set_container_drag_callback(self.set_active_drag_widget) 
             self.layout.removeWidget(top)
         self.layout.removeWidget(bottom)
@@ -98,15 +98,17 @@ class PageContainer(QWidget):
 
     def addCombinedSegment(self, container, head_segment):
         self.layout.insertWidget(head_segment.get_index() + 1, container)
-        container.set_combine_callback(self.combine_segments)
+        container.set_combine_callback(self.decombine_segments)
         container.set_container_drag_callback(self.set_active_drag_widget) 
 
-    def combine_segments(self, container):
+    def decombine_segments(self, container):
         segs = container.segment_boxes
         index = self.layout.indexOf(container)
         self.layout.removeWidget(container)
         container.setParent(None)
         for seg in segs:
+            if(seg.segment.get_child()):
+                seg.segment.set_next_segment(None)
             self.layout.insertWidget(index,seg)
             index+=1
             
@@ -153,6 +155,8 @@ class PageContainer(QWidget):
             widget = self.layout.itemAt(i).widget()
             
             if widget.segment:
+                if widget._edit_mode:
+                    widget.set_edit_mode(False)
                 segment = widget.segment
                 index = segment.set_nro(index) +1
                 ordered_segments.add_segment(segment)

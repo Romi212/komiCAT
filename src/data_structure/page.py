@@ -52,10 +52,11 @@ class Page:
     def sort_segments(self):
         base = 1
         self.segments = SegmentList()
-        for panel in self.detected_panels:
+        for i, panel in enumerate(self.detected_panels):
             print(f"sorting panel {base}")
             base, panel_segs = panel.sort_segments(base)
             self.segments.append_segments(panel_segs)
+            panel.nro = i
         self.segments.recount_segments()
         
 
@@ -201,20 +202,7 @@ class Page:
             if panel.contains_segment(segment):
                 panel.add_segment(segment)
                 segment.set_panel(panel)
-    def get_data(self):
-        return {
-            "file_path": self.file_path,
-            "panels": [panel.get_data() for panel in self.detected_panels]   
-        }
-
-    def load_panels(self, panels_data):
-        for panel_data in panels_data:
-            new_panel = Panel(None)
-            new_panel.load_segments(panel_data,self)
-            self.detected_panels.append(new_panel)
-            self.segments.append_segments(new_panel.segments) 
-        self.detected_panels.sort(key=lambda p: p.nro)
-
+    
     
 
     def get_translation_text(self):
@@ -248,11 +236,20 @@ class Page:
             if not segment.panel:
                 self._asign_panel(segment)
 
-        
+    def insert_manual_segments(self):
+        for segment in self.outside_segments:
+            self._asign_panel(segment)
+            self.segments.insert_segment(segment)
+        self.outside_segments = []
+
 
 
     def automatic_sort(self):
         self.reasign_panels()
+        for segment in self.segments:
+            if segment.has_been_extracted():
+                self.insert_manual_segments()
+                return True
         self.sort_segments()
     
 
@@ -265,3 +262,29 @@ class Page:
             return None
         else:
             return self.chapter.pages[self.number-1].get_last_segment()
+
+
+    def get_data(self):
+        return {
+            "file_path": self.file_path,
+            "panels": [panel.get_data() for panel in self.detected_panels] ,
+            "segments": [segment.get_data() for segment in self.segments.heads]  
+        }
+    def get_panel(self, index):
+        return self.detected_panels[index]
+    def load_page(self, data):
+        for panel_data in data["panels"]:
+            new_panel = Panel(None)
+            new_panel.load_panel(panel_data,self)
+            self.detected_panels.append(new_panel)
+        self.detected_panels.sort(key=lambda p: p.nro)
+
+        for segment_data in data["segments"]:
+            if segment_data["next_segment"]:
+                print("loading combined")
+                segment = SegmentCombined(self, segment_data["nro"])
+            else:
+                segment = Segment(self, segment_data["nro"])
+            segment.page = self
+            segment.load_data(segment_data)
+            self.segments.add_segment(segment)

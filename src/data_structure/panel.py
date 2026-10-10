@@ -9,45 +9,40 @@ class Panel:
 
     def __init__(self, text_box):
         self.text_box = text_box
-        self.bubbles = []
-        self.segments = SegmentList()
+        self.segments = []
         self.nro = 0
-
-    def contains_bubble(self, bubble):
-        return self.text_box.intersects(bubble)
-
-    def add_bubble(self, bubble):
-        self.bubbles.append(bubble)
-
-    def sort_bubbles(self,base_index):
-        self.bubbles.sort(key=lambda bubble: bubble.ymin)
-        i = base_index
-        for bubble in self.bubbles:
-            bubble.index = i
-            i+=1
-        return base_index + len(self.bubbles)
-
-    
 
     def contains_segment(self, segment):
         return self.text_box.intersects(segment.text_box)
 
     def add_segment(self, segment):
-        self.segments.add_segment(segment)
+        self.segments.append(segment)
 
     def sort_segments(self, base_index):
-        
-        return self.segments.sort_segments(base_index)
+        segment_list = SegmentList()
+        segment_list.append_from_array(self.segments)
+        index, seg_list = segment_list.sort_segments(base_index)
+        self.segments.sort(key=lambda seg: seg.nro)
+        return index, seg_list
+
         
 
-    
     def get_data(self):
         return {
                     "bounds": {"xmin": self.text_box.xmin, "ymin": self.text_box.ymin, "xmax": self.text_box.xmax, "ymax": self.text_box.ymax},
-                    "nro": self.nro,
-                    "segments": [segment.get_data() for segment in self.segments.heads]   
+                    "nro": self.nro  
                 }
 
+    def load_panel(self, panel_data, page):
+        self.text_box = TextBox(
+                            panel_data["bounds"]["xmin"],
+                            panel_data["bounds"]["xmax"],
+                            panel_data["bounds"]["ymin"],
+                            panel_data["bounds"]["ymax"], 
+                            "panel"
+                        )
+        self.nro = panel_data["nro"]
+        
     def load_segments(self, panel_data, page):
         self.text_box = TextBox(
                     panel_data["bounds"]["xmin"],
@@ -72,4 +67,4 @@ class Panel:
         
 
     def delete_segment(self,segment):
-        self.segments.remove_segment(segment)
+        self.segments.remove(segment)

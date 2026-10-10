@@ -13,7 +13,7 @@ class DragHandle(QLabel):
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setCursor(Qt.CursorShape.OpenHandCursor)
         self.setObjectName("DragHandle")
-        
+        self._edit_mode = False
         self._drag_start_pos = None
         self.callback = None  # Placeholder for the callback function
 

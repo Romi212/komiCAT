@@ -21,16 +21,10 @@ class SegmentCombined(Segment):
             return nro
 
     def get_data(self):
-        
-        return {
-            "nro": self.nro,
-            "is_extracted": self.source_text is not None,
-            "bounds": {"xmin": self.text_box.xmin, "ymin": self.text_box.ymin, "xmax": self.text_box.xmax, "ymax": self.text_box.ymax},
-            "label" : self.text_box.label,
-            "source_text": self.source_text,
-            "translation": self.translation,
-            "next_segment": self.next_segment.get_data() if self.next_segment else None
-        }
+        data = super().get_data()
+        child = self.get_child()
+        data["next_segment"] = child.get_data() if child else None
+        return data
     
     def load_data(self, data):
         super().load_data(data)
@@ -40,7 +34,6 @@ class SegmentCombined(Segment):
         else:
             next_segment = Segment(self.page, -1)
         next_segment.page = self.page
-        next_segment.panel = self.panel
         if data["next_segment"]:
             next_segment.load_data(data["next_segment"])
         self.set_next_segment(next_segment)

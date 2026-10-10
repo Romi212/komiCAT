@@ -30,8 +30,46 @@ class SegmentList:
     def append_segments(self, toAppend):
         self.segments += toAppend.segments
 
+    def append_from_array(self, array):
+        self.segments += array
+
     def get_segment(self, index):
         return self.segments_indexes[index]
+
+    def insert_segment(self, segment):
+        if len(self.segments)<=1:
+            return
+        panel = segment.panel
+        
+        panel_segments = panel.segments
+        if len(panel_segments) <= 1:
+            panel_segments = self.segments
+        sorted_panel = self._sort_subset(panel_segments, combine= False).copy()
+        index = sorted_panel.index(segment)
+        if index == 0:
+            if panel.nro == 0:
+                if(segment in self.segments):
+                    self.remove_segment(segment)
+                self.segments.insert(0, segment)
+                self.recount_segments()
+                return
+            else:
+                prev = sorted_panel[index+1].nro - 1
+            
+        else:
+            prev = sorted_panel[index-1].nro
+        if(segment in self.segments):
+            self.remove_segment(segment)
+        for i, seg in enumerate(self.heads):
+            if seg.nro > prev:
+                self.segments.insert(i,segment)
+                break
+        if not segment in self.segments:
+            self.segments.append(segment)
+
+        self.recount_segments()
+    
+
         
     def remove_segment(self, segment):
         try:
@@ -50,7 +88,7 @@ class SegmentList:
             i = seg.set_nro(i) +1
         return i, self
 
-    def _sort_subset(self, segments):
+    def _sort_subset(self, segments, combine = True):
 
         if len(segments) <= 1:
             if segments: 
@@ -92,8 +130,10 @@ class SegmentList:
                 top_sorted = self._sort_subset(top_segs)
                 bottom_sorted = self._sort_subset(bottom_segs)
                 return top_sorted + bottom_sorted
-
-        return self.combine_segments(segments)
+        if combine:
+            return self.combine_segments(segments)
+        else:
+            return sorted(segments, key=lambda s: s.text_box.ymin) 
 
     def logprint(self, list):
         for l in list:
