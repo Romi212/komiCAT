@@ -212,7 +212,8 @@ class Page:
         return translation_text
 
     def update_segments(self, to_update):
-        self.segments = to_update
+        self.segments.merge_lists(to_update)
+        self.set_edit_mode(False)
 
     def set_edit_mode(self, can_edit):
         for segment in self.segments:
@@ -225,6 +226,7 @@ class Page:
             segment.panel.delete_segment(segment)
         self.segments.remove_segment(segment)
         self.segments.recount_segments()
+        segment.delete_self()
 
     def reasign_panels(self):
         for segment in self.segments:
@@ -247,7 +249,7 @@ class Page:
     def automatic_sort(self):
         self.reasign_panels()
         for segment in self.segments:
-            if segment.has_been_extracted():
+            if segment.is_extracted():
                 self.insert_manual_segments()
                 return True
         self.sort_segments()

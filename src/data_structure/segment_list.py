@@ -33,6 +33,20 @@ class SegmentList:
     def append_from_array(self, array):
         self.segments += array
 
+    def has_segment(self, segment):
+        for seg in self.segments:
+            if seg.equals(segment):
+                return True
+
+        return False
+    
+    def merge_lists(self,to_merge):
+        for segment in self.segments:
+            if not to_merge.has_segment(segment):
+                print(f"Inserting segment {segment.nro}")
+                to_merge.insert_segment(segment)
+
+        self.segments = to_merge.segments
     def get_segment(self, index):
         return self.segments_indexes[index]
 
@@ -40,11 +54,15 @@ class SegmentList:
         if len(self.segments)<=1:
             return
         panel = segment.panel
+
+        print(f"Searching to insert segment nro: {segment.nro} in panel {panel.nro}")
         
         panel_segments = panel.segments
         if len(panel_segments) <= 1:
             panel_segments = self.segments
-        sorted_panel = self._sort_subset(panel_segments, combine= False).copy()
+        sorted_panel = self._sort_subset(panel_segments, combine= False)
+        for s in sorted_panel:
+            print(s.nro)
         index = sorted_panel.index(segment)
         if index == 0:
             if panel.nro == 0:
@@ -98,7 +116,6 @@ class SegmentList:
 
         pivot_v = self._find_pivot_v(segments)
         if pivot_v:
-            print(f"found v pivot in: {pivot_v} ")
             left_segs = segments.copy()
             right_segs = []
             for seg in segments:
@@ -109,13 +126,12 @@ class SegmentList:
             if(left_segs and right_segs):
                 print(right_segs)
                 print(left_segs)
-                right_sorted = self._sort_subset(right_segs)
-                left_sorted = self._sort_subset(left_segs)
+                right_sorted = self._sort_subset(right_segs,combine)
+                left_sorted = self._sort_subset(left_segs,combine)
                 return right_sorted + left_sorted
 
         pivot_h = self._find_pivot_h(segments)
         if pivot_h:
-            print(f"found h pivot in {pivot_h}")
             top_segs = segments.copy()
             bottom_segs = []
 
@@ -127,8 +143,8 @@ class SegmentList:
             if(top_segs and bottom_segs):
                 self.logprint(top_segs)
                 self.logprint(bottom_segs)
-                top_sorted = self._sort_subset(top_segs)
-                bottom_sorted = self._sort_subset(bottom_segs)
+                top_sorted = self._sort_subset(top_segs,combine)
+                bottom_sorted = self._sort_subset(bottom_segs,combine)
                 return top_sorted + bottom_sorted
         if combine:
             return self.combine_segments(segments)

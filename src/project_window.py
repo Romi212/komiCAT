@@ -71,7 +71,10 @@ class ProjectWindow(QMainWindow):
         splitter.addWidget(self.text_viewer)
         splitter.addWidget(self.image_viewer)
         splitter.setStretchFactor(0, 1)
-        splitter.setStretchFactor(1, 2)
+        splitter.setStretchFactor(1, 1)
+        splitter.setSizes([1, 1])
+        self.text_viewer.setMinimumWidth(400)
+        
         
         layout.setMenuBar(self.menu_bar)
         layout.addWidget(splitter)
@@ -131,7 +134,9 @@ class ProjectWindow(QMainWindow):
         self.text_viewer.delete_segment(segment)
 
     def change_edit_mode(self, page, can_edit):
-            page.set_edit_mode(can_edit)
+            #page.set_edit_mode(can_edit)
             self.edit_mode_changed.emit(page, can_edit)
             if not can_edit:
                 self.text_viewer.update_tab_order(page)
+            else:
+                page.set_edit_mode(can_edit)

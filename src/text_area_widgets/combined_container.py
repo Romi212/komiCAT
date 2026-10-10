@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QHBoxLayout, QMenu, QPushButton, QWidget, QVBoxLayout, QLabel, QTextEdit
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from data_structure.segment_combined import SegmentCombined
 from text_area_widgets.segment_box import DragHandle, SegmentBox
 
@@ -12,9 +12,11 @@ class DecombineButton(QPushButton):
         self.setToolTip("Split combined segments")
 
 class CombinedContainer(QWidget):
+    deleted = pyqtSignal(object)
     def __init__(self, segment_head, parent=None):
         super().__init__(parent)
         self.segment = segment_head
+        segment_head.deleted.connect(self.delete_head)
         self.segment_boxes = []
         self.segment_boxes.append(segment_head)
 
@@ -68,7 +70,10 @@ class CombinedContainer(QWidget):
         self.drag_handle.setVisible(enabled)
         self.decombine_button.setVisible(enabled)
         if not enabled:
-            self.recreate_segment()
+            if not self.segment_boxes:
+                self.deleted.emit(self)
+            else:
+                self.recreate_segment()
 
     def recreate_segment(self):
         head = SegmentCombined(None, 0)
@@ -87,6 +92,7 @@ class CombinedContainer(QWidget):
         self.segment_boxes.append(segment)
         self.layout.addWidget(segment)
         segment.set_drag_callback(self.set_active_drag_widget)  # route child drags here, not to PageContainer
+        segment.deleted.connect(self.remove_segment)
 
     def set_active_drag_widget(self, widget):
         self.active_drag_widget = widget
@@ -127,3 +133,16 @@ class CombinedContainer(QWidget):
                 ordered.append(widget)
 
         self.segment_boxes = ordered[:]
+
+    def remove_segment(self, segment):
+        self.layout.removeWidget(segment)
+        self.segment_boxes.remove(segment)
+
+    def delete_head(self, segment):
+            self.layout.removeWidget(segment)
+            self.segment_boxes.remove(segment)
+            if(self.segment_boxes):
+                self.segment = self.segment_boxes[0]
+            else:
+                self.segment = None
+                self.deleted.emit(self)

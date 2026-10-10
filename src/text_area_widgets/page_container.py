@@ -95,11 +95,13 @@ class PageContainer(QWidget):
     def addSegment(self, segment_box):
         self.layout.insertWidget(segment_box.get_index()+1, segment_box)
         segment_box.set_drag_callback(self.set_active_drag_widget)  
+        segment_box.deleted.connect(self.remove_segment)
 
     def addCombinedSegment(self, container, head_segment):
         self.layout.insertWidget(head_segment.get_index() + 1, container)
         container.set_combine_callback(self.decombine_segments)
         container.set_container_drag_callback(self.set_active_drag_widget) 
+        container.deleted.connect(self.remove_segment)
 
     def decombine_segments(self, container):
         segs = container.segment_boxes

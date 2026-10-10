@@ -126,7 +126,7 @@ class ImageViewer(QWidget):
         layout.addLayout(self.button_layout)
         self.setLayout(layout)
         self.setWindowTitle("Image Viewer")
-        self.resize(1000, 800)
+        
         
         
     def open_images(self):

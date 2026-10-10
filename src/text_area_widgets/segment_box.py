@@ -53,6 +53,7 @@ class DragHandle(QLabel):
 class SegmentBox(QWidget):
 
     focused = pyqtSignal(object)
+    deleted = pyqtSignal(object)
     
     def __init__(self, spell_checker, jp_dict, logic_segment, initial_text_size=12):
         super().__init__()
@@ -232,3 +233,6 @@ class SegmentBox(QWidget):
                         cursor.mergeCharFormat(fmt)
                 else:
                     self.label.remove_match(word)
+    def delete_self(self):
+        self.drag_handle.setVisible(False)
+        self.deleted.emit(self)

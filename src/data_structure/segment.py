@@ -139,4 +139,8 @@ class Segment:
             self.text_box.ymax = scene_rect.bottom()
 
     def delete_self(self):
-        self.page.delete_segment(self)
+        if(self.segment_box):
+            self.segment_box.delete_self()
+
+    def equals(self, segment):
+        return self.source_text == segment.source_text and self.translation == segment.translation

@@ -16,7 +16,8 @@ class Panel:
         return self.text_box.intersects(segment.text_box)
 
     def add_segment(self, segment):
-        self.segments.append(segment)
+        if not segment in self.segments:
+            self.segments.append(segment)
 
     def sort_segments(self, base_index):
         segment_list = SegmentList()
@@ -67,4 +68,5 @@ class Panel:
         
 
     def delete_segment(self,segment):
-        self.segments.remove(segment)
+        if segment in self.segments:
+            self.segments.remove(segment)
