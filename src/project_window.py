@@ -1,6 +1,7 @@
 import sys
 from PyQt6.QtWidgets import QApplication, QDialog, QFileDialog, QMainWindow, QSplitter, QVBoxLayout, QWidget, QMenuBar
 from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QKeySequence
 
 from data_structure.page import Page
 from data_structure.segment_combined import SegmentCombined
@@ -33,6 +34,7 @@ class ProjectWindow(QMainWindow):
         create_action.triggered.connect(self.create_new_project)
 
         save_action = file_menu.addAction("Save Project")
+        save_action.setShortcut(QKeySequence.StandardKey.Save)
         save_action.triggered.connect(self.save_project)
 
         #Load project button

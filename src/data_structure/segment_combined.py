@@ -37,14 +37,6 @@ class SegmentCombined(Segment):
         if data["next_segment"]:
             next_segment.load_data(data["next_segment"])
         self.set_next_segment(next_segment)
-
-    def get_translation(self):
-        if(self.nro == -1): 
-            return ""
-        translation = self.translation
-        if self.next_segment:
-            translation += " // " + self.next_segment.get_translation()
-        return translation
     
     def get_child(self):
         return self.next_segment

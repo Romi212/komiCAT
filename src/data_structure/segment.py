@@ -22,6 +22,12 @@ class Segment:
         self.text_box = text_box
         self.text_type = text_box.text_type
 
+    def chain(self):
+        curr = self
+        while curr is not None:
+            yield curr
+            curr = curr.get_child()
+
     def change_type(self, segment_type):
         if self.text_type == segment_type:
             return

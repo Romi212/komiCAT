@@ -1,4 +1,5 @@
 
+from aux_types.export_stategy import EXPORTERS
 from data_structure.chapter import Chapter
 import json
 
@@ -53,9 +54,19 @@ class ProjectLoader:
             json.dump(self.chapter.get_data(), f)
             
         
-    def export_translation(self, export_path):
-        export_path = export_path if export_path.endswith(".txt") else export_path + ".txt"
-        with open(export_path, "w", encoding="utf-8") as f:
-            f.write(self.chapter.get_translation_text())
+    def export_translation(self, export_path, exporter_name="Plain text", data=None):
+        exporter = EXPORTERS[exporter_name]
+
+        # the extension comes from the exporter, not hardcoded
+        ext = "." + exporter.extension
+        if not export_path.endswith(ext):
+            export_path += ext
+
+        # reuse the data the preview already showed, if there is one
+        if data is None:
+            data = exporter.build(self.chapter)
+
+        exporter.export(data, export_path)
         print(f"Translation exported to {export_path}")
+        return export_path
 
