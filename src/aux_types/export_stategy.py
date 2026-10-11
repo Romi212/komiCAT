@@ -79,19 +79,20 @@ class ExcelExporter(Exporter):
     def build(self, chapter):
         rows = [Row("band", self.COLUMNS),
                 Row("band", ["Title"]),
-                Row("segment", [chapter.title_jp, chapter.title_tl, "Title"]),
+                Row("segment", [chapter.series_name, "Title"]),
                 Row("band", ["Chapter name"]),
-                Row("segment", [chapter.name_jp, chapter.name_tl, "Chapter name"])]
+                Row("segment", [chapter.name, chapter.number, "Chapter name"])]
         for page in chapter.pages:
             rows.append(Row("band", [f"Page {page.number + 1}"]))
             for head in page.segments.heads:
-                segs = list(head.chain())
-                rows.append(Row("segment", [
-                    "\n".join(s.source_text for s in segs),
-                    "\n".join(s.translation for s in segs),
-                    head.segment_type.label,
-                    getattr(head, "note", ""),
-                ], style=head.segment_type.key))
+                if head.is_extracted():
+                    segs = list(head.chain())
+                    rows.append(Row("segment", [
+                        "\n".join(s.source_text for s in segs),
+                        "\n".join(s.translation for s in segs),
+                        head.segment_type.key,
+                        getattr(head, "note", ""),
+                    ], style=head.segment_type.key))
         return rows
 
     def export(self, rows, path):

@@ -54,7 +54,7 @@ class ProjectLoader:
             json.dump(self.chapter.get_data(), f)
             
         
-    def export_translation(self, export_path, exporter_name="Plain text", data=None):
+    def export_translation(self, export_path, exporter_name="Excel (structured)", data=None):
         exporter = EXPORTERS[exporter_name]
 
         # the extension comes from the exporter, not hardcoded

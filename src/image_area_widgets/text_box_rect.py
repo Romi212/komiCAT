@@ -51,7 +51,7 @@ class TextBoxRect(QGraphicsRectItem):
         t = theme.current()
         if self.segment:
             return t.segment_style(self.segment.segment_type)
-        return t.segment_style(SegmentType.OUTSIDE)   # before a segment is attached
+        return t.segment_style(SegmentType.FREE)   # before a segment is attached
     def link_on_click(self, callback):
             self.onClick = callback
 
@@ -254,7 +254,7 @@ class TextBoxRect(QGraphicsRectItem):
             type_actions = {}
             current = self.segment.segment_type if self.segment else None
             for seg_type in SegmentType:
-                action = type_menu.addAction(str(seg_type))
+                action = type_menu.addAction(seg_type.key)
                 action.setCheckable(True)
                 action.setChecked(seg_type == current)
                 group.addAction(action)

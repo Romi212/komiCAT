@@ -212,14 +212,15 @@ class Page:
         return translation_text
 
     def update_segments(self, to_update):
+        self.reasign_panels()
         self.segments.merge_lists(to_update)
         self.set_edit_mode(False)
 
     def set_edit_mode(self, can_edit):
         for segment in self.segments:
             segment.set_edit_mode(can_edit)
-        if not can_edit:
-            self.reasign_panels()
+        
+            
 
     def delete_segment(self, segment):
         if segment.panel:

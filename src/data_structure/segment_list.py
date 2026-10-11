@@ -42,7 +42,7 @@ class SegmentList:
     
     def merge_lists(self,to_merge):
         for segment in self.segments:
-            if not to_merge.has_segment(segment):
+            if not segment.is_extracted() or not to_merge.has_segment(segment):
                 print(f"Inserting segment {segment.nro}")
                 to_merge.insert_segment(segment)
 
@@ -236,7 +236,8 @@ class SegmentList:
             return len(self.segments)
 
     def get_last_segment(self):
-        if self.segments_indexes:
-            return self.segments_indexes[max(self.segments_indexes)]
-        else:
-            return None
+        for i in range(max(self.segments_indexes, default=0), 0, -1):
+            seg = self.segments_indexes.get(i)
+            if seg is not None and seg.segment_box:
+                return seg
+        return None

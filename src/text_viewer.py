@@ -92,13 +92,15 @@ class TextViewer(QWidget):
         
         
 
-    def update_tab_order(self,page):
+    def update_tab_order(self, page):
         previous = page.get_previous_page_last_segment()
-        for segment in page.segments:
-            if previous and segment.segment_box:
-                segment.segment_box.set_prev_focus(previous)
+        for segment in page.segments:                
+            box = segment.segment_box
+            if box is None:
+                continue                              
+            if previous is not None:
+                box.set_prev_focus(previous)
             previous = segment
-
     def create_segment(self, logic_segment):
         segment = SegmentBox(self.spell_checker, self.jp_dict,logic_segment, self.text_size)
         

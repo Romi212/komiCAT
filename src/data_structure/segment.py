@@ -149,4 +149,4 @@ class Segment:
             self.segment_box.delete_self()
 
     def equals(self, segment):
-        return self.source_text == segment.source_text and self.translation == segment.translation
+        return self.source_text == segment.source_text

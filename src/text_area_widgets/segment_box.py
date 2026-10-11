@@ -64,7 +64,7 @@ class SegmentBox(QWidget):
         self.segment = logic_segment
         self.text_size = initial_text_size
         self.initial_height = self.text_size * 2  
-
+        self._edit_mode = False
         main_layout = QHBoxLayout()
         main_layout.setContentsMargins(5, 5, 5, 5)
         main_layout.setSpacing(6)

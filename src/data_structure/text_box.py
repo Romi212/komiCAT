@@ -39,4 +39,4 @@ class TextBox:
     def update_text_type(self, type):
         self.text_type = type
         self.text_type_format = SEGMENT_TYPE_FORMAT[self.text_type]
-        self.label = type
+        self.label = type.key
