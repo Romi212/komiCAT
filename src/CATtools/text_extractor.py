@@ -1,14 +1,14 @@
 import PIL.Image
 import os
 from dotenv import load_dotenv
-
+from pathlib import Path
 from manga_ocr import MangaOcr
 from matplotlib import text
 from data_structure.text_box import TextBox
 from transformers import AutoImageProcessor, AutoModelForObjectDetection, pipeline
 from huggingface_hub import login
 from ultralytics import YOLO
-
+from first_run import model_path
 load_dotenv()
 
 class TextExtractor:
@@ -20,7 +20,7 @@ class TextExtractor:
 
     def _intialize_local(self):
         # 1. Define the relative path to your local model folder
-        local_model_path = "./models/bubble_detector_model"
+        local_model_path = (model_path("bubble_detector_model"))
         
         # 2. Load the processor and model locally
         processor = AutoImageProcessor.from_pretrained(
@@ -39,12 +39,13 @@ class TextExtractor:
             feature_extractor=processor,
         )
 
-        local_ocr_path = "./models/manga_ocr_model"
+        local_ocr_path = (model_path("manga_ocr_model"))
         self.mocr = MangaOcr(
             pretrained_model_name_or_path=local_ocr_path
         )
 
-        self.panel_detector = YOLO("./models/comic_panel_detection_model_leoxs/manga_panel_detector_fp32.pt")
+        path = (model_path("comic_panel_detection_model_leoxs"))
+        self.panel_detector = YOLO(str(Path(model_path("comic_panel_detection_model_leoxs")) / "manga_panel_detector_fp32.pt"))
 
 
 

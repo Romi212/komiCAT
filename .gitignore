@@ -16,3 +16,8 @@ env/
 
 # Ignore model files
 models/
+
+#Ignore builds
+build/
+dist/
+Output/

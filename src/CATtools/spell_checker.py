@@ -1,11 +1,13 @@
 import os
 import re
 from symspellpy import SymSpell, Verbosity
+from first_run import DICTS_DIR, DICT_CHECK_FILE
 
 class SpellChecker:
     def __init__(self, language='es', termbase = None):
         self.language = 'es'
-        dict_path = f"./dictionaries/{language}_frequency_dictionary.txt"
+        
+        
         self.sym_spell = SymSpell(
             max_dictionary_edit_distance=2, 
             prefix_length=7
@@ -13,12 +15,8 @@ class SpellChecker:
         self.termbase = termbase
         
         # Load Spanish frequency dictionary (Format: "word frequency")
-        if os.path.exists(dict_path):
-            self.sym_spell.load_dictionary(
-                dict_path, term_index=0, count_index=1, separator=" ", encoding="utf-8"
-            )
-        else:
-            raise FileNotFoundError(f"Dictionary file not found at: {dict_path}")
+        self.sym_spell.load_dictionary(str(DICTS_DIR / DICT_CHECK_FILE),
+                                               term_index=0, count_index=1)
 
 
 

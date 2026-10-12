@@ -7,8 +7,50 @@ from ui import theme
 import sys, traceback, datetime
 from pathlib import Path
 from PyQt6.QtWidgets import QApplication, QMessageBox
+from PyQt6.QtCore import QThreadPool, QEventLoop
+from PyQt6.QtWidgets import QProgressDialog, QMessageBox
+import first_run
+from process.background_worker import BackgroundWorker   # wherever your class lives
 
 LOG_FILE = Path.home() / "komicat_error.log"
+
+def run_setup(app):
+    if not first_run.needs_setup():
+        return True
+
+    dlg = QProgressDialog("Preparing KomiCAT (first run, needs internet)...", None, 0, 0)
+    dlg.setWindowTitle("KomiCAT setup")
+    dlg.setCancelButton(None)
+    dlg.setMinimumDuration(0)
+    dlg.show()
+
+    def do_setup():
+        first_run.download_models()
+        first_run.download_jamdict()
+        first_run.download_dictionaries()
+
+    result = {"ok": True, "error": ""}
+    loop = QEventLoop()
+
+    worker = BackgroundWorker(do_setup)
+
+    def on_error(msg):
+        result["ok"] = False
+        result["error"] = msg
+        loop.quit()
+
+    worker.signals.finished.connect(lambda _: loop.quit())
+    worker.signals.error.connect(on_error)
+
+    QThreadPool.globalInstance().start(worker)
+    loop.exec()          # keeps the UI responsive until a signal fires
+    dlg.close()
+
+    if not result["ok"]:
+        QMessageBox.critical(None, "Setup failed",
+            f"Could not download the required files:\n{result['error']}\n\n"
+            "Check your connection and restart.")
+    return result["ok"]
 
 def handle_exception(exc_type, exc_value, exc_tb):
     if issubclass(exc_type, KeyboardInterrupt):
@@ -35,7 +77,8 @@ def handle_exception(exc_type, exc_value, exc_tb):
 
 sys.excepthook = handle_exception
 app = QApplication(sys.argv)
-
+if not run_setup(app):
+    sys.exit(1)
 
 def apply_theme(t):
     app.setStyleSheet(theme.build_qss(t))
