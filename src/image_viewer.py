@@ -219,7 +219,7 @@ class ImageViewer(QWidget):
                     button.set_segment(segment)
 
                 
-                button.link_on_click(lambda checked, btn=segment.button: self.selected_bubble(btn))
+                #button.link_on_click(lambda checked, btn=segment.button: self.selected_bubble(btn))
                 button.conect_signals(self.prompt_and_delete_segment, self.combine_segments)
                 
                 self.scene.addItem(button)
@@ -244,6 +244,7 @@ class ImageViewer(QWidget):
                 panel_text.setFont(QFont("Arial", 24, QFont.Weight.Bold))
                 self.scene.addItem(panel_text)
                 i += 1
+            self.controller.page_changed(self.current_page)
 
             
             
@@ -406,7 +407,6 @@ class ImageViewer(QWidget):
         segment = self.current_page.create_segment(text_box)
         rect = segment.button
         rect.set_segment(segment)
-        rect.link_on_click(lambda checked, btn=rect: self.selected_bubble(btn))
         self.scene.addItem(rect)
 
     def add_bubble(self):

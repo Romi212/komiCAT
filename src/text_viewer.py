@@ -169,3 +169,8 @@ class TextViewer(QWidget):
         if(False):
             container = self.page_containers[segment.page.number]
             container.remove_segment(segment_box)
+
+    def focus_page(self,page):
+        if (page.number in range(0,len(self.page_containers))):
+            page_container = self.page_containers[page.number]
+            self.scroll_area.verticalScrollBar().setValue(page_container.y())

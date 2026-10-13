@@ -82,6 +82,10 @@ class Segment:
     def show_focus(self, focused):
         self.button.set_focus(focused)
 
+    def focus_segment_box(self, focused):
+        if(self.segment_box):
+            self.segment_box.text_area.setFocus()
+
     def get_data(self):
         
         

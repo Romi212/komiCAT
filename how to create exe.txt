@@ -1,0 +1,1 @@
+pyinstaller --noconfirm --clean --windowed --name KomiCAT --collect-all torch --collect-all torchvision --collect-all ultralytics --collect-all manga_ocr --collect-all transformers --collect-all unidic_lite --collect-all jamdict --collect-data symspellpy --copy-metadata gdown src/main.py

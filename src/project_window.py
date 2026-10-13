@@ -1,7 +1,7 @@
 import sys
 from PyQt6.QtWidgets import QApplication, QDialog, QFileDialog, QMainWindow, QSplitter, QVBoxLayout, QWidget, QMenuBar
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QKeySequence
+from PyQt6.QtGui import QAction, QKeySequence
 
 from data_structure.page import Page
 from data_structure.segment_combined import SegmentCombined
@@ -65,9 +65,21 @@ class ProjectWindow(QMainWindow):
         self.image_viewer = ImageViewer(controller=self, chapter=chapter, text_extractor=self.text_extractor)
         
         self.set_up_chapter(chapter)
+        
 
         open_images = project_menu.addAction("Open Images")
         open_images.triggered.connect(self.image_viewer.open_images)
+
+        view_menu = self.menu_bar.addMenu("View")
+        next_action = QAction("Next page", self)
+        next_action.setShortcut(QKeySequence("Alt+Right"))
+        next_action.triggered.connect(self.image_viewer.load_next_image)
+        view_menu.addAction(next_action)
+
+        prev_action = QAction("Previous page", self)
+        prev_action.setShortcut(QKeySequence("Alt+Left"))
+        prev_action.triggered.connect(self.image_viewer.load_previous_image)
+        view_menu.addAction(prev_action)
         
         # Add to splitter
         splitter.addWidget(self.text_viewer)
@@ -142,3 +154,6 @@ class ProjectWindow(QMainWindow):
                 self.text_viewer.update_tab_order(page)
             else:
                 page.set_edit_mode(can_edit)
+                
+    def page_changed(self, page):
+        self.text_viewer.focus_page(page)

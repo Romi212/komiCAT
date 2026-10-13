@@ -22,7 +22,6 @@ class TextBoxRect(QGraphicsRectItem):
         self.number = self.text_box.index
         self.text = ""
         self.number = 0
-        self.onClick = None
 
         self._is_dragging = False
         self._has_moved = False
@@ -52,8 +51,6 @@ class TextBoxRect(QGraphicsRectItem):
         if self.segment:
             return t.segment_style(self.segment.segment_type)
         return t.segment_style(SegmentType.FREE)   # before a segment is attached
-    def link_on_click(self, callback):
-            self.onClick = callback
 
     def itemChange(self, change, value):
         if change in (QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged,
@@ -61,11 +58,6 @@ class TextBoxRect(QGraphicsRectItem):
             self.signals.moved.emit()
         return super().itemChange(change, value)
     
-    def _on_clicked(self):
-        """Wrapper that passes the button object (self) to the onClick callback"""
-        if self.onClick:
-            self.onClick(self)
-
     def selected(self, number):
             print(number)
             self.number = number
@@ -186,11 +178,13 @@ class TextBoxRect(QGraphicsRectItem):
 
             if not self._has_moved:
                 # --- ACTION 1: PURE CLICK (Show Text / Select Number) ---
-                self._on_clicked()
+                self.focus_segment()
 
             event.accept()
         else:
             super().mouseReleaseEvent(event)
+            if event.button() == Qt.MouseButton.LeftButton:
+                self.focus_segment()
 
     def paint(self, painter, option, widget=None):
         """Replaces QSS completely with fast, native vector painting."""
@@ -223,6 +217,11 @@ class TextBoxRect(QGraphicsRectItem):
             self.has_been_extracted_flag = True
             self.state = "extracted"
             self.update()
+
+    def focus_segment(self):
+        #self.set_focus(True)
+        print("FOCUSS")
+        self.segment.focus_segment_box(True)
 
     def set_focus(self, focused=True):
         if self.has_been_extracted_flag:
