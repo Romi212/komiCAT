@@ -19,8 +19,10 @@ class Project():
 
 
     def add_chapter(self, chapter):
-          path = ""+str(chapter.number) + "_" + chapter.name
+          path = "ch"+str(chapter.number)
+          chapter.path = path
           self.chapters.append([chapter.number, path, chapter.name])
+          return path
 
     def load_project(self, data):
         self.project_name = data["project_name"]

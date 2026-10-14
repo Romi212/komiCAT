@@ -14,12 +14,12 @@ from tool_windows.termbase_panel import TermbasePanel
 
 class ChapterWindow(QMainWindow):
     edit_mode_changed = pyqtSignal(Page, bool)
-    def __init__(self, text_extractor=None, chapter=None, project_loader=None):
+    def __init__(self, text_extractor=None, chapter=None, project_loader=None, project_manager= None):
         super().__init__()
         
         self.text_extractor = text_extractor;
         self.project_loader = project_loader;
-        
+        self.project_manager = project_manager
         
         # Create main window
         
@@ -157,3 +157,14 @@ class ChapterWindow(QMainWindow):
                 
     def page_changed(self, page):
         self.text_viewer.focus_page(page)
+
+    def open_images(self):
+        paths, _ = QFileDialog.getOpenFileNames(
+            self,
+            "Open Image File",
+            "",
+            "Image files (*.png *.jpg *.jpeg *.gif *.bmp *.ico);;All files (*)"
+        )
+        if not paths:
+            return False
+        return self.project_manager.open_images(self.chapter, paths)

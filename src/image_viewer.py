@@ -130,14 +130,9 @@ class ImageViewer(QWidget):
         
         
     def open_images(self):
-        file_paths, _ = QFileDialog.getOpenFileNames(
-            self,
-            "Open Image File",
-            "",
-            "Image files (*.png *.jpg *.jpeg *.gif *.bmp *.ico);;All files (*)"
-        )
-        if file_paths:
-            self.load_pages(file_paths)
+        if self.controller.open_images():
+            self._update_open_images_button_visibility()
+            self._setup_page()
         
     def load_chapter(self, chapter):
         self.chapter = chapter

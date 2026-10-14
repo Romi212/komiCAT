@@ -81,3 +81,8 @@ class ProjectStorage:
                                    new_name=f"page_{i:03d}")
             pages.append({"file": rel, "original_name": Path(src).name})
         return pages
+
+    
+    def add_chapter(self, path):
+        # Make dir in resolve_path(path)
+        (self.resolve(path)).mkdir(parents=True, exist_ok=True)

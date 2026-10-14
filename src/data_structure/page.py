@@ -1,4 +1,6 @@
 import os
+
+from PIL import Image
 from data_structure.panel import Panel
 from data_structure.segment import Segment
 from data_structure.segment_combined import SegmentCombined
@@ -9,10 +11,14 @@ from image_area_widgets.text_box_rect import TextBoxRect
 
 class Page:
     
-    def __init__(self, file_path=None, image=None, chapter=None, number=0):
+    def __init__(self, file_path=None,
+                        rel_path=None,
+                        chapter=None,
+                        number=0,
+                        original_name=None):
         
         self.file_path = file_path
-        self.image = image
+        self._image = None
         self.page_name = os.path.basename(file_path)
         self.number = number
         self.segments = SegmentList()
@@ -23,7 +29,12 @@ class Page:
         self.detected_panels = []
         self.has_been_processed = False
         self.segments_to_update = SegmentList()
-    
+
+    @property
+    def image(self):
+        if self._image is None:
+            self._image = Image.open(self.file_path)
+        return self._image
 
     def store_detected_bubbles(self, detected_bubbles, detected_text_bubbles, detected_free_text, detected_panels):
 

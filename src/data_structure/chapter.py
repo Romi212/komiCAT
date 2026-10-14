@@ -11,6 +11,7 @@ class Chapter:
         self.name = name
         self.series_name = series_name
         self.number = number
+        self.path = ""
         self.pages = []
         self.current_page = 0
         self.language = language 

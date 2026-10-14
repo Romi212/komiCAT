@@ -1,6 +1,8 @@
 from chapter_window import ChapterWindow
 from create_chapter_window import CreateChapterWindow
 from data_structure.chapter import Chapter
+from data_structure.page import Page
+from project_storage import safe_name
 from project_window import ProjectWindow
 from PyQt6.QtWidgets import QDialog
 
@@ -25,13 +27,15 @@ class ProjectManager():
             ch_data = create_chapter_window.get_project_data()
             chapter = self.create_project_chapter(ch_data)
             self.project_window.close()
-            self.chapter_window = ChapterWindow(self.text_extractor,chapter,self.loader)
+            self.open_chapter_window(chapter)
         return None
 
     def create_project_chapter(self, project_data):
         number = len(self.project.chapters)
         chapter = Chapter(self.project.series_name, project_data["chapter_name"], number, self.project.target_language)
-        self.project.add_chapter(chapter)
+        relative_path = self.project.add_chapter(chapter)
+        self.storage.add_chapter(relative_path)
+        self.storage.write_json(f"{safe_name(self.project.project_name)}.romi", self.project.get_data())
         return chapter
 
     def delete_chapter(self, chapter):
@@ -44,7 +48,7 @@ class ProjectManager():
         self.loader.save_manifest(self.project)
 
     def open_chapter_window(self, chapter):
-        self.chapter_window = ChapterWindow(self.text_extractor, self.loader, chapter)
+        self.chapter_window = ChapterWindow(text_extractor=self.text_extractor, chapter=chapter, project_loader=self.loader, project_manager=self)
 
     def show_termbase_panel(self):
         print("TERMBASE")
@@ -54,3 +58,21 @@ class ProjectManager():
 
     def delete_project():
         print("delete")
+
+    def open_images(self, chapter, src_paths):
+        start = max((p.number for p in chapter.pages), default=-1) + 1   # next free file number
+        stored = self.storage.store_chapter_images(chapter.path, src_paths, start_at=start)
+
+        new_pages = []
+        for entry in stored:
+            page = Page(file_path=str(self.storage.resolve(entry["file"])),
+                        rel_path=entry["file"],
+                        chapter=chapter,
+                        number=len(chapter.pages),
+                        original_name=entry["original_name"])
+            chapter.add_page(page)
+            new_pages.append(page)
+
+        #self.loader.save_chapter(chapter)        # chapter.json now lists the new pages
+        return new_pages
+        
