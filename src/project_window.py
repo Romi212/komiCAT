@@ -1,159 +1,230 @@
-import sys
-from PyQt6.QtWidgets import QApplication, QDialog, QFileDialog, QMainWindow, QSplitter, QVBoxLayout, QWidget, QMenuBar
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QAction, QKeySequence
+from pathlib import Path
 
-from data_structure.page import Page
-from data_structure.segment_combined import SegmentCombined
-from create_project_window import CreateProjectWindow
-from image_viewer import ImageViewer
-from project_loader import ProjectLoader
-from text_viewer import TextViewer
-from data_structure.chapter import Chapter
-from tool_windows.termbase_panel import TermbasePanel
+from PyQt6.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QScrollArea,
+    QMenu, QInputDialog, QMessageBox, QFrame
+)
+from PyQt6.QtGui import QPixmap, QIcon
+from PyQt6.QtCore import Qt, QSize, pyqtSignal
 
-class ProjectWindow(QMainWindow):
-    edit_mode_changed = pyqtSignal(Page, bool)
-    def __init__(self, text_extractor=None, chapter=None, project_loader=None):
-        super().__init__()
-        
-        self.text_extractor = text_extractor;
-        self.project_loader = project_loader;
-        
-        
-        # Create main window
-        
-        self.setWindowTitle("KomiCAT")
-        self.resize(1600, 900)
+CARD_SIZE = (130, 180)      # chapter thumbnail, width x height
+COVER_SIZE = (150, 210)
 
-        #Create menu bar
-        self.menu_bar = QMenuBar(self)
-        file_menu = self.menu_bar.addMenu("File")
-        #Save project button
-        create_action = file_menu.addAction("New Project")
-        create_action.triggered.connect(self.create_new_project)
 
-        save_action = file_menu.addAction("Save Project")
-        save_action.setShortcut(QKeySequence.StandardKey.Save)
-        save_action.triggered.connect(self.save_project)
+def _load_pixmap(path, size):
+    """Scaled and center-cropped pixmap, or None if the file is missing or unreadable."""
+    if not path or not Path(path).exists():
+        return None
+    pix = QPixmap(str(path))
+    if pix.isNull():
+        return None
+    scaled = pix.scaled(QSize(*size), Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+                        Qt.TransformationMode.SmoothTransformation)
+    x = (scaled.width() - size[0]) // 2
+    y = (scaled.height() - size[1]) // 2
+    return scaled.copy(x, y, size[0], size[1])
 
-        #Load project button
-        load_action = file_menu.addAction("Load Project")
-        load_action.triggered.connect(self.load_project)
 
-        project_menu = self.menu_bar.addMenu("Project")
-        
+class ChapterCard(QWidget):
+    """Thumbnail + name. Left click opens, right click shows rename/delete."""
+    open_requested = pyqtSignal(object)
+    rename_requested = pyqtSignal(object, str)
+    delete_requested = pyqtSignal(object)
 
-        export_action = project_menu.addAction("Export Translation")
-        export_action.triggered.connect(self.export_translation)
-
-        termbase_action = project_menu.addAction("Termbase")
-        termbase_action.triggered.connect(self.show_termbase)
-
-        
-
-        # Create central widget with splitter
-        central_widget = QWidget()
-        layout = QVBoxLayout()
-        
-        splitter = QSplitter(Qt.Orientation.Horizontal)
-       
-
-        
-        # Create viewers
-        self.text_viewer = TextViewer(controller=self, chapter=chapter)
-        self.image_viewer = ImageViewer(controller=self, chapter=chapter, text_extractor=self.text_extractor)
-        
-        self.set_up_chapter(chapter)
-        
-
-        open_images = project_menu.addAction("Open Images")
-        open_images.triggered.connect(self.image_viewer.open_images)
-
-        view_menu = self.menu_bar.addMenu("View")
-        next_action = QAction("Next page", self)
-        next_action.setShortcut(QKeySequence("Alt+Right"))
-        next_action.triggered.connect(self.image_viewer.load_next_image)
-        view_menu.addAction(next_action)
-
-        prev_action = QAction("Previous page", self)
-        prev_action.setShortcut(QKeySequence("Alt+Left"))
-        prev_action.triggered.connect(self.image_viewer.load_previous_image)
-        view_menu.addAction(prev_action)
-        
-        # Add to splitter
-        splitter.addWidget(self.text_viewer)
-        splitter.addWidget(self.image_viewer)
-        splitter.setStretchFactor(0, 1)
-        splitter.setStretchFactor(1, 1)
-        splitter.setSizes([1, 1])
-        self.text_viewer.setMinimumWidth(400)
-        
-        
-        layout.setMenuBar(self.menu_bar)
-        layout.addWidget(splitter)
-        central_widget.setLayout(layout)
-        self.setCentralWidget(central_widget)
-        
-        
-        self.show()
-       
-
-    def set_up_chapter(self, chapter):
+    def __init__(self, chapter, thumb_path=None, parent=None):
+        super().__init__(parent)
         self.chapter = chapter
-        self.termbase = self.chapter.get_termbase()
-        self.termbase_panel = TermbasePanel(self.termbase, self)
-        self.image_viewer.load_chapter(self.chapter)
-        self.text_viewer.load_chapter(self.chapter)
 
-    def extracted(self, page, segments):
-        self.text_viewer.add_extracted_segments(page,segments)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(4)
+
+        self.thumb = QPushButton()
+        self.thumb.setObjectName("chapterThumb")
+        self.thumb.setFixedSize(*CARD_SIZE)
+        self.thumb.setIconSize(QSize(*CARD_SIZE))
+        self.thumb.setCursor(Qt.CursorShape.PointingHandCursor)
+        pix = _load_pixmap(thumb_path, CARD_SIZE)
+        if pix:
+            self.thumb.setIcon(QIcon(pix))
+        else:
+            self.thumb.setText("No pages")
+        self.thumb.clicked.connect(lambda: self.open_requested.emit(self.chapter))
+        layout.addWidget(self.thumb)
+
+        self.name_label = QLabel(chapter.name)
+        self.name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.name_label.setFixedWidth(CARD_SIZE[0])
+        self.name_label.setWordWrap(True)
+        layout.addWidget(self.name_label)
+
+    def contextMenuEvent(self, event):
+        menu = QMenu(self)
+        rename = menu.addAction("Rename")
+        delete = menu.addAction("Delete")
+        chosen = menu.exec(event.globalPos())
+        if chosen == rename:
+            new_name, ok = QInputDialog.getText(self, "Rename chapter", "Name:",
+                                                text=self.chapter.name)
+            if ok and new_name.strip():
+                self.rename_requested.emit(self.chapter, new_name.strip())
+        elif chosen == delete:
+            reply = QMessageBox.question(
+                self, "Delete chapter",
+                f'Delete "{self.chapter.name}"? This removes its images and translations.',
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No)
+            if reply == QMessageBox.StandardButton.Yes:
+                self.delete_requested.emit(self.chapter)
 
 
-    def save_project(self):
-        self.project_loader.save_project()
-        self.image_viewer.status_label.setText("Project saved successfully! in " + self.project_loader.save_path)   
+class ProjectWindow(QWidget):
+    chapter_opened = pyqtSignal(object)
+    chapter_add_requested = pyqtSignal()
+    chapter_rename_requested = pyqtSignal(object, str)
+    chapter_delete_requested = pyqtSignal(object)
+    termbase_requested = pyqtSignal()
+    memory_requested = pyqtSignal()
+    edit_requested = pyqtSignal()
+    delete_project_requested = pyqtSignal()
 
-    def load_project(self):
+    def __init__(self, project, parent=None):
+        super().__init__(parent)
+        self.project = project
+        self.setWindowTitle(f"KomiCAT - {project.project_name}")
+        self.resize(760, 520)
 
-        chapter = self.project_loader.load_project()
-        if(chapter):
-            self.set_up_chapter(chapter)
-        #TODO ELSE TIRAR ERROR CANT OPEN PROJECT
+        root = QVBoxLayout(self)
+        root.setSpacing(16)
 
-    def export_translation(self):
-        export_path = QFileDialog.getSaveFileName()
-        self.project_loader.export_translation(export_path[0])
+        # ---------- header: cover + title + tools ----------
+        header = QHBoxLayout()
+        header.setSpacing(20)
 
-    def show_termbase(self):
-        self.termbase_panel.show()
-        self.termbase_panel.raise_()
-        self.termbase_panel.activateWindow()
+        self.cover_label = QLabel("No cover")
+        self.cover_label.setObjectName("coverPreview")
+        self.cover_label.setFixedSize(*COVER_SIZE)
+        self.cover_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        header.addWidget(self.cover_label, alignment=Qt.AlignmentFlag.AlignTop)
 
-    def create_new_project(self):
-        
-        chapter = self.project_loader.create_new_project()
-        if(chapter):
-            self.set_up_chapter(chapter)
-        #TODO: ELSE mostrar error creando nuevo
+        info = QVBoxLayout()
+        self.title_label = QLabel()
+        self.title_label.setObjectName("projectTitle")
+        self.subtitle_label = QLabel()
+        self.memory_btn = QPushButton("Translation Memory")
+        self.termbase_btn = QPushButton("Termbase")
+        self.memory_btn.clicked.connect(self.memory_requested)
+        self.termbase_btn.clicked.connect(self.termbase_requested)
+        info.addWidget(self.title_label)
+        info.addWidget(self.subtitle_label)
+        info.addSpacing(8)
+        info.addWidget(self.memory_btn)
+        info.addWidget(self.termbase_btn)
+        info.addStretch()
+        header.addLayout(info, 1)
+        root.addLayout(header)
 
-    def set_current_page(self, page):
-        self.chapter.set_current_page(page)
-        self.image_viewer._setup_page()
+        # ---------- chapters strip:  <  [cards...] [+]  > ----------
+        strip = QHBoxLayout()
+        self.left_btn = QPushButton("<")
+        self.right_btn = QPushButton(">")
+        for b in (self.left_btn, self.right_btn):
+            b.setFixedWidth(28)
+            b.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.left_btn.clicked.connect(lambda: self._scroll(-1))
+        self.right_btn.clicked.connect(lambda: self._scroll(1))
 
-    def set_panel_zoom(self,panel):
-        self.image_viewer.set_panel_zoom(panel)
+        self.scroll = QScrollArea()
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.scroll.setFixedHeight(CARD_SIZE[1] + 50)
+        bar = self.scroll.horizontalScrollBar()
+        bar.valueChanged.connect(self._update_arrows)
+        bar.rangeChanged.connect(self._update_arrows)
 
-    def delete_segment(self, segment):
-        self.text_viewer.delete_segment(segment)
+        strip.addWidget(self.left_btn)
+        strip.addWidget(self.scroll, 1)
+        strip.addWidget(self.right_btn)
+        root.addLayout(strip)
+        root.addStretch()
 
-    def change_edit_mode(self, page, can_edit):
-            #page.set_edit_mode(can_edit)
-            self.edit_mode_changed.emit(page, can_edit)
-            if not can_edit:
-                self.text_viewer.update_tab_order(page)
-            else:
-                page.set_edit_mode(can_edit)
-                
-    def page_changed(self, page):
-        self.text_viewer.focus_page(page)
+        # ---------- footer ----------
+        footer = QHBoxLayout()
+        self.delete_btn = QPushButton("Delete Project")
+        self.delete_btn.setObjectName("dangerButton")
+        self.edit_btn = QPushButton("Edit")
+        self.delete_btn.clicked.connect(self._confirm_delete_project)
+        self.edit_btn.clicked.connect(self.edit_requested)
+        footer.addStretch()
+        footer.addWidget(self.delete_btn)
+        footer.addWidget(self.edit_btn)
+        footer.addStretch()
+        root.addLayout(footer)
+
+        self.refresh()
+
+    # ---------- content ----------
+    def refresh(self):
+        """Rebuild everything from the project. Call after adding, renaming or deleting."""
+        p = self.project
+        self.title_label.setText(p.series_name)
+        self.subtitle_label.setText(f"{p.project_name}  ·  {p.target_language.upper()}")
+        self.setWindowTitle(f"KomiCAT - {p.project_name}")
+
+        pix = _load_pixmap(Path(p.path) / p.cover if p.cover else None, COVER_SIZE)
+        if pix:
+            self.cover_label.setPixmap(pix)
+        else:
+            self.cover_label.setPixmap(QPixmap())
+            self.cover_label.setText("No cover")
+
+        # chapter cards
+        content = QWidget()
+        row = QHBoxLayout(content)
+        row.setContentsMargins(4, 4, 4, 4)
+        row.setSpacing(16)
+        for chapter in p.chapters:
+            card = ChapterCard(chapter, self._chapter_thumb(chapter))
+            card.open_requested.connect(self.chapter_opened)
+            card.rename_requested.connect(self.chapter_rename_requested)
+            card.delete_requested.connect(self.chapter_delete_requested)
+            row.addWidget(card, alignment=Qt.AlignmentFlag.AlignTop)
+
+        add_btn = QPushButton("+")
+        add_btn.setObjectName("addChapterButton")
+        add_btn.setFixedSize(60, 60)
+        add_btn.setToolTip("Add chapter")
+        add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        add_btn.clicked.connect(self.chapter_add_requested)
+        row.addWidget(add_btn, alignment=Qt.AlignmentFlag.AlignVCenter)
+        row.addStretch()
+
+        self.scroll.setWidget(content)
+        self._update_arrows()
+
+    def _chapter_thumb(self, chapter):
+        rel = getattr(chapter, "thumbnail", None)      # relative path of the first page, if known
+        return Path(self.project.path) / rel if rel else None
+
+    # ---------- scrolling ----------
+    def _scroll(self, direction):
+        bar = self.scroll.horizontalScrollBar()
+        bar.setValue(bar.value() + direction * (CARD_SIZE[0] + 16) * 2)
+
+    def _update_arrows(self, *_):
+        bar = self.scroll.horizontalScrollBar()
+        self.left_btn.setEnabled(bar.value() > bar.minimum())
+        self.right_btn.setEnabled(bar.value() < bar.maximum())
+
+    # ---------- project deletion ----------
+    def _confirm_delete_project(self):
+        reply = QMessageBox.warning(
+            self, "Delete project",
+            f'Delete "{self.project.project_name}" and all its chapters?\n'
+            "This cannot be undone.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No)
+        if reply == QMessageBox.StandardButton.Yes:
+            self.delete_project_requested.emit()

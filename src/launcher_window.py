@@ -5,9 +5,12 @@ from data_structure.segment_combined import SegmentCombined
 from create_project_window import CreateProjectWindow
 from process.background_worker import BackgroundWorker
 from project_loader import ProjectLoader
-from project_window import ProjectWindow
+from chapter_window import ChapterWindow
 from CATtools.text_extractor import TextExtractor
 from PyQt6.QtCore import QThreadPool
+
+from project_manager import ProjectManager
+from project_window import ProjectWindow
 
 
 class LauncherWindow(QMainWindow):
@@ -78,7 +81,7 @@ class LauncherWindow(QMainWindow):
             self.status_label.setText("AI models are still loading. Please wait...")   
         else:
             if self.pending_chapter is not None:
-                self.project_window = ProjectWindow(text_extractor=self.text_extractor, chapter=self.pending_chapter, project_loader=self.project_loader)
+                self.project_manager = ProjectManager(self.pending_chapter,self.project_loader, self.text_extractor)
                 self.close()
 
     def set_buttons_enabled(self, enabled: bool):

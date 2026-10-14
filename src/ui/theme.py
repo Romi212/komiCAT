@@ -90,7 +90,13 @@ def build_qss(t):
     return f"""
     QMainWindow, QDialog {{ background-color: {t.window}; }}
     QWidget {{ color: {t.text}; }}
-
+    QPushButton#coverButton {{
+        border: 1px solid {t.border};
+        border-radius: 4px;
+        background-color: {t.input_bg};
+        padding: 0;
+        }}
+    QPushButton#coverButton:hover {{ border: 2px solid {t.accent}; }}
     QScrollArea {{ background-color: {t.window}; border: none; }}
     QScrollArea > QWidget > QWidget {{ background-color: {t.window}; }}
 

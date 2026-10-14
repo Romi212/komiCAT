@@ -55,7 +55,7 @@ def download_jamdict(progress=print):
 
     try:
         progress("Downloading Japanese dictionary...")
-        result = gdown.download(url=JAMDICT_URL, output=str(temp_download), quiet=False, fuzzy=True)
+        result = gdown.download(url=JAMDICT_URL, output=str(temp_download), quiet=False)
         if result is None or not temp_download.exists():
             raise RuntimeError("Dictionary download failed (check connection or Drive link permissions).")
 

@@ -1,6 +1,6 @@
 import sys
 from launcher_window import LauncherWindow
-from project_window import ProjectWindow
+from chapter_window import ChapterWindow
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtWidgets import QApplication
 from ui import theme
@@ -75,7 +75,7 @@ def handle_exception(exc_type, exc_value, exc_tb):
         box.setDetailedText(text)          # expandable "Show Details" with the traceback
         box.exec()
 
-sys.excepthook = handle_exception
+#sys.excepthook = handle_exception
 app = QApplication(sys.argv)
 if not run_setup(app):
     sys.exit(1)
