@@ -122,6 +122,6 @@ class CreateProjectWindow(QDialog):
             "project_name": self.name_input.text().strip(),
             "path": self.path_input.text(),
             "source_language": self.lang_input.currentText(),
-            "output_language": self.output_lang_input.currentText(),
+            "target_language": self.output_lang_input.currentText(),
             "cover_path": self.cover_path,           # "" if none chosen
         }

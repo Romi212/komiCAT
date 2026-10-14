@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import QDialog, QFileDialog, QMainWindow
 from create_project_window import CreateProjectWindow
 from PIL import Image
 
-from data_structure.project import Project
+from data_structure.project import ChapterEntry, Project
 from project_storage import ProjectStorage, safe_name
 
 
@@ -39,48 +39,51 @@ class ProjectLoader:
     def create_project(self, project_data):
         root = Path(project_data["path"]) / safe_name(project_data["project_name"])
         if root.exists() and any(root.iterdir()):
-            raise FileExistsError(f"The folder already exists and is not empty:\n{root}")
+                            raise FileExistsError(f"The folder already exists and is not empty:\n{root}")
+                
+        self._create_storage(root)
+        project_data["path"] = root
+        project = self.load_project_data(project_data)
+        self.save_project(project)
+        return project
 
+    def _create_storage(self,root):
+        
         self.storage = ProjectStorage(root)
         self.storage.create_structure()
 
-        project = Project(path=str(root), series_name=project_data["series_name"],
-                        name=project_data["project_name"], source_language = project_data["source_language"], target_language=project_data["output_language"])
-        project.termbase = Termbase(project_data["source_language"], project_data["output_language"])
+    def load_project_data(self, project_data):
+        project = Project(path=project_data["path"], series_name=project_data["series_name"],
+                        name=project_data["project_name"], source_language = project_data["source_language"], target_language=project_data["target_language"])
+        project.termbase = Termbase(project_data["source_language"], project_data["target_language"])
 
         cover_src = project_data.get("cover_path")
         project.cover = self.storage.store_image(cover_src, self.storage.SHARED_DIR, new_name="cover") if cover_src else None
 
-        self.storage.write_json("shared/termbase.json", {"schema_version": 1, **project.termbase.get_data()})
-        self.storage.write_json(f"{safe_name(project.project_name)}.romi", project.get_data())
+        
+        
         return project
-    
-   
 
     def load_project(self):
         load_path = QFileDialog.getOpenFileName()
         if load_path[0]:
-            self.project = self.load_project_chapter(load_path[0])
-            return self.project
+            root = Path(load_path[0]).parent
+            project_name = Path(load_path[0]).stem
+            self._create_storage(root)
+            project_data = self.storage.read_json(project_name+".romi")
+            cover_path = Path(self.storage.SHARED_DIR) / safe_name("cover.png")
+            
+            project = Project(root, name = project_name, cover_image=cover_path)
+            project.load_project(project_data)
+            
+            return project
         
-    def load_project_chapter(self, file_path):
-        #Load project from file
-        self.save_path = file_path
-        with open(file_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        self.project = Chapter(
-            series_name=data["series_name"],
-            name=data["name"],
-            number=data["number"]
-        )
-        self.project.load_chapter(data)
-        return self.project
 
-    def save_project(self):
+    def save_project(self, project):
         print("Saving project...")
-        print(self.save_path)
-        with open(self.save_path, "w", encoding="utf-8") as f:
-            json.dump(self.project.get_data(), f)
+        self.storage.write_json(f"{safe_name(project.project_name)}.romi", project.get_data())
+        self.storage.write_json("shared/termbase.json", {"schema_version": 1, **project.termbase.get_data()})
+        
             
     def save_chapter(self, chapter):
         path = chapter.path

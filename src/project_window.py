@@ -172,7 +172,7 @@ class ProjectWindow(QWidget):
         self.title_label.setText(p.series_name)
         self.subtitle_label.setText(f"{p.project_name}  ·  {p.target_language.upper()}")
         self.setWindowTitle(f"KomiCAT - {p.project_name}")
-
+        print(p.cover)
         pix = _load_pixmap(Path(p.path) / p.cover if p.cover else None, COVER_SIZE)
         if pix:
             self.cover_label.setPixmap(pix)

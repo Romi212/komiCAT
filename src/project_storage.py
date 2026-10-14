@@ -71,7 +71,7 @@ class ProjectStorage:
             tmp = dest.with_name(dest.name + ".tmp")
             shutil.copyfile(src, tmp)              # copy only, never re-encode: coordinates stay valid
             tmp.replace(dest)
-
+        print(dest.relative_to(self.root).as_posix())
         return dest.relative_to(self.root).as_posix()
 
     def store_chapter_images(self, chapter_id, image_paths, start_at=1):
