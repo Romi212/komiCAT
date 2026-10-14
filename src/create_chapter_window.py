@@ -1,122 +1,101 @@
 from PyQt6.QtWidgets import (
-    QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout,
-    QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton
+    QCheckBox, QDialog, QDialogButtonBox, QFormLayout, QFrame, QLabel, QLineEdit,
+    QSpinBox, QToolButton, QVBoxLayout
 )
-from PyQt6.QtGui import QIcon, QPixmap
-from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtCore import Qt
 
 
 class CreateChapterWindow(QDialog):
-    COVER_SIZE = (150, 210)   # width, height (roughly manga cover proportions)
-
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, next_number=1, existing_numbers=None):
         super().__init__(parent)
+        self.existing_numbers = set(existing_numbers)
         self.setWindowTitle("Add a new Chapter")
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowType.WindowContextHelpButtonHint)
-        self.cover_path = ""
+        self.setMinimumWidth(340)
 
-        main_layout = QHBoxLayout(self)          
-        main_layout.setSpacing(16)
+        main_layout = QVBoxLayout(self)
 
-        
-        left_layout = QVBoxLayout()
-
+        # ---------- main fields ----------
         form = QFormLayout()
-
-        self.series_name_input = QLineEdit()
-        self.series_name_input.setPlaceholderText("Chapter title")
-        form.addRow("Series name:", self.series_name_input)
+        self.number_input = QSpinBox()
+        self.number_input.setRange(1, 9999)
+        self.number_input.setValue(self._suggest_number())
+        self.number_input.valueChanged.connect(self._validate)
+        form.addRow("Chapter number:", self.number_input)
 
         self.name_input = QLineEdit()
-        self.name_input.setPlaceholderText("My Manga Project")
-        form.addRow("Project name:", self.name_input)
+        self.name_input.setPlaceholderText("Optional, e.g. The Demon King")
+        form.addRow("Chapter name:", self.name_input)
 
-        path_layout = QHBoxLayout()
-        self.path_input = QLineEdit()
-        self.path_input.setReadOnly(True)
-        self.browse_btn = QPushButton("Browse...")
-        self.browse_btn.clicked.connect(self._browse_folder)
-        path_layout.addWidget(self.path_input)
-        path_layout.addWidget(self.browse_btn)
-        form.addRow("Project folder:", path_layout)
+        
 
-        lang_layout = QHBoxLayout()
-        self.lang_input = QComboBox()
-        self.lang_input.addItems(["jp"])
-        self.output_lang_input = QComboBox()
-        self.output_lang_input.addItems(["es", "en"])
-        lang_layout.addWidget(self.lang_input)
-        lang_layout.addWidget(QLabel(">"))
-        lang_layout.addWidget(self.output_lang_input)
-        lang_layout.addStretch()
-        form.addRow("Source lan:", lang_layout)
+        self.warning_label = QLabel()
+        self.warning_label.setObjectName("warningLabel")      # styled in build_qss
+        self.warning_label.setWordWrap(True)
+        self.warning_label.setVisible(False)
+        main_layout.addWidget(self.warning_label)
 
-        left_layout.addLayout(form)
+        main_layout.addLayout(form)
 
-        left_layout.addStretch()                 # pushes the buttons to the bottom
+        # ---------- advanced options (collapsed by default) ----------
+        self.advanced_toggle = QToolButton()
+        self.advanced_toggle.setText("Advanced options")
+        self.advanced_toggle.setCheckable(True)
+        self.advanced_toggle.setChecked(False)
+        self.advanced_toggle.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        self.advanced_toggle.setArrowType(Qt.ArrowType.RightArrow)
+        self.advanced_toggle.setAutoRaise(True)
+        self.advanced_toggle.toggled.connect(self._toggle_advanced)
+        main_layout.addWidget(self.advanced_toggle)
 
+        self.advanced_frame = QFrame()
+        adv_layout = QVBoxLayout(self.advanced_frame)
+        adv_layout.setContentsMargins(20, 0, 0, 0)
+        self.use_termbase = QCheckBox("Use series termbase")
+        self.use_termbase.setChecked(True)
+        self.use_memory = QCheckBox("Use series translation memory")
+        self.use_memory.setChecked(True)
+        adv_layout.addWidget(self.use_termbase)
+        adv_layout.addWidget(self.use_memory)
+        self.advanced_frame.setVisible(False)
+        main_layout.addWidget(self.advanced_frame)
+
+        # ---------- OK / Cancel ----------
         self.button_box = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
-        self.button_box.setCenterButtons(True) 
+        self.button_box.setCenterButtons(True)
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
-        left_layout.addWidget(self.button_box)
+        main_layout.addWidget(self.button_box)
 
-        main_layout.addLayout(left_layout, 1)
-
-        # cover column
-        self.cover_btn = QPushButton("Click to\nadd cover")
-        self.cover_btn.setObjectName("coverButton")     # styled in build_qss
-        self.cover_btn.setFixedSize(*self.COVER_SIZE)
-        self.cover_btn.setIconSize(QSize(*self.COVER_SIZE))
-        self.cover_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.cover_btn.setToolTip("Click to choose a cover image")
-        self.cover_btn.clicked.connect(self._choose_cover)
-        main_layout.addWidget(self.cover_btn, alignment=Qt.AlignmentFlag.AlignTop)
-
-
-
-       
-
-        # OK stays disabled until the required fields are filled in
-        for field in (self.series_name_input, self.name_input, self.path_input):
-            field.textChanged.connect(self._validate)
         self._validate()
 
-    # ---------- behavior ----------
+    def _suggest_number(self):
+        """Lowest free number after the highest existing one."""
+        return max(self.existing_numbers, default=0) + 1
+
     def _validate(self):
-        ok = bool(self.series_name_input.text().strip()
-                  and self.name_input.text().strip()
-                  and self.path_input.text().strip())
-        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(ok)
+        number = self.number_input.value()
+        duplicate = number in self.existing_numbers
+        self.warning_label.setVisible(duplicate)
+        if duplicate:
+            self.warning_label.setText(f"Chapter {number} already exists in this project.")
+        self.button_box.button(QDialogButtonBox.StandardButton.Ok).setEnabled(not duplicate)
+        self.adjustSize()
 
-    def _browse_folder(self):
-        folder = QFileDialog.getExistingDirectory(self, "Select where to create the project")
-        if folder:
-            self.path_input.setText(folder)
+    # ---------- behavior ----------
+    def _toggle_advanced(self, expanded):
+        self.advanced_frame.setVisible(expanded)
+        self.advanced_toggle.setArrowType(
+            Qt.ArrowType.DownArrow if expanded else Qt.ArrowType.RightArrow)
+        self.adjustSize()                    # shrink or grow the dialog with the section
 
-    def _choose_cover(self):
-        path, _ = QFileDialog.getOpenFileName(
-            self, "Select cover image", "",
-            "Images (*.png *.jpg *.jpeg *.webp *.bmp)")
-        if not path:
-            return
-        pix = QPixmap(path)
-        if pix.isNull():
-            return                                      # not a readable image
-        self.cover_path = path
-        scaled = pix.scaled(self.cover_btn.size(),
-                            Qt.AspectRatioMode.KeepAspectRatioByExpanding,
-                            Qt.TransformationMode.SmoothTransformation)
-        # crop to the button size so the cover fills it without stretching
-        x = (scaled.width() - self.cover_btn.width()) // 2
-        y = (scaled.height() - self.cover_btn.height()) // 2
-        cropped = scaled.copy(x, y, self.cover_btn.width(), self.cover_btn.height())
-        self.cover_btn.setText("")
-        self.cover_btn.setIcon(QIcon(cropped))
-
-    def get_project_data(self):
+    def get_chapter_data(self):
+        number = self.number_input.value()
         return {
-            "chapter_name": self.series_name_input.text().strip()
+            "number": number,
+            "name": self.name_input.text().strip() or f"Chapter {number}",
+            "use_series_termbase": self.use_termbase.isChecked(),
+            "use_series_memory": self.use_memory.isChecked(),
         }

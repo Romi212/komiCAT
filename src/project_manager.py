@@ -21,18 +21,18 @@ class ProjectManager():
         self.project_window.show()
 
     def add_chapter(self):
-        create_chapter_window = CreateChapterWindow()
+        create_chapter_window = CreateChapterWindow(existing_numbers=[c.number for c in self.project.chapters])
         data = create_chapter_window.exec()
         if data == QDialog.DialogCode.Accepted:
-            ch_data = create_chapter_window.get_project_data()
+            ch_data = create_chapter_window.get_chapter_data()
             chapter = self.create_project_chapter(ch_data)
             self.project_window.close()
             self.open_chapter_window(chapter)
         return None
 
     def create_project_chapter(self, project_data):
-        number = len(self.project.chapters)
-        chapter = Chapter(self.project.series_name, project_data["chapter_name"], number, self.project.target_language)
+        number = project_data["number"]
+        chapter = Chapter(self.project.series_name, project_data["name"], number, self.project.target_language)
         relative_path = self.project.add_chapter(chapter)
         self.storage.add_chapter(relative_path)
         self.storage.write_json(f"{safe_name(self.project.project_name)}.romi", self.project.get_data())
