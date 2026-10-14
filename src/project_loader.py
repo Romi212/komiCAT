@@ -19,6 +19,8 @@ SCHEMA_VERSION = 1
 
 
 class ProjectLoader:
+    CHAPTER_DATA = "chapter_data"
+
     def __init__(self):
         self.project = None
         self.save_path = ""
@@ -80,7 +82,11 @@ class ProjectLoader:
         with open(self.save_path, "w", encoding="utf-8") as f:
             json.dump(self.project.get_data(), f)
             
-        
+    def save_chapter(self, chapter):
+        path = chapter.path
+        chapter_data_path = Path(self.storage.chapter_dir(path)) / f"{self.CHAPTER_DATA}.json"
+        self.storage.write_json(chapter_data_path, chapter.get_data())
+
     def export_translation(self, export_path, exporter_name="Excel (structured)", data=None):
         exporter = EXPORTERS[exporter_name]
 
@@ -96,4 +102,3 @@ class ProjectLoader:
         exporter.export(data, export_path)
         print(f"Translation exported to {export_path}")
         return export_path
-

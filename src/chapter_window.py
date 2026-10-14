@@ -111,8 +111,8 @@ class ChapterWindow(QMainWindow):
 
 
     def save_project(self):
-        self.project_loader.save_project()
-        self.image_viewer.status_label.setText("Project saved successfully! in " + self.project_loader.save_path)   
+        self.project_manager.save_chapter(self.chapter)
+        self.image_viewer.status_label.setText("Project saved successfully!")   
 
     def load_project(self):
 

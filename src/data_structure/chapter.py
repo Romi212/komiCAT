@@ -54,7 +54,6 @@ class Chapter:
     def get_data(self):
         return {
             "name": self.name,
-            "series_name": self.series_name,
             "number": self.number,
             "termbase": self.termbase.get_data() if self.termbase else None,
             "pages": [page.get_data() for page in self.pages]

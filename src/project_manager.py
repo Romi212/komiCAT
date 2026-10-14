@@ -34,7 +34,7 @@ class ProjectManager():
         number = project_data["number"]
         chapter = Chapter(self.project.series_name, project_data["name"], number, self.project.target_language)
         relative_path = self.project.add_chapter(chapter)
-        self.storage.add_chapter(relative_path)
+        self.storage.add_chapter(self.storage.chapter_dir(relative_path))
         self.storage.write_json(f"{safe_name(self.project.project_name)}.romi", self.project.get_data())
         return chapter
 
@@ -75,4 +75,6 @@ class ProjectManager():
 
         #self.loader.save_chapter(chapter)        # chapter.json now lists the new pages
         return new_pages
-        
+
+    def save_chapter(self, chapter):
+        self.loader.save_chapter(chapter)
