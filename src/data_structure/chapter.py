@@ -11,7 +11,7 @@ class Chapter:
         self.name = name
         self.series_name = series_name
         self.number = number
-        self.path = ""
+        self.path = "ch"+str(number)
         self.pages = []
         self.current_page = 0
         self.language = language 
@@ -27,8 +27,7 @@ class Chapter:
             self.termbase = Termbase(data["termbase"]["source_lan"], data["termbase"]["target_lan"])
             self.termbase.load_data(data["termbase"])
         for page_data in data["pages"]:
-            image = Image.open(page_data["file_path"])
-            page = Page(file_path=page_data["file_path"], image=image, chapter=self, number=len(self.pages))
+            page = Page(file_path=page_data["file_path"], chapter=self, number=len(self.pages))
             self.add_page(page)
             page.load_page(page_data)
             

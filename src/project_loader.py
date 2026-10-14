@@ -43,7 +43,13 @@ class ProjectLoader:
                 
         self._create_storage(root)
         project_data["path"] = root
-        project = self.load_project_data(project_data)
+        project = Project(path=str(project_data["path"]), series_name=project_data["series_name"],
+                        name=project_data["project_name"], source_language = project_data["source_language"], target_language=project_data["target_language"])
+        project.termbase = Termbase(project_data["source_language"], project_data["target_language"])
+
+        cover_src = project_data.get("cover_path")
+        project.cover = self.storage.store_image(cover_src, self.storage.SHARED_DIR, new_name="cover") if cover_src else None
+        
         self.save_project(project)
         return project
 
@@ -52,17 +58,7 @@ class ProjectLoader:
         self.storage = ProjectStorage(root)
         self.storage.create_structure()
 
-    def load_project_data(self, project_data):
-        project = Project(path=project_data["path"], series_name=project_data["series_name"],
-                        name=project_data["project_name"], source_language = project_data["source_language"], target_language=project_data["target_language"])
-        project.termbase = Termbase(project_data["source_language"], project_data["target_language"])
-
-        cover_src = project_data.get("cover_path")
-        project.cover = self.storage.store_image(cover_src, self.storage.SHARED_DIR, new_name="cover") if cover_src else None
-
-        
-        
-        return project
+    
 
     def load_project(self):
         load_path = QFileDialog.getOpenFileName()
@@ -72,13 +68,26 @@ class ProjectLoader:
             self._create_storage(root)
             project_data = self.storage.read_json(project_name+".romi")
             cover_path = Path(self.storage.SHARED_DIR) / safe_name("cover.png")
-            
-            project = Project(root, name = project_name, cover_image=cover_path)
+            project = Project(str(root), name = project_name, cover_image=cover_path)
             project.load_project(project_data)
-            
+            self.load_shared(project)
+            self.project = project
             return project
         
+    def load_shared(self, project):
+        termbase_data = self.storage.read_json(Path(self.storage.SHARED_DIR) / safe_name("termbase.json"))
+        project.termbase = Termbase(project.source_language, project.target_language)
+        project.termbase.load_data(termbase_data)
 
+
+    def load_chapter(self, project, chapter):
+         rel_path = Path(self.storage.CHAPTERS_DIR) / chapter.path / f"{self.CHAPTER_DATA}.json"
+         chapter_data = self.storage.read_json(rel_path)
+         loaded_chapter = Chapter(project.series_name, chapter.name, chapter.number, project.target_language)
+         loaded_chapter.load_chapter(chapter_data)
+         loaded_chapter.termbase = project.termbase
+         return loaded_chapter
+         
     def save_project(self, project):
         print("Saving project...")
         self.storage.write_json(f"{safe_name(project.project_name)}.romi", project.get_data())
@@ -89,6 +98,7 @@ class ProjectLoader:
         path = chapter.path
         chapter_data_path = Path(self.storage.chapter_dir(path)) / f"{self.CHAPTER_DATA}.json"
         self.storage.write_json(chapter_data_path, chapter.get_data())
+        self.save_project(self.project)  # save the project manifest too, as it lists the chapters 
 
     def export_translation(self, export_path, exporter_name="Excel (structured)", data=None):
         exporter = EXPORTERS[exporter_name]

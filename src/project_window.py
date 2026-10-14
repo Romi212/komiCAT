@@ -88,8 +88,9 @@ class ProjectWindow(QWidget):
     edit_requested = pyqtSignal()
     delete_project_requested = pyqtSignal()
 
-    def __init__(self, project, parent=None):
+    def __init__(self, project, thumbnail_path, parent=None):
         super().__init__(parent)
+        self.get_thumbnail = thumbnail_path
         self.project = project
         self.setWindowTitle(f"KomiCAT - {project.project_name}")
         self.resize(760, 520)
@@ -205,7 +206,7 @@ class ProjectWindow(QWidget):
         self._update_arrows()
 
     def _chapter_thumb(self, chapter):
-        rel = getattr(chapter, "thumbnail", None)      # relative path of the first page, if known
+        rel = self.get_thumbnail(chapter)
         return Path(self.project.path) / rel if rel else None
 
     # ---------- scrolling ----------

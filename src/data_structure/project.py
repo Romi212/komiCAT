@@ -46,7 +46,7 @@ class Project():
             #use_series_memory=getattr(chapter, "use_series_memory", True),
         )
         self.chapters.append(entry)
-        return entry
+        return entry.path
 
     def load_project(self, data):
         self.project_name = data["project_name"]
@@ -59,6 +59,7 @@ class Project():
         self.chapters = [ChapterEntry.from_dict(d) for d in data.get("chapters", [])]
         
     def get_data(self):
+            self.chapters.sort(key=lambda e: e.number)
             return {
                 "project_name": self.project_name,
                 "series_name": self.series_name,
@@ -66,5 +67,8 @@ class Project():
                 "source_language": self.source_language,
                 "path": self.path,
                 "cover_path": self.cover_path,
-                "chapters": [entry.to_dict() for entry in self.chapters],
+                "chapters": [entry.to_dict() for entry in self.chapters]
             }        
+
+
+    

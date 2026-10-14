@@ -10,9 +10,9 @@ class ProjectManager():
     def __init__(self, project, loader, text_extractor):
         self.project, self.loader, self.text_extractor = project, loader, text_extractor
         self.storage  = loader.storage
-        self.project_window = ProjectWindow(project= self.project)
+        self.project_window = ProjectWindow(project= self.project, thumbnail_path=self.get_thubnail_path)
         self.project_window.chapter_add_requested.connect(self.add_chapter)       # your logic, then home.refresh()
-        self.project_window.chapter_opened.connect(self.open_chapter_window)      # opens your existing ProjectWindow
+        self.project_window.chapter_opened.connect(self.open_chapter)      # opens your existing ProjectWindow
         self.project_window.chapter_rename_requested.connect(self.rename_chapter)
         self.project_window.chapter_delete_requested.connect(self.delete_chapter)
         self.project_window.termbase_requested.connect(self.show_termbase_panel)
@@ -20,6 +20,9 @@ class ProjectManager():
         self.project_window.delete_project_requested.connect(self.delete_project)
         self.project_window.show()
 
+    def get_thubnail_path(self,chapter):
+        print(self.storage.get_image_path(chapter))
+        return self.storage.get_image_path(chapter)
     def add_chapter(self):
         create_chapter_window = CreateChapterWindow(existing_numbers=[c.number for c in self.project.chapters])
         data = create_chapter_window.exec()
@@ -46,6 +49,10 @@ class ProjectManager():
     def rename_chapter(self, chapter, new_name):
         chapter.name = new_name
         self.loader.save_manifest(self.project)
+
+    def open_chapter(self, chapter_Entry):
+        chapter = self.loader.load_chapter(self.project, chapter_Entry)
+        self.open_chapter_window(chapter)
 
     def open_chapter_window(self, chapter):
         self.chapter_window = ChapterWindow(text_extractor=self.text_extractor, chapter=chapter, project_loader=self.loader, project_manager=self)

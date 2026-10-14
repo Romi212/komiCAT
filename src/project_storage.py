@@ -82,7 +82,8 @@ class ProjectStorage:
             pages.append({"file": rel, "original_name": Path(src).name})
         return pages
 
-    
+    def get_image_path(self, chapter):
+        return Path(self.CHAPTERS_DIR) / chapter.path / "images" / "page_000.png"
     def add_chapter(self, path):
         # Make dir in resolve_path(path)
         (self.resolve(path)).mkdir(parents=True, exist_ok=True)
