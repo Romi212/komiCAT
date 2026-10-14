@@ -6,6 +6,8 @@ from project_storage import safe_name
 from project_window import ProjectWindow
 from PyQt6.QtWidgets import QDialog
 
+from tool_windows.termbase_panel import TermbasePanel
+
 class ProjectManager():
     def __init__(self, project, loader, text_extractor):
         self.project, self.loader, self.text_extractor = project, loader, text_extractor
@@ -43,12 +45,13 @@ class ProjectManager():
 
     def delete_chapter(self, chapter):
         self.project.remove_chapter(chapter)
-        self.loader.save_manifest(self.project)                # manifest first, as discussed
-        self.storage.delete_chapter_folder(chapter.id)         # then the folder (recycle bin)
+        self.loader.save_project(self.project)                # manifest first, as discussed
+        #self.storage.delete_chapter_folder(chapter.id)         # then the folder (recycle bin)
 
     def rename_chapter(self, chapter, new_name):
         chapter.name = new_name
-        self.loader.save_manifest(self.project)
+        self.project.update_chapter(chapter)
+        self.loader.save_chapter(chapter)  # chapter.json now lists the new name
 
     def open_chapter(self, chapter_Entry):
         chapter = self.loader.load_chapter(self.project, chapter_Entry)
@@ -58,7 +61,9 @@ class ProjectManager():
         self.chapter_window = ChapterWindow(text_extractor=self.text_extractor, chapter=chapter, project_loader=self.loader, project_manager=self)
 
     def show_termbase_panel(self):
-        print("TERMBASE")
+        termbase_panel = TermbasePanel(termbase=self.project.termbase)
+        termbase_panel.show()
+        
 
     def edit_project_info():
         print("edit")

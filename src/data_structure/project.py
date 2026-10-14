@@ -48,6 +48,20 @@ class Project():
         self.chapters.append(entry)
         return entry.path
 
+    def remove_chapter(self, chapter):
+        self.chapters = [e for e in self.chapters if e.number != chapter.number]
+
+    def update_chapter(self, chapter):
+        for i, e in enumerate(self.chapters):
+            if e.number == chapter.number:
+                self.chapters[i] = ChapterEntry(
+                    number=chapter.number, name=chapter.name,
+                    path=chapter.path,
+                    #use_series_termbase=getattr(chapter, "use_series_termbase", True),
+                    #use_series_memory=getattr(chapter, "use_series_memory", True),
+                )
+                return
+        raise ValueError(f"Chapter {chapter.number} not found")
     def load_project(self, data):
         self.project_name = data["project_name"]
         self.series_name = data["series_name"]
