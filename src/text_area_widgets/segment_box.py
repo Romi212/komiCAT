@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QApplication, QHBoxLayout, QMenu, QWidget, QVBoxLayout, QLabel, QTextEdit
 from PyQt6.QtCore import QMimeData, Qt, pyqtSignal
 from PyQt6.QtGui import QDrag, QKeyEvent, QTextCursor, QTextCharFormat, QColor
+from text_area_widgets.suggestions_text_edit import SuggestionsTextEdit
 from text_area_widgets.translation_text_edit import TranslationTextEdit
 from text_area_widgets.source_text_edit import SourceTextEdit
 
@@ -95,7 +96,14 @@ class SegmentBox(QWidget):
         self.label.focusOutEvent = self._on_label_unfocus
         self.label.setTabChangesFocus(True)
         layout.addWidget(self.label)
-        
+
+        self.suggestions  = SuggestionsTextEdit()
+        self.suggestions.setReadOnly(True)
+        self.suggestions.setStyleSheet(f"font-size: {self.text_size}px;")
+        self.suggestions.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.suggestions.setMinimumHeight(5)
+        self.suggestions.setVisible(False)  # Initially hidden
+        layout.addWidget(self.suggestions)
         # Text area for translation
         self.text_area = TranslationTextEdit(spell_checker=self.spell_checker)
         self.text_area.setMinimumHeight(5)
@@ -171,6 +179,7 @@ class SegmentBox(QWidget):
     def _on_text_area_focus(self, event):
         self.segment.show_focus(True)
         self.focused.emit(self.segment)
+        self.suggestions.show_suggestions(self.get_japanese_text(), self.label._term_matches)
         QTextEdit.focusInEvent(self.text_area, event)
 
 
@@ -179,6 +188,7 @@ class SegmentBox(QWidget):
         
         QTextEdit.focusOutEvent(self.text_area, event)
         self.segment.translation = self.get_translation()
+        self.suggestions.setVisible(False)
         print(f"Updated translation for segment {self.segment.nro}: {self.segment.translation}")
         self.check_spelling() 
 
