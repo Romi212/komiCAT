@@ -136,6 +136,15 @@ def build_qss(t):
                     
                               
     }}
+    QFrame#segmentDivider {{ background-color: {t.border}; border: none; }}
+
+    QLabel#numberBadge {{
+        background-color: {t.scroll_handle};
+        border-radius: 3px;
+        font-size: 10px;
+    }}
+
+    SegmentBox QTextEdit {{ background: transparent; border: none; }}
     #combinedSegmentContainer {{ border: 2px solid {t.accent}; border-radius: 5px; }}
     #PageDivisionLabel {{font-weight: bold; border: none;}}
     #combineHighlight {{
