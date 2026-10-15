@@ -11,6 +11,7 @@ JAMDICT_URL = "https://drive.google.com/file/d/1QZRzOoMF4CGlkdl0FyU7ledAZLRlpoom
 DICTS_DIR = DATA_DIR / "dictionaries"
 DICT_URL = "https://drive.google.com/drive/folders/1IXzPc_56WmknVd1QfAV4EzeXR8af9Q9O?usp=sharing"
 DICT_CHECK_FILE = "es_frequency_dictionary.txt"
+REQUIRED_DICT_LANGS = ("es",)
 MODELS = {
     "bubble_detector_model" : "ogkalu/comic-text-and-bubble-detector",
     "manga_ocr_model" : "kha-white/manga-ocr-base",
@@ -21,18 +22,40 @@ MODEL_CHECK_FILES = {
     "manga_ocr_model": "config.json",
     "comic_panel_detection_model_leoxs": "manga_panel_detector_fp32.pt",
 }
+HUNSPELL_DIR = DATA_DIR / "hunspell"
+HUNSPELL_FILES = {
+    "es_AR.aff": "https://raw.githubusercontent.com/wooorm/dictionaries/main/dictionaries/es-AR/index.aff",
+    "es_AR.dic": "https://raw.githubusercontent.com/wooorm/dictionaries/main/dictionaries/es-AR/index.dic",
+}
+
+def missing_hunspell():
+    return [n for n in HUNSPELL_FILES if not (HUNSPELL_DIR / n).exists()]
+
+def download_hunspell(progress=print):
+    import requests
+    HUNSPELL_DIR.mkdir(parents=True, exist_ok=True)
+    for name in missing_hunspell():
+        progress(f"Downloading {name}...")
+        r = requests.get(HUNSPELL_FILES[name], timeout=60)
+        r.raise_for_status()
+        part = HUNSPELL_DIR / (name + ".part")
+        part.write_bytes(r.content)
+        part.replace(HUNSPELL_DIR / name)    
+def dictionary_file(lang):
+    return DICTS_DIR / f"{lang}.txt"
+
 def model_path(name):
     return str(MODELS_DIR / name)
 
 def missing_dictionaries():
-    return not (DICTS_DIR / DICT_CHECK_FILE).exists()
+    return [l for l in REQUIRED_DICT_LANGS if not dictionary_file(l).exists()]
 
 def missing_models():
     return [n for n, f in MODEL_CHECK_FILES.items() if not (MODELS_DIR / n / f).exists()]
 
 
 def needs_setup():
-    return bool(missing_models()) or not JAMDICT_DB.exists() or missing_dictionaries()
+    return bool(missing_models()) or not JAMDICT_DB.exists() or missing_dictionaries() or missing_hunspell()
 
 def download_models(progress=print):
     from huggingface_hub import snapshot_download
@@ -88,7 +111,10 @@ def download_jamdict(progress=print):
 
 
 def download_dictionaries(progress=print):
-        if not missing_dictionaries():
+        for lang in missing_dictionaries():
+            build_dictionary(lang, progress)
+        download_hunspell()
+        """if not missing_dictionaries():
             return
 
         import shutil
@@ -109,4 +135,24 @@ def download_dictionaries(progress=print):
             shutil.rmtree(DICTS_DIR, ignore_errors=True)
             temp_dir.replace(DICTS_DIR)                  # appears only when complete
         finally:
-            shutil.rmtree(temp_dir, ignore_errors=True)
+            shutil.rmtree(temp_dir, ignore_errors=True)"""
+
+def build_dictionary(lang, progress=print):
+    """Convert pyspellchecker's word list into SymSpell format (word count per line)."""
+    from spellchecker import SpellChecker
+
+    progress(f"Preparing {lang} dictionary...")
+    freq = dict(SpellChecker(language=lang).word_frequency.dictionary)
+
+    
+    DICTS_DIR.mkdir(parents=True, exist_ok=True)
+    final = dictionary_file(lang)
+    partial = final.with_name(final.name + ".part")
+    try:
+        with open(partial, "w", encoding="utf-8") as f:
+            for word, count in freq.items():
+                f.write(f"{word} {count}\n")
+        partial.replace(final)                    # appears only when complete
+    finally:
+        if partial.exists():
+            partial.unlink()

@@ -15,3 +15,5 @@ ultralytics
 jamdict
 gdown
 openpyxl
+pyspellchecker
+spylls

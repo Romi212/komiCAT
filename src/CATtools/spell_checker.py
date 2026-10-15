@@ -1,24 +1,27 @@
 import os
 import re
 from symspellpy import SymSpell, Verbosity
-from first_run import DICTS_DIR, DICT_CHECK_FILE
+from first_run import DICTS_DIR, DICT_CHECK_FILE, dictionary_file
+from spylls.hunspell import Dictionary
+from pathlib import Path
+import sys
+
+def resource(rel):
+    base = getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent)
+    return Path(base) / rel
 
 class SpellChecker:
     def __init__(self, language='es', termbase = None):
-        self.language = 'es'
-        
-        
-        self.sym_spell = SymSpell(
-            max_dictionary_edit_distance=2, 
-            prefix_length=7
-        )
+        self.language = language
         self.termbase = termbase
-        
-        # Load Spanish frequency dictionary (Format: "word frequency")
-        self.sym_spell.load_dictionary(str(DICTS_DIR / DICT_CHECK_FILE),
-                                               term_index=0, count_index=1)
+        self.sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
 
+        path = dictionary_file(language)
+        if not path.exists():
+            raise FileNotFoundError(f"No {language} dictionary at {path}")
+        self.sym_spell.load_dictionary(str(path), term_index=0, count_index=1)
 
+        self.hunspell = Dictionary.from_files(str(resource("dicts/es_AR")))   # no extension
 
 
 
@@ -51,7 +54,7 @@ class SpellChecker:
             max_edit_distance=0
         )
         #print(f"Checking word: '{word}', Suggestions: {[item.term for item in suggestions]}")
-        return len(suggestions) > 0
+        return len(suggestions) > 0 or self.hunspell.lookup(word)
 
     def get_misspelled_words(self, text: str) -> list[str]:
         """Scans a block of text and returns a list of unknown/misspelled words."""
