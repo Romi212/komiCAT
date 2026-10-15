@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QApplication, QBoxLayout, QFrame, QHBoxLayout, QMenu, QWidget, QVBoxLayout, QLabel, QTextEdit
+from PyQt6.QtWidgets import QApplication, QBoxLayout, QFrame, QHBoxLayout, QMenu, QSizePolicy, QWidget, QVBoxLayout, QLabel, QTextEdit
 from PyQt6.QtCore import QMimeData, Qt, pyqtSignal
 from PyQt6.QtGui import QDrag, QKeyEvent, QTextCursor, QTextCharFormat, QColor
 from aux_types.segment_types import SegmentType
@@ -63,7 +63,7 @@ class SegmentBox(QWidget):
     def __init__(self, spell_checker, jp_dict, logic_segment, initial_text_size=12):
         super().__init__()
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         self.spell_checker = spell_checker
         self.jp_dict = jp_dict
         self.on_focused = None  
@@ -89,7 +89,6 @@ class SegmentBox(QWidget):
         self.label = SourceTextEdit(jmdict=jp_dict, termbase=self.termbase)
         self.label.set_source_text(self.segment.source_text)
         self.label.setReadOnly(False)
-        self.label.setMinimumHeight(5)
         self.label.setStyleSheet(f"font-weight: bold; font-size: {self.text_size}px;")
         self.label.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.label.textChanged.connect(self._adjust_label_height)
@@ -108,8 +107,6 @@ class SegmentBox(QWidget):
 
         
         self.text_area = TranslationTextEdit(spell_checker=self.spell_checker)
-        self.text_area.setMinimumHeight(5)
-        self.text_area.setMaximumHeight(self.initial_height)
         self.text_area.setPlainText(self.segment.translation)
         self.text_area.setStyleSheet(f"font-size: {self.text_size}px;")
         self.text_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -127,7 +124,8 @@ class SegmentBox(QWidget):
         self.v_divider.setObjectName("segmentDivider")
         self.v_divider.setFixedWidth(1)
 
-        
+        for w in (self.label, self.suggestions, self.text_area, self.h_divider, self.v_divider):
+            w.setParent(self)
         
         # ---------- body: one layout, direction depends on the segment type ----------
         self.body_layout = QBoxLayout(QBoxLayout.Direction.TopToBottom)
@@ -141,7 +139,7 @@ class SegmentBox(QWidget):
         self.number_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.number_badge.setFixedSize(24, 18)
 
-        self.setMinimumHeight(5)
+        self.setLayout(main_layout)
         self._apply_layout()
         self.refresh_number()
 
@@ -177,7 +175,8 @@ class SegmentBox(QWidget):
             w.setVisible(w in visible)
 
         self._apply_label_style()
-        self._adjust_label_height()
+        self._adjust_height(self.label)
+        self._adjust_height(self.text_area)
 
     def _apply_label_style(self):
         # font and size live together in the stylesheet (it overrides setFont)
@@ -226,17 +225,27 @@ class SegmentBox(QWidget):
     def set_translation(self, text):
         self.text_area.setPlainText(text)
         self._adjust_text_area_height()
-    
-    def _adjust_label_height(self):
-        """Adjust label height to fit content"""
-        doc_height = int(self.label.document().size().height())
-        cap = 220 if self._is_sfx() else 150      # SFX text is larger
-        self.label.setMaximumHeight(max(20, min(doc_height + 4, cap)))
 
     def _adjust_text_area_height(self):
-        """Adjust text_area height to fit content"""
-        doc_height = int(self.text_area.document().size().height())
-        self.text_area.setMaximumHeight(max(20, min(doc_height + 4, 200)))
+        """Adjust text area height dynamically to fit text content."""
+        self._adjust_height(self.text_area)
+
+    def _adjust_label_height(self):
+        """Adjust label height dynamically to fit text content."""
+        self._adjust_height(self.label)
+    def _adjust_height(self, widget):
+        """Adjust label height dynamically to fit text content."""
+        # Force document layout calculation to get accurate height
+        widget.document().adjustSize()
+        doc_height = int(widget.document().size().height())
+        
+        cap = 220 if self._is_sfx() else 150
+        target_height = max(32, min(doc_height + 8, cap))
+        
+        # Lock minimum and maximum to force the layout engine to respect content height
+        widget.setFixedHeight(target_height)
+        self.updateGeometry()
+
     
     def _on_label_focus(self, event):
         self.segment.show_focus(True)

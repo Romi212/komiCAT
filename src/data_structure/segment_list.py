@@ -63,6 +63,8 @@ class SegmentList:
         sorted_panel = self._sort_subset(panel_segments, combine= False)
         for s in sorted_panel:
             print(s.nro)
+        if not segment in sorted_panel:
+            return
         index = sorted_panel.index(segment)
         if index == 0:
             if panel.nro == 0:

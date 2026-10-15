@@ -41,8 +41,10 @@ class TextViewer(QWidget):
         
         # Set size policy so it doesn't expand to fill scroll area
         self.scroll_container.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
         
         self.scroll_area.setWidget(self.scroll_container)
+        self.scroll_area.setAlignment(Qt.AlignmentFlag.AlignTop)
         layout.addWidget(self.scroll_area)
         
         self.setLayout(layout)
