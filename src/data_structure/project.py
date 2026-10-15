@@ -29,6 +29,7 @@ class Project():
             self.source_language = source_language 
             self.termbase = None
             self.term_memory = None
+            self.translation_memory = None
             self.chapters = []
             self.cover_path = cover_image
             self.cover = self.cover_path

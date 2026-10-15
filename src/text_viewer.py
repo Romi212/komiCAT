@@ -50,6 +50,9 @@ class TextViewer(QWidget):
         self.setLayout(layout)
 
         button_layout = QHBoxLayout()
+        self.verify_button = QPushButton("Verify")
+        self.verify_button.clicked.connect(self.verify_segments)
+        button_layout.addWidget(self.verify_button)
         
         self.zoom_in_button = QPushButton("Zoom In")
         self.zoom_in_button.clicked.connect(self.zoom_in)
@@ -176,3 +179,17 @@ class TextViewer(QWidget):
         if (page.number in range(0,len(self.page_containers))):
             page_container = self.page_containers[page.number]
             self.scroll_area.verticalScrollBar().setValue(page_container.y())
+
+
+    def verify_segments(self):
+        valid_segments = []
+        for page_container in self.page_containers:
+            segments = page_container.get_ordered_segments()
+            for segment in segments:
+                if segment.segment_box.text_area.correct_spelling():
+                    context = str({"chapter": self.chapter.path, "page": segment.page.number})
+                    valid_segments.append((segment.source_text, segment.translation, context))
+
+            
+    # Save batch to local DB
+        self.controller.save_checked_segments(valid_segments)

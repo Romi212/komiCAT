@@ -15,7 +15,8 @@ class CombinedContainer(QWidget):
     deleted = pyqtSignal(object)
     def __init__(self, segment_head, parent=None):
         super().__init__(parent)
-        self.segment = segment_head
+        self._edit_mode = False
+        self.segment = segment_head.segment
         segment_head.deleted.connect(self.delete_head)
         self.segment_boxes = []
         self.segment_boxes.append(segment_head)

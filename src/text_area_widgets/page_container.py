@@ -151,6 +151,10 @@ class PageContainer(QWidget):
 
     def sync_logical_segments(self):
         """Re-orders logical segments in self.page to match visual layout order."""
+        ordered_segments = self.get_ordered_segments()
+        self.page.update_segments(ordered_segments)
+
+    def get_ordered_segments(self):
         ordered_segments = SegmentList()
         index = 1
         for i in range(1,self.layout.count()):
@@ -162,8 +166,7 @@ class PageContainer(QWidget):
                 segment = widget.segment
                 index = segment.set_nro(index) +1
                 ordered_segments.add_segment(segment)
-        self.page.update_segments(ordered_segments)
-
+        return ordered_segments
     def remove_segment(self, segment):
         self.layout.removeWidget(segment)
 

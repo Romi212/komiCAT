@@ -2,6 +2,7 @@
 from pathlib import Path
 
 from CATtools.termbase import Termbase
+from CATtools.translation_memory import TranslationMemoryDB
 from aux_types.export_stategy import EXPORTERS
 from data_structure.chapter import Chapter
 import json
@@ -46,7 +47,7 @@ class ProjectLoader:
         project = Project(path=str(project_data["path"]), series_name=project_data["series_name"],
                         name=project_data["project_name"], source_language = project_data["source_language"], target_language=project_data["target_language"])
         project.termbase = Termbase(project_data["source_language"], project_data["target_language"])
-
+        project.translation_memory = TranslationMemoryDB(self.storage.resolve(self.storage.TRANSLATION_MEMORY))
         cover_src = project_data.get("cover_path")
         project.cover = self.storage.store_image(cover_src, self.storage.SHARED_DIR, new_name="cover") if cover_src else None
         
@@ -78,6 +79,7 @@ class ProjectLoader:
         termbase_data = self.storage.read_json(Path(self.storage.SHARED_DIR) / safe_name("termbase.json"))
         project.termbase = Termbase(project.source_language, project.target_language)
         project.termbase.load_data(termbase_data)
+        project.translation_memory = TranslationMemoryDB(self.storage.resolve(self.storage.TRANSLATION_MEMORY))
 
 
     def load_chapter(self, project, chapter):
@@ -86,6 +88,7 @@ class ProjectLoader:
          loaded_chapter = Chapter(project.series_name, chapter.name, chapter.number, project.target_language)
          loaded_chapter.load_chapter(chapter_data)
          loaded_chapter.termbase = project.termbase
+         loaded_chapter.translation_memory = project.translation_memory
          return loaded_chapter
          
     def save_project(self, project):

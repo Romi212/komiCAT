@@ -326,6 +326,7 @@ class SegmentBox(QWidget):
                             
                         # Apply formatting specifically to the matched cursor selection
                         cursor.mergeCharFormat(fmt)
+                        self.text_area.add_misspelled_word(word)
                 else:
                     self.label.remove_match(word)
     def delete_self(self):

@@ -11,6 +11,7 @@ from project_loader import ProjectLoader
 from text_viewer import TextViewer
 from data_structure.chapter import Chapter
 from tool_windows.termbase_panel import TermbasePanel
+from tool_windows.translation_memory_panel import TranslationMemoryPanel
 
 class ChapterWindow(QMainWindow):
     edit_mode_changed = pyqtSignal(Page, bool)
@@ -50,6 +51,8 @@ class ChapterWindow(QMainWindow):
         termbase_action = project_menu.addAction("Termbase")
         termbase_action.triggered.connect(self.show_termbase)
 
+        tm_action = project_menu.addAction("Translation Memory")
+        tm_action.triggered.connect(self.show_tm)
         
 
         # Create central widget with splitter
@@ -102,7 +105,9 @@ class ChapterWindow(QMainWindow):
     def set_up_chapter(self, chapter):
         self.chapter = chapter
         self.termbase = self.chapter.get_termbase()
+        self.translation_memory = self.chapter.translation_memory
         self.termbase_panel = TermbasePanel(self.termbase, self)
+        self.tm_panel = TranslationMemoryPanel(self.translation_memory, self)
         self.image_viewer.load_chapter(self.chapter)
         self.text_viewer.load_chapter(self.chapter)
 
@@ -129,6 +134,11 @@ class ChapterWindow(QMainWindow):
         self.termbase_panel.show()
         self.termbase_panel.raise_()
         self.termbase_panel.activateWindow()
+
+    def show_tm(self):
+            self.tm_panel.show()
+            self.tm_panel.raise_()
+            self.tm_panel.activateWindow()
 
     def create_new_project(self):
         
@@ -168,3 +178,7 @@ class ChapterWindow(QMainWindow):
         if not paths:
             return False
         return self.project_manager.open_images(self.chapter, paths)
+
+    def save_checked_segments(self, segments):
+        print(segments)
+        self.project_manager.update_translation_memory(segments)

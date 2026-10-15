@@ -90,3 +90,6 @@ class ProjectManager():
 
     def save_chapter(self, chapter):
         self.loader.save_chapter(chapter)
+
+    def update_translation_memory(self, segments):
+        self.project.translation_memory.save_checked_segments(segments)

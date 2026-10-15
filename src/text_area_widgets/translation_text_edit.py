@@ -7,6 +7,7 @@ class TranslationTextEdit(QTextEdit):
     def __init__(self, spell_checker=None, parent=None):
         super().__init__(parent)
         self.spell_checker = spell_checker
+        self.misspelled_words = []
 
 
     def mouseDoubleClickEvent(self, event):
@@ -59,3 +60,16 @@ class TranslationTextEdit(QTextEdit):
         if hasattr(self.spell_checker, 'add_custom_word'):
             self.spell_checker.add_custom_word(word)
             # Optionally re-trigger parent check_spelling if available
+
+    def add_misspelled_word(self, word):
+        self.misspelled_words.append(word)
+
+    def correct_spelling(self):
+        text = self.toPlainText().strip()
+        if not text:
+            return False
+        for word in self.misspelled_words:
+            if word in text:
+                return False
+            self.misspelled_words.remove(word)
+        return True

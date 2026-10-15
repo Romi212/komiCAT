@@ -13,6 +13,7 @@ def safe_name(name):
 
 class ProjectStorage:
     SHARED_DIR = "shared"
+    TRANSLATION_MEMORY = SHARED_DIR + "/translation_memory.db"
     CHAPTERS_DIR = "chapters"
 
     def __init__(self, root):
