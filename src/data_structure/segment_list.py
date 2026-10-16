@@ -41,12 +41,13 @@ class SegmentList:
         return False
     
     def merge_lists(self,to_merge):
-        for segment in self.segments:
-            if not segment.is_extracted() or not to_merge.has_segment(segment):
-                print(f"Inserting segment {segment.nro}")
-                to_merge.insert_segment(segment)
+        if len(to_merge)>0:
+            for segment in self.segments:
+                if not segment.is_extracted() or not to_merge.has_segment(segment):
+                    print(f"Inserting segment {segment.nro}")
+                    to_merge.insert_segment(segment)
 
-        self.segments = to_merge.segments
+            self.segments = to_merge.segments
     def get_segment(self, index):
         return self.segments_indexes[index]
 
