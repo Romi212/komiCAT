@@ -175,7 +175,7 @@ class ImageViewer(QWidget):
             self._setup_page()
         self._update_open_images_button_visibility()
 
-    def _setup_page(self):
+    def _setup_page(self, change_focus = True):
         self.current_page = self.chapter.get_current_page()
 
         #Set up image
@@ -239,7 +239,8 @@ class ImageViewer(QWidget):
                 panel_text.setFont(QFont("Arial", 24, QFont.Weight.Bold))
                 self.scene.addItem(panel_text)
                 i += 1
-            self.controller.page_changed(self.current_page)
+            if change_focus:
+                self.controller.page_changed(self.current_page)
 
             
             

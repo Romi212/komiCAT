@@ -147,3 +147,12 @@ class CombinedContainer(QWidget):
             else:
                 self.segment = None
                 self.deleted.emit(self)
+
+    def child_removed(self, box):
+        boxes = [self.layout.itemAt(i).widget() for i in range(self.layout.count())
+                if self.layout.itemAt(i).widget() is not None]
+        if len(boxes) < 2 and self.decombine_callback:
+            self.decombine_callback(self)    # the same method as the decombine button
+        elif boxes:
+            self.head = boxes[0]
+            self.seg_children = boxes[1:]

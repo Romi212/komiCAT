@@ -147,9 +147,9 @@ class ChapterWindow(QMainWindow):
             self.set_up_chapter(chapter)
         #TODO: ELSE mostrar error creando nuevo
 
-    def set_current_page(self, page):
+    def set_current_page(self, page, change_focus= True):
         self.chapter.set_current_page(page)
-        self.image_viewer._setup_page()
+        self.image_viewer._setup_page(change_focus)
 
     def set_panel_zoom(self,panel):
         self.image_viewer.set_panel_zoom(panel)

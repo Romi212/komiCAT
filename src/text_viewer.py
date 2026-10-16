@@ -147,7 +147,7 @@ class TextViewer(QWidget):
     def focus_next_segment(self, next_segment):
                 
         if next_segment.page != self.chapter.current_page:
-            self.controller.set_current_page(next_segment.page)  # Switch to the page of the next segment
+            self.controller.set_current_page(next_segment.page, False)  # Switch to the page of the next segment
         
         if next_segment.panel != self.current_panel:
             self.current_panel = next_segment.panel
@@ -170,10 +170,20 @@ class TextViewer(QWidget):
             self.page_containers.append(page_container)
 
     def delete_segment(self, segment):
-        segment_box = segment.segment_box
-        if(False):
-            container = self.page_containers[segment.page.number]
-            container.remove_segment(segment_box)
+        box = segment.segment_box
+        if box is None:                      # never extracted, so it has no box in the text panel
+            return
+
+        parent = box.parentWidget()          # PageContainer or CombinedContainer
+        box.setParent(None)                  # leaves the layout at once, the scroll panel resizes
+        box.deleteLater()
+        segment.segment_box = None
+
+        if isinstance(parent, CombinedContainer):
+            parent.remove_segment(box)        
+
+        self.update_tab_order(segment.page)
+        
 
     def focus_page(self,page):
         if (page.number in range(0,len(self.page_containers))):

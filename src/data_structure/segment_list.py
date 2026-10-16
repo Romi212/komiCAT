@@ -126,8 +126,8 @@ class SegmentList:
                     left_segs.remove(seg)
 
             if(left_segs and right_segs):
-                print(right_segs)
-                print(left_segs)
+                #print(right_segs)
+                #print(left_segs)
                 right_sorted = self._sort_subset(right_segs,combine)
                 left_sorted = self._sort_subset(left_segs,combine)
                 return right_sorted + left_sorted
@@ -143,8 +143,8 @@ class SegmentList:
                     top_segs.remove(seg)   
 
             if(top_segs and bottom_segs):
-                self.logprint(top_segs)
-                self.logprint(bottom_segs)
+                #self.logprint(top_segs)
+                #self.logprint(bottom_segs)
                 top_sorted = self._sort_subset(top_segs,combine)
                 bottom_sorted = self._sort_subset(bottom_segs,combine)
                 return top_sorted + bottom_sorted
@@ -161,7 +161,7 @@ class SegmentList:
             print(l.text_box.ymax)
     def combine_segments(self,segments):
         #Sort
-        print(f"Combined {len(segments)} segments")
+        
         sorted = segments.copy()
         sorted.sort(key=lambda panel: panel.text_box.ymin)
         #Create Combined Segments and link until last one

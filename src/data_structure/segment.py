@@ -33,6 +33,8 @@ class Segment:
             return
         self.text_type = segment_type
         self.text_box.update_text_type(segment_type)
+        if self.segment_box:
+            self.segment_box.refresh_type()
 
     @property
     def segment_type(self):
@@ -53,6 +55,10 @@ class Segment:
             self.text_box.index = nro
         if self.button:
             self.button.selected(nro)
+        print(f"updating number {nro}")
+        if self.segment_box:
+            print("refresing box")
+            self.segment_box.refresh_number()
         return nro
 
     def set_segment_box(self, segment_box):
