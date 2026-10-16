@@ -85,7 +85,7 @@ class ProjectLoader:
     def load_chapter(self, project, chapter):
          rel_path = Path(self.storage.CHAPTERS_DIR) / chapter.path / f"{self.CHAPTER_DATA}.json"
          chapter_data = self.storage.read_json(rel_path)
-         loaded_chapter = Chapter(project.series_name, chapter.name, chapter.number, project.target_language)
+         loaded_chapter = Chapter(project,project.series_name, chapter.name, chapter.number, project.target_language)
          loaded_chapter.load_chapter(chapter_data)
          loaded_chapter.termbase = project.termbase
          loaded_chapter.translation_memory = project.translation_memory

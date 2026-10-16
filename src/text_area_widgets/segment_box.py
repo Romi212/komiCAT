@@ -86,6 +86,7 @@ class SegmentBox(QWidget):
         
         # TextEdit for Japanese text (editable)
         self.termbase = self.segment.page.chapter.get_termbase()
+        self.translation_memory = self.segment.page.chapter.get_tm()
         self.label = SourceTextEdit(jmdict=jp_dict, termbase=self.termbase)
         self.label.set_source_text(self.segment.source_text)
         self.label.setReadOnly(False)
@@ -98,7 +99,7 @@ class SegmentBox(QWidget):
         self.label.setTabChangesFocus(True)
         
 
-        self.suggestions  = SuggestionsTextEdit()
+        self.suggestions  = SuggestionsTextEdit(self.translation_memory)
         self.suggestions.setReadOnly(True)
         self.suggestions.setStyleSheet(f"font-size: {self.text_size}px;")
         self.suggestions.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)

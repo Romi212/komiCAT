@@ -7,7 +7,8 @@ from data_structure.page import Page
 
 
 class Chapter:
-    def __init__(self,  series_name, name, number,language='es'):
+    def __init__(self, project, series_name, name, number,language='es'):
+        self.project = project
         self.name = name
         self.series_name = series_name
         self.number = number
@@ -16,6 +17,7 @@ class Chapter:
         self.current_page = 0
         self.language = language 
         self.termbase = None
+        self.translation_memory = None
 
 
     def add_page(self, page):
@@ -71,3 +73,8 @@ class Chapter:
         if self.termbase is None:
             self.termbase = Termbase("jp", self.language)
         return self.termbase
+
+    def get_tm(self):
+        if not self.translation_memory:
+            self.translation_memory = self.project.translation_memory
+        return self.translation_memory

@@ -37,7 +37,7 @@ class ProjectManager():
 
     def create_project_chapter(self, project_data):
         number = project_data["number"]
-        chapter = Chapter(self.project.series_name, project_data["name"], number, self.project.target_language)
+        chapter = Chapter(self.project,self.project.series_name, project_data["name"], number, self.project.target_language)
         relative_path = self.project.add_chapter(chapter)
         self.storage.add_chapter(self.storage.chapter_dir(relative_path))
         self.storage.write_json(f"{safe_name(self.project.project_name)}.romi", self.project.get_data())
