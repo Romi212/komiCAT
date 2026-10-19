@@ -134,6 +134,7 @@ class CombinedContainer(QWidget):
                 ordered.append(widget)
 
         self.segment_boxes = ordered[:]
+        return ordered
 
     def remove_segment(self, segment):
         self.layout.removeWidget(segment)

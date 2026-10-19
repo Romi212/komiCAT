@@ -11,7 +11,14 @@ class SegmentCombined(Segment):
 
     def set_next_segment(self, next_segment):
         self.next_segment = next_segment
-        self.next_arrow = CombineArrow(self,next_segment)
+        if next_segment:
+            self.next_arrow = CombineArrow(self,next_segment)
+        else:
+            if self.next_arrow:
+                parent = self.next_arrow.parentWidget()          # PageContainer or CombinedContainer
+                self.next_arrow.setParent(None)                  # leaves the layout at once, the scroll panel resizes
+                self.next_arrow.deleteLater()
+                self.next_arrow = None
 
     def set_nro(self, nro):
         super().set_nro(nro)

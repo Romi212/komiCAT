@@ -66,7 +66,12 @@ class PageContainer(QWidget):
             head_segment.clone_segment(top.segment)
             top.segment = head_segment
             container = CombinedContainer(top)
-            container.addChild(bottom)
+            if isinstance(bottom,CombinedContainer):
+               children = bottom.sync_children()
+            else:
+                children = [bottom]     
+            for child in children:
+                container.addChild(child)
             head_segment.set_next_segment(bottom.segment)
             
             self.layout.insertWidget(index, container)
