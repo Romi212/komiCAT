@@ -49,11 +49,14 @@ class ProjectLoader:
         project.termbase = Termbase(project_data["source_language"], project_data["target_language"])
         project.translation_memory = TranslationMemoryDB(self.storage.resolve(self.storage.TRANSLATION_MEMORY))
         cover_src = project_data.get("cover_path")
-        project.cover = self.storage.store_image(cover_src, self.storage.SHARED_DIR, new_name="cover") if cover_src else None
-        
+        project.cover = self.store_new_cover(cover_src)
         self.save_project(project)
         return project
 
+    def store_new_cover(self, cover_src):
+        self.storage.delete_old_cover()
+        return self.storage.store_image(cover_src, self.storage.SHARED_DIR, new_name="cover") if cover_src else None
+        
     def _create_storage(self,root):
         
         self.storage = ProjectStorage(root)

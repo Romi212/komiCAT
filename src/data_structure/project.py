@@ -63,15 +63,16 @@ class Project():
                 )
                 return
         raise ValueError(f"Chapter {chapter.number} not found")
+    
     def load_project(self, data):
-        self.project_name = data["project_name"]
-        self.series_name = data["series_name"]
-        self.target_language = data["target_language"]
-        self.source_language = data["source_language"]
-        self.cover_path = data["cover_path"]
+        self.project_name = data["project_name"]  if "project_name" in data else self.project_name
+        self.series_name = data["series_name"] if data["series_name"] else self.series_name
+        self.target_language = data["target_language"] if data["target_language"] else self.target_language
+        self.source_language = data["source_language"] if data["source_language"] else self.source_language
+        self.cover_path = data["cover_path"] if "cover_path" in data else self.cover_path
         #self.cover = self.cover_path
-        
-        self.chapters = [ChapterEntry.from_dict(d) for d in data.get("chapters", [])]
+        if "chapters" in data:
+            self.chapters = [ChapterEntry.from_dict(d) for d in data.get("chapters", [])]
         
     def get_data(self):
             self.chapters.sort(key=lambda e: e.number)

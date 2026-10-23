@@ -11,7 +11,7 @@ JAMDICT_URL = "https://drive.google.com/file/d/1QZRzOoMF4CGlkdl0FyU7ledAZLRlpoom
 DICTS_DIR = DATA_DIR / "dictionaries"
 DICT_URL = "https://drive.google.com/drive/folders/1IXzPc_56WmknVd1QfAV4EzeXR8af9Q9O?usp=sharing"
 DICT_CHECK_FILE = "es_frequency_dictionary.txt"
-REQUIRED_DICT_LANGS = ("es",)
+REQUIRED_DICT_LANGS = ("es","en")
 MODELS = {
     "bubble_detector_model" : "ogkalu/comic-text-and-bubble-detector",
     "manga_ocr_model" : "kha-white/manga-ocr-base",

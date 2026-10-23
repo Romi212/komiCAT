@@ -41,6 +41,11 @@ class ProjectStorage:
     def read_json(self, relative_path):
         return json.loads((self.root / relative_path).read_text(encoding="utf-8"))
 
+    def delete_old_cover(self):
+        for ext in IMAGE_EXTENSIONS:
+            path = self.root / self.SHARED_DIR / f"cover{ext}"
+            if path.exists():
+                path.unlink()
     # ---- images ----
     def store_image(self, src_path, subfolder, new_name=None):
         """Copy an image into root/subfolder unchanged. Returns the relative path."""

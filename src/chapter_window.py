@@ -1,5 +1,5 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QDialog, QFileDialog, QMainWindow, QSplitter, QVBoxLayout, QWidget, QMenuBar
+from PyQt6.QtWidgets import QApplication, QDialog, QFileDialog, QMainWindow, QMessageBox, QSplitter, QVBoxLayout, QWidget, QMenuBar
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QKeySequence
 
@@ -101,7 +101,7 @@ class ChapterWindow(QMainWindow):
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
         
-        
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         self.show()
        
 
@@ -121,6 +121,7 @@ class ChapterWindow(QMainWindow):
     def save_project(self):
         self.project_manager.save_chapter(self.chapter)
         self.image_viewer.status_label.setText("Project saved successfully!")   
+        return True
 
     def load_project(self):
 
@@ -198,3 +199,26 @@ class ChapterWindow(QMainWindow):
     def save_checked_segments(self, segments):
         print(segments)
         self.project_manager.update_translation_memory(segments)
+
+    def closeEvent(self, event):
+
+        Btn = QMessageBox.StandardButton
+        reply = QMessageBox.question(
+            self,
+            "Unsaved changes",
+            "Do you want to save your changes before closing?",
+            Btn.Save | Btn.Discard | Btn.Cancel,
+            Btn.Save,
+        )
+
+        if reply == Btn.Save:
+            if self.save_project():
+                self.project_manager.close_chapter_window(self.chapter.number)
+                event.accept()
+            else:
+                event.ignore()      # save failed or was cancelled, stay open
+        elif reply == Btn.Discard:
+            self.project_manager.close_chapter_window(self.chapter.number)
+            event.accept()
+        else:
+            event.ignore()

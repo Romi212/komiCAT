@@ -5,8 +5,9 @@ from data_structure.page import Page
 from project_storage import safe_name
 from project_window import ProjectWindow
 from PyQt6.QtWidgets import QDialog
-
+from PyQt6.QtCore import Qt
 from tool_windows.termbase_panel import TermbasePanel
+from tool_windows.translation_memory_panel import TranslationMemoryPanel
 
 class ProjectManager():
     def __init__(self, project, loader, text_extractor):
@@ -18,21 +19,27 @@ class ProjectManager():
         self.project_window.chapter_rename_requested.connect(self.rename_chapter)
         self.project_window.chapter_delete_requested.connect(self.delete_chapter)
         self.project_window.termbase_requested.connect(self.show_termbase_panel)
+        self.project_window.memory_requested.connect(self.show_translation_memory_panel)
         self.project_window.edit_requested.connect(self.edit_project_info)
         self.project_window.delete_project_requested.connect(self.delete_project)
+        self.project_window.close_project_requested.connect(self.close_all_chapters)
         self.project_window.show()
+        self.open_chapters = {}
 
     def get_thubnail_path(self,chapter):
         print(self.storage.get_image_path(chapter))
         return self.storage.get_image_path(chapter)
+    
     def add_chapter(self):
         create_chapter_window = CreateChapterWindow(existing_numbers=[c.number for c in self.project.chapters])
         data = create_chapter_window.exec()
         if data == QDialog.DialogCode.Accepted:
+            #TODO try catch y eliminar si no se creó correctamente
             ch_data = create_chapter_window.get_chapter_data()
             chapter = self.create_project_chapter(ch_data)
             #self.project_window.close()
-            self.open_chapter_window(chapter)
+            self.create_chapter_window(chapter)
+            self.project_window.refresh()
         return None
 
     def create_project_chapter(self, project_data):
@@ -47,28 +54,62 @@ class ProjectManager():
 
     def delete_chapter(self, chapter):
         self.project.remove_chapter(chapter)
-        self.loader.save_project(self.project)                # manifest first, as discussed
-        #self.storage.delete_chapter_folder(chapter.id)         # then the folder (recycle bin)
+        self.loader.save_project(self.project)               
+        #self.storage.delete_chapter_folder(chapter.id)     
+        self.project_window.refresh()    
 
     def rename_chapter(self, chapter, new_name):
         chapter.name = new_name
         self.project.update_chapter(chapter)
-        self.loader.save_chapter(chapter)  # chapter.json now lists the new name
+        self.loader.save_project(self.project) 
+        self.project_window.refresh()
 
     def open_chapter(self, chapter_Entry):
+        window = self.open_chapters.get(chapter_Entry.number)
+        
+        if window is not None:
+            # Already open: restore if minimized, then bring to front
+            if window.isMinimized():
+                window.setWindowState(
+                    window.windowState() & ~Qt.WindowState.WindowMinimized
+                    | Qt.WindowState.WindowActive
+                )
+            window.show()
+            window.raise_()
+            window.activateWindow()
+            return
         chapter = self.loader.load_chapter(self.project, chapter_Entry)
-        self.open_chapter_window(chapter)
+        window = self.create_chapter_window(chapter)
+        
 
-    def open_chapter_window(self, chapter):
-        self.chapter_window = ChapterWindow(text_extractor=self.text_extractor, chapter=chapter, project_loader=self.loader, project_manager=self)
+    def create_chapter_window(self, chapter):
+        
+        window = ChapterWindow(
+            text_extractor=self.text_extractor,
+            chapter=chapter,
+            project_loader=self.loader,
+            project_manager=self,
+        )
+        
+        window.show()
+        self.open_chapters[chapter.number] = window
 
+    def close_chapter_window(self, chapter_number):
+        self.open_chapters.pop(chapter_number)
     def show_termbase_panel(self):
         termbase_panel = TermbasePanel(termbase=self.project.termbase)
         termbase_panel.show()
-        
+    def show_translation_memory_panel(self):
+        tm_panel = TranslationMemoryPanel(tm_db=self.project.translation_memory, parent=self.project_window)
+        tm_panel.show()
+        tm_panel.raise_()
+        tm_panel.activateWindow()
 
-    def edit_project_info():
-        print("edit")
+    def edit_project_info(self, data, cover_path):
+        if cover_path:
+            self.loader.store_new_cover(cover_path)
+        self.project.load_project(data)
+        self.loader.save_project(self.project)
 
     def delete_project():
         print("delete")
@@ -95,3 +136,11 @@ class ProjectManager():
 
     def update_translation_memory(self, segments):
         self.project.translation_memory.save_checked_segments(segments)
+
+    def close_all_chapters(self):
+         
+        for window in list(self.open_chapters.values()):
+            window.close()
+
+        if not self.open_chapters:
+            self.project_window.close()
