@@ -68,7 +68,7 @@ class ProjectLoader:
             project_name = Path(load_path[0]).stem
             self._create_storage(root)
             project_data = self.storage.read_json(project_name+".romi")
-            cover_path = Path(self.storage.SHARED_DIR) / safe_name("cover.png")
+            cover_path = self.storage.get_cover_image_path()
             project = Project(str(root), name = project_name, cover_image=cover_path)
             project.load_project(project_data)
             self.load_shared(project)
@@ -103,7 +103,7 @@ class ProjectLoader:
         self.storage.write_json(chapter_data_path, chapter.get_data())
         self.save_project(self.project)  # save the project manifest too, as it lists the chapters 
 
-    def export_translation(self, export_path, exporter_name="Excel (structured)", data=None):
+    def export_translation(self, chapter, export_path, exporter_name="Excel (structured)", data=None):
         exporter = EXPORTERS[exporter_name]
 
         # the extension comes from the exporter, not hardcoded
@@ -113,7 +113,7 @@ class ProjectLoader:
 
         # reuse the data the preview already showed, if there is one
         if data is None:
-            data = exporter.build(self.project)
+            data = exporter.build(chapter)
 
         exporter.export(data, export_path)
         print(f"Translation exported to {export_path}")

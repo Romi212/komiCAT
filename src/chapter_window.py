@@ -43,10 +43,13 @@ class ChapterWindow(QMainWindow):
         load_action.triggered.connect(self.load_project)
 
         project_menu = self.menu_bar.addMenu("Project")
-        
 
-        export_action = project_menu.addAction("Export Translation")
-        export_action.triggered.connect(self.export_translation)
+        export_menu = project_menu.addMenu("Export Translation")
+        txt_export_action = export_menu.addAction("txt")
+        txt_export_action.triggered.connect(lambda: self.export_translation("Plain text"))
+
+        excel_export_action = export_menu.addAction("excel")
+        excel_export_action.triggered.connect(lambda: self.export_translation("Excel (structured)"))
 
         termbase_action = project_menu.addAction("Termbase")
         termbase_action.triggered.connect(self.show_termbase)
@@ -126,9 +129,22 @@ class ChapterWindow(QMainWindow):
             self.set_up_chapter(chapter)
         #TODO ELSE TIRAR ERROR CANT OPEN PROJECT
 
-    def export_translation(self):
-        export_path = QFileDialog.getSaveFileName()
-        self.project_loader.export_translation(export_path[0])
+    def export_translation(self, exporter_name="Excel (structured)"):
+        if not self.chapter:
+            return
+
+        extension = "txt" if exporter_name == "Plain text" else "xlsx"
+        default_name = f"{self.chapter.name or 'translation'}.{extension}"
+        export_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export Translation",
+            default_name,
+            f"Text files (*.txt);;Excel files (*.xlsx)"
+        )
+        if not export_path:
+            return
+
+        self.project_loader.export_translation(self.chapter, export_path, exporter_name)
 
     def show_termbase(self):
         self.termbase_panel.show()

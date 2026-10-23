@@ -24,7 +24,7 @@ class CreateChapterWindow(QDialog):
         form.addRow("Chapter number:", self.number_input)
 
         self.name_input = QLineEdit()
-        self.name_input.setPlaceholderText("Optional, e.g. The Demon King")
+        self.name_input.setPlaceholderText("Chapter Name")
         form.addRow("Chapter name:", self.name_input)
 
         

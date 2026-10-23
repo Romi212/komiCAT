@@ -159,8 +159,8 @@ class ProjectWindow(QWidget):
         self.delete_btn.clicked.connect(self._confirm_delete_project)
         self.edit_btn.clicked.connect(self.edit_requested)
         footer.addStretch()
-        footer.addWidget(self.delete_btn)
-        footer.addWidget(self.edit_btn)
+        #footer.addWidget(self.delete_btn)
+        #footer.addWidget(self.edit_btn)
         footer.addStretch()
         root.addLayout(footer)
 

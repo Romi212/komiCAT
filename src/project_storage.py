@@ -83,8 +83,27 @@ class ProjectStorage:
             pages.append({"file": rel, "original_name": Path(src).name})
         return pages
 
+    def get_cover_image_path(self):
+        return self._find_image_path(Path(self.SHARED_DIR), "cover")
+
+    def _find_image_path(self, images_dir, name):
+        images_dir_resolved = self.resolve(images_dir)
+        candidates = sorted(
+                    (path for path in images_dir_resolved.glob(f"{name}.*")
+                     if path.suffix.lower() in IMAGE_EXTENSIONS),
+                    key=lambda path: (
+                        {".png": 0, ".jpg": 1}.get(path.suffix.lower(), 2),
+                        path.suffix.lower(),
+                    ),
+                )
+        print(f"searching for {name} in {images_dir} found {candidates}")
+        return candidates[0] if candidates else images_dir / f"{name}.png"
+    
     def get_image_path(self, chapter):
-        return Path(self.CHAPTERS_DIR) / chapter.path / "images" / "page_000.png"
+        images_dir = Path(self.CHAPTERS_DIR) / chapter.path / "images"
+        
+        return self._find_image_path(images_dir, "page_000")
+
     def add_chapter(self, path):
         # Make dir in resolve_path(path)
         (self.resolve(path)).mkdir(parents=True, exist_ok=True)
