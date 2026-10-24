@@ -3,7 +3,7 @@ from PyInstaller.utils.hooks import collect_data_files
 from PyInstaller.utils.hooks import collect_all
 from PyInstaller.utils.hooks import copy_metadata
 
-datas = [('src/dicts', 'dicts')]
+datas = [('src/resources/dicts', 'resources/dicts')]
 binaries = []
 hiddenimports = []
 datas += collect_data_files('symspellpy')

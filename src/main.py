@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import QApplication, QMessageBox
 from PyQt6.QtCore import QThreadPool, QEventLoop
 from PyQt6.QtWidgets import QProgressDialog, QMessageBox
 import first_run
-from process.background_worker import BackgroundWorker   # wherever your class lives
+from storage.process.background_worker import BackgroundWorker   # wherever your class lives
 
 LOG_FILE = Path.home() / "komicat_error.log"
 

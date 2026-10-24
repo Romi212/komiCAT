@@ -21,7 +21,7 @@ class SpellChecker:
             raise FileNotFoundError(f"No {language} dictionary at {path}")
         self.sym_spell.load_dictionary(str(path), term_index=0, count_index=1)
 
-        self.hunspell = Dictionary.from_files(str(resource(f"dicts/{self.language}")))   # no extension
+        self.hunspell = Dictionary.from_files( str(resource(f"resources/dicts/{self.language}")))   # no extension
 
 
 
