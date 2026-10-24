@@ -1,7 +1,7 @@
 
 from data_structure.text_box import TextBox
-from image_area_widgets.text_box_rect import TextBoxRect
-from aux_types.segment_types import SEGMENT_TYPE_FORMAT, SegmentType
+from ui.windows.chapter.image_area_widgets.text_box_rect import TextBoxRect
+from ui.segment_types import SEGMENT_TYPE_FORMAT, SegmentType
 
 class Segment:
     def __init__(self, page, segment_nro):

@@ -1,5 +1,5 @@
 
-from aux_types.segment_types import SEGMENT_TYPE_FORMAT, SegmentType
+from ui.segment_types import SEGMENT_TYPE_FORMAT, SegmentType
 
 
 class TextBox:

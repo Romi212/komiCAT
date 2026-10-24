@@ -1,10 +1,10 @@
 from PyQt6.QtWidgets import QApplication, QBoxLayout, QFrame, QHBoxLayout, QMenu, QSizePolicy, QWidget, QVBoxLayout, QLabel, QTextEdit
 from PyQt6.QtCore import QMimeData, Qt, pyqtSignal
 from PyQt6.QtGui import QDrag, QKeyEvent, QTextCursor, QTextCharFormat, QColor
-from aux_types.segment_types import SegmentType
-from text_area_widgets.suggestions_text_edit import SuggestionsTextEdit
-from text_area_widgets.translation_text_edit import TranslationTextEdit
-from text_area_widgets.source_text_edit import SourceTextEdit
+from ui.segment_types import SegmentType
+from ui.windows.chapter.text_area_widgets.suggestions_text_edit import SuggestionsTextEdit
+from ui.windows.chapter.text_area_widgets.translation_text_edit import TranslationTextEdit
+from ui.windows.chapter.text_area_widgets.source_text_edit import SourceTextEdit
 
 class DragHandle(QLabel):
     """Grip icon placed on the left side of SegmentBox to initiate dragging."""

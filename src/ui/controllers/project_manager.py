@@ -1,13 +1,13 @@
-from chapter_window import ChapterWindow
-from create_chapter_window import CreateChapterWindow
+from ui.windows.chapter.chapter_window import ChapterWindow
+from ui.windows.chapter.create_chapter_window import CreateChapterWindow
 from data_structure.chapter import Chapter
 from data_structure.page import Page
-from project_storage import safe_name
-from project_window import ProjectWindow
+from storage.project_storage import safe_name
+from ui.windows.project.project_window import ProjectWindow
 from PyQt6.QtWidgets import QDialog
 from PyQt6.QtCore import Qt
-from tool_windows.termbase_panel import TermbasePanel
-from tool_windows.translation_memory_panel import TranslationMemoryPanel
+from ui.windows.tools.termbase_panel import TermbasePanel
+from ui.windows.tools.translation_memory_panel import TranslationMemoryPanel
 
 class ProjectManager():
     def __init__(self, project, loader, text_extractor):

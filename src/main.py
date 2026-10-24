@@ -1,6 +1,6 @@
 import sys
-from launcher_window import LauncherWindow
-from chapter_window import ChapterWindow
+from ui.windows.launcher_window import LauncherWindow
+from ui.windows.chapter.chapter_window import ChapterWindow
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtWidgets import QApplication
 from ui import theme

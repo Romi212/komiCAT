@@ -6,7 +6,7 @@ from data_structure.segment import Segment
 from data_structure.segment_combined import SegmentCombined
 from data_structure.segment_list import SegmentList
 from data_structure.text_box import TextBox
-from image_area_widgets.text_box_rect import TextBoxRect
+from ui.windows.chapter.image_area_widgets.text_box_rect import TextBoxRect
 
 
 class Page:

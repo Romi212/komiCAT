@@ -3,17 +3,17 @@ from pathlib import Path
 
 from CATtools.termbase import Termbase
 from CATtools.translation_memory import TranslationMemoryDB
-from aux_types.export_stategy import EXPORTERS
+from storage.export_stategy import EXPORTERS
 from data_structure.chapter import Chapter
 import json
 
 from PyQt6.QtWidgets import QDialog, QFileDialog, QMainWindow
 
-from create_project_window import CreateProjectWindow
+from ui.windows.project.create_project_window import CreateProjectWindow
 from PIL import Image
 
 from data_structure.project import ChapterEntry, Project
-from project_storage import ProjectStorage, safe_name
+from storage.project_storage import ProjectStorage, safe_name
 
 
 SCHEMA_VERSION = 1

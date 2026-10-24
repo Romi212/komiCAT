@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import (
     QMenu, QInputDialog, QMessageBox, QFrame, QLineEdit, QComboBox, QFileDialog
 )
 
-from image_card import ImageCard, CARD_SIZE, load_pixmap
+from ui.windows.project.widgets.image_card import ImageCard, CARD_SIZE, load_pixmap
 
 COVER_SIZE = (150, 210)
 

@@ -2,8 +2,8 @@ from PyQt6.QtWidgets import QMenu, QWidget, QVBoxLayout, QLabel, QTextEdit
 from PyQt6.QtCore import Qt
 from data_structure.segment_combined import SegmentCombined
 from data_structure.segment_list import SegmentList
-from text_area_widgets.combined_container import CombinedContainer
-from text_area_widgets.segment_box import SegmentBox
+from ui.windows.chapter.text_area_widgets.combined_container import CombinedContainer
+from ui.windows.chapter.text_area_widgets.segment_box import SegmentBox
 
 class PageContainer(QWidget):
     

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
-from aux_types.segment_types import SegmentType
+from ui.segment_types import SegmentType
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Font, Alignment
 

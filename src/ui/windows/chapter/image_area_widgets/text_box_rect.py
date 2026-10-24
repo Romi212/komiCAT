@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import QGraphicsRectItem, QGraphicsItem, QMenu
 from PyQt6.QtGui import QActionGroup, QPen, QBrush, QColor, QFont, QCursor
 from PyQt6.QtCore import QObject, Qt, QRectF, pyqtSignal
 
-from aux_types.segment_types import SEGMENT_TYPE_FORMAT, SegmentType
+from ui.segment_types import SEGMENT_TYPE_FORMAT, SegmentType
 from ui import theme
 
 class TextBoxRectSignals(QObject):

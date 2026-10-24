@@ -1,6 +1,6 @@
 from data_structure.text_box import TextBox
 from data_structure.segment import Segment
-from image_area_widgets.combine_arrow import CombineArrow
+from ui.windows.chapter.image_area_widgets.combine_arrow import CombineArrow
 
 class SegmentCombined(Segment):
     

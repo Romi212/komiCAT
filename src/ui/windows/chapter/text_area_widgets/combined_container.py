@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QHBoxLayout, QMenu, QPushButton, QWidget, QVBoxLayout, QLabel, QTextEdit
 from PyQt6.QtCore import Qt, pyqtSignal
 from data_structure.segment_combined import SegmentCombined
-from text_area_widgets.segment_box import DragHandle, SegmentBox
+from ui.windows.chapter.text_area_widgets.segment_box import DragHandle, SegmentBox
 
 class DecombineButton(QPushButton):
     """Floating button to split a CombinedContainer back into individual segments."""

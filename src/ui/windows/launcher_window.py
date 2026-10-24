@@ -2,15 +2,15 @@
 import sys
 from PyQt6.QtWidgets import QApplication, QDialog, QFileDialog, QLabel, QMainWindow, QPushButton,  QSplitter, QVBoxLayout, QWidget, QMenuBar
 from data_structure.segment_combined import SegmentCombined
-from create_project_window import CreateProjectWindow
+from ui.windows.project.create_project_window import CreateProjectWindow
 from process.background_worker import BackgroundWorker
-from project_loader import ProjectLoader
-from chapter_window import ChapterWindow
+from storage.project_loader import ProjectLoader
+from ui.windows.chapter.chapter_window import ChapterWindow
 from CATtools.text_extractor import TextExtractor
 from PyQt6.QtCore import QThreadPool
 
-from project_manager import ProjectManager
-from project_window import ProjectWindow
+from ui.controllers.project_manager import ProjectManager
+from ui.windows.project.project_window import ProjectWindow
 
 
 class LauncherWindow(QMainWindow):

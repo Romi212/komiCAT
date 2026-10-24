@@ -8,7 +8,7 @@ from PyQt6.QtCore import QRectF, Qt, QSize, QRect, pyqtSignal
 from PIL import Image
 import os
 
-from image_area_widgets.text_box_rect import TextBoxRect
+from ui.windows.chapter.image_area_widgets.text_box_rect import TextBoxRect
 from CATtools.text_extractor import TextExtractor
 from data_structure.text_box import TextBox
 from data_structure.page import Page
