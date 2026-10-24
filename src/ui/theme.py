@@ -97,6 +97,23 @@ def build_qss(t):
         padding: 0;
         }}
     QPushButton#coverButton:hover {{ border: 2px solid {t.accent}; }}
+    QPushButton#prefsButton {{
+        background-color: transparent;
+        color: {t.text};
+        border: 1px solid transparent;
+        border-radius: 18px;
+        font-size: 14pt;
+    }}
+    QPushButton#prefsButton:hover {{
+        background-color: {t.button_bg_hover};
+        border-color: {t.border};
+    }}
+    QLabel#launcherTitle {{
+        color: {t.text};
+        font-size: 30pt;
+        font-weight: bold;
+        letter-spacing: 2px;
+    }}
     QScrollArea {{ background-color: {t.window}; border: none; }}
     QScrollArea > QWidget > QWidget {{ background-color: {t.window}; }}
 

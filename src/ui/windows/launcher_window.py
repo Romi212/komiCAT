@@ -1,100 +1,106 @@
-#Small window with 3 buttons to load or create proyect 
-import sys
-from PyQt6.QtWidgets import QApplication, QDialog, QFileDialog, QLabel, QMainWindow, QPushButton,  QSplitter, QVBoxLayout, QWidget, QMenuBar
-from data_structure.segment_combined import SegmentCombined
-from ui.windows.project.create_project_window import CreateProjectWindow
-from storage.process.background_worker import BackgroundWorker
-from storage.project_loader import ProjectLoader
-from ui.windows.chapter.chapter_window import ChapterWindow
-from CATtools.text_extractor import TextExtractor
-from PyQt6.QtCore import QThreadPool
+from pathlib import Path
 
-from ui.controllers.project_manager import ProjectManager
-from ui.controllers.config_controller import ConfigController
-from ui.windows.project.project_window import ProjectWindow
+from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtWidgets import (
+    QHBoxLayout, QLabel, QMainWindow, QMessageBox, QPushButton, QVBoxLayout, QWidget,
+)
+
+from ui.windows.project.widgets.image_card import ImageCard      # adjust to where ImageCard lives
+
+CARD_COVER = (110, 155)
 
 
 class LauncherWindow(QMainWindow):
-    def __init__(self, storage = None):
+    create_requested = pyqtSignal()
+    load_requested = pyqtSignal()
+    preferences_requested = pyqtSignal()
+    recent_open_requested = pyqtSignal(str)       # project (.romi) path
+    recent_remove_requested = pyqtSignal(str)
+
+    def __init__(self):
         super().__init__()
-        self.storage = storage
-        self.config_controller = ConfigController(storage=self.storage, parent=self)
-        self.config_window = None
-        self.project_loader = ProjectLoader(storage)
-        self.thread_pool = QThreadPool.globalInstance()
-        self.text_extractor = None  
-        self.pending_chapter = None 
+        self.setWindowTitle("KomiCAT")
+        self.resize(560, 460)
 
-        self.setWindowTitle("Launcher")
-        self.resize(400, 200)
-        self.menu_bar = QMenuBar(self)
-        file_menu = self.menu_bar.addMenu("App")
-        #Save project button
-        create_action = file_menu.addAction("Preferences")
-        create_action.triggered.connect(self.open_preferences)
-        layout = QVBoxLayout()
+        root = QVBoxLayout()
+        root.setContentsMargins(16, 12, 16, 20)
 
+        # ---- top row: gear | title | spacer (same width, keeps title centered) ----
+        top = QHBoxLayout()
+        self.prefs_button = QPushButton("⚙")
+        self.prefs_button.setFixedSize(36, 36)
+        self.prefs_button.setToolTip("Preferences")
+        self.prefs_button.setObjectName("preferencesButton")
+        self.prefs_button.clicked.connect(self.preferences_requested)
+
+        title = QLabel("KomiCAT")
+        title.setObjectName("launcherTitle")
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title.setObjectName("launcherTitle")
+
+        spacer = QWidget()
+        spacer.setFixedSize(36, 36)
+
+        top.addWidget(self.prefs_button)
+        top.addWidget(title, 1)
+        top.addWidget(spacer)
+        root.addLayout(top)
+        root.addStretch(1)
+
+        # ---- recent projects row ----
+        self.recent_host = QWidget()
+        self.recent_layout = QHBoxLayout(self.recent_host)
+        self.recent_layout.setSpacing(24)
+        root.addWidget(self.recent_host, alignment=Qt.AlignmentFlag.AlignHCenter)
+        root.addStretch(1)
+
+        # ---- status ----
         self.status_label = QLabel("")
-        layout.setMenuBar(self.menu_bar)
-        layout.addWidget(self.status_label)
-        
-        self.create_project_button = QPushButton("Create New Project")
-        self.create_project_button.clicked.connect(self.create_new_project)
-        layout.addWidget(self.create_project_button)
+        self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        root.addWidget(self.status_label)
 
-        self.load_project_button = QPushButton("Load Project")
-        self.load_project_button.clicked.connect(self.load_project)
-        layout.addWidget(self.load_project_button)
+        # ---- buttons side by side ----
+        buttons = QHBoxLayout()
+        self.create_button = QPushButton("Create New")
+        self.load_button = QPushButton("Load Project")
+        self.create_button.clicked.connect(self.create_requested)
+        self.load_button.clicked.connect(self.load_requested)
+        buttons.addWidget(self.create_button)
+        buttons.addWidget(self.load_button)
+        root.addLayout(buttons)
 
-        central_widget = QWidget()
-        central_widget.setLayout(layout)
-        self.setCentralWidget(central_widget)
+        central = QWidget()
+        central.setLayout(root)
+        self.setCentralWidget(central)
 
-        self.show()
-        self.preload_models()  # Start loading models in the background
+    # ---------- API used by the controller ----------
+    def set_status(self, text):
+        self.status_label.setText(text)
 
+    def set_busy(self, busy: bool):
+        for w in (self.create_button, self.load_button, self.recent_host):
+            w.setEnabled(not busy)
 
-    def preload_models(self):
-        self.status_label.setText("Loading AI models in background...")
-        
-        # Instantiate TextExtractor inside the worker thread execution
-        worker = BackgroundWorker(TextExtractor)
-        worker.signals.finished.connect(self._on_models_loaded)
-        worker.signals.error.connect(self._on_models_error)
+    def set_recents(self, entries):
+        """entries: list of dicts {"path": str, "name": str, "cover": Path | None}"""
+        while self.recent_layout.count():
+            item = self.recent_layout.takeAt(0)
+            if item.widget():
+                item.widget().hide()
+                item.widget().deleteLater()
 
-        self.thread_pool.start(worker)
+        if not entries:
+            self.recent_layout.addWidget(QLabel("No recent projects"))
+            return
 
-    def _on_models_loaded(self, text_extractor):
-        self.text_extractor = text_extractor
-        self.status_label.setText("AI models loaded successfully.")
-        if self.pending_chapter is not None:
-            self.open_project_window()
+        for e in entries:
+            card = ImageCard("recent", e["path"], e["name"], e["cover"], CARD_COVER)
+            card.open_requested.connect(lambda p: self.recent_open_requested.emit(str(p)))
+            card.remove_requested.connect(lambda p: self.recent_remove_requested.emit(str(p)))
+            self.recent_layout.addWidget(card)
 
-    def _on_models_error(self, error):
-        self.status_label.setText(f"Error loading AI models: {error}")
-        print(f"Error loading AI models: {error}")
+    def show_error(self, title, message):
+        QMessageBox.critical(self, title, message)
 
-    def create_new_project(self):
-        self.pending_chapter = self.project_loader.create_new_project()
-        self.open_project_window()
-
-    def load_project(self):
-        self.pending_chapter = self.project_loader.load_project()
-        self.open_project_window()
-
-    def open_project_window(self):
-        if self.text_extractor is None:
-            self.set_buttons_enabled(False)
-            self.status_label.setText("AI models are still loading. Please wait...")   
-        else:
-            if self.pending_chapter is not None:
-                self.project_manager = ProjectManager(self.pending_chapter,self.project_loader, self.text_extractor)
-                self.close()
-
-    def set_buttons_enabled(self, enabled: bool):
-        self.create_project_button.setEnabled(enabled)
-        self.load_project_button.setEnabled(enabled)
-
-    def open_preferences(self):
-        self.config_window = self.config_controller.open(self)
-        
+    def show_warning(self, title, message):
+        QMessageBox.warning(self, title, message)

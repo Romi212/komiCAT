@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import QProgressDialog, QMessageBox
 import first_run
 from storage.project_storage import ProjectStorage
 from storage.process.background_worker import BackgroundWorker   # wherever your class lives
+from ui.controllers.launcher_controller import LauncherController
 
 LOG_FILE = Path.home() / "komicat_error.log"
 
@@ -95,7 +96,9 @@ def main():
     theme.theme_manager.set_theme(app_config.config.theme)
     apply_theme(theme.current())                              # apply at startup
     theme.theme_manager.theme_changed.connect(apply_theme)
-    launcher = LauncherWindow(storage)
+    launcher_window = LauncherWindow()
+    launcher = LauncherController(launcher_window, storage)   # keep a reference
+    launcher_window.show()
     sys.exit(app.exec())
 
 if __name__ == "__main__":
