@@ -64,19 +64,21 @@ class ProjectLoader:
 
     
 
-    def load_project(self):
-        load_path = QFileDialog.getOpenFileName()
-        if load_path[0]:
-            root = Path(load_path[0]).parent
-            project_name = Path(load_path[0]).stem
-            self._create_storage(root)
-            project_data = self.storage.read_json(project_name+".romi")
-            cover_path = self.storage.get_cover_image_path()
-            project = Project(str(root), name = project_name, cover_image=cover_path)
-            project.load_project(project_data)
-            self.load_shared(project)
-            self.project = project
-            return project
+    def load_project(self, load_path = None):
+        if load_path is None:
+            load_path, _ = QFileDialog.getOpenFileName(None, "Open project", "", "KomiCAT project (*.romi)")
+        if not load_path:
+            return
+        root = Path(load_path).parent
+        project_name = Path(load_path).stem
+        self._create_storage(root)
+        project_data = self.storage.read_json(project_name+".romi")
+        cover_path = self.storage.get_cover_image_path()
+        project = Project(str(root), name = project_name, cover_image=cover_path)
+        project.load_project(project_data)
+        self.load_shared(project)
+        self.project = project
+        return project
         
     def load_shared(self, project):
         termbase_data = self.storage.read_json(Path(self.storage.SHARED_DIR) / safe_name("termbase.json"))
