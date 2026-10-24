@@ -43,7 +43,7 @@ class SegmentList:
     def merge_lists(self,to_merge):
         if len(to_merge)>0:
             for segment in self.segments:
-                if not segment.is_extracted() or not to_merge.has_segment(segment):
+                if not segment.is_extracted():
                     print(f"Inserting segment {segment.nro}")
                     to_merge.insert_segment(segment)
 

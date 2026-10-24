@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import (
     QInputDialog, QLabel, QMenu, QMessageBox, QPushButton, QVBoxLayout, QWidget,
 )
 
-
+CARD_SIZE = (130, 180)
 def load_pixmap(path, size):
     """Scaled and center-cropped pixmap, or None if the file is missing or unreadable."""
     if not path or not Path(path).exists():
@@ -30,7 +30,7 @@ class ImageCard(QWidget):
     delete_requested = pyqtSignal(object)        # chapter only
     remove_requested = pyqtSignal(object)        # recent only
 
-    def __init__(self, kind, item, name, image_path, size = (130, 180), parent=None):
+    def __init__(self, kind, item, name, image_path, size = CARD_SIZE, parent=None):
         super().__init__(parent)
         self.kind = kind
         self.item = item        # Chapter object for "chapter", project path for "recent"

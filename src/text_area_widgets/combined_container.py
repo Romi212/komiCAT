@@ -79,11 +79,13 @@ class CombinedContainer(QWidget):
     def recreate_segment(self):
         head = SegmentCombined(None, 0)
         head.clone_segment(self.segment_boxes[0].segment)
+        self.segment_boxes[0].segment = head
         self.segment = head
         for segment in self.segment_boxes[1:]:
             seg = SegmentCombined(None, 0)
             seg.clone_segment(segment.segment)
             head.set_next_segment(seg)
+            segment.segment = seg
             head = seg
         head.set_next_segment(None)
 
@@ -157,3 +159,9 @@ class CombinedContainer(QWidget):
         elif boxes:
             self.head = boxes[0]
             self.seg_children = boxes[1:]
+
+    def link_last_segment_to(self, next_segment):
+        """Link the last segment in this container to the provided next_segment."""
+        if self.segment_boxes:
+            last_segment = self.segment_boxes[-1].segment
+            last_segment.set_next_segment(next_segment)

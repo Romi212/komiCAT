@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import (
     QMenu, QInputDialog, QMessageBox, QFrame, QLineEdit, QComboBox, QFileDialog
 )
 
-from image_card import ImageCard
+from image_card import ImageCard, CARD_SIZE, load_pixmap
 
 COVER_SIZE = (150, 210)
 
@@ -220,7 +220,7 @@ class ProjectWindow(QWidget):
         self.scroll.setWidget(content)   # replaces and deletes the previous content
 
     def _show_cover(self, path):
-        pix = _load_pixmap(path, COVER_SIZE)
+        pix = load_pixmap(path, COVER_SIZE)
         if pix:
             self.cover_label.setPixmap(pix)
         else:

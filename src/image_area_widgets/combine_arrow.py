@@ -168,3 +168,8 @@ class CombineArrow(QGraphicsPathItem):
 
     def set_edit_mode(self, value):
         self.edit_mode = value
+
+    def request_remove(self):
+        parent = self.parentWidget()          # PageContainer or CombinedContainer
+        self.setParentItem(None)                  # leaves the layout at once, the scroll panel resizes
+        

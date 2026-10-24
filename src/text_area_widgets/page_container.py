@@ -58,27 +58,36 @@ class PageContainer(QWidget):
         super().mousePressEvent(event)
 
     def combine_adjacent(self,top, bottom):
-        if isinstance(top,CombinedContainer):
-            top.addChild(bottom)
+        
+        if isinstance(bottom,CombinedContainer):
+            children = bottom.sync_children()
         else:
+            children = [bottom]     
+        
+        if not isinstance(top,CombinedContainer):
             index = self.layout.indexOf(top)
             head_segment = SegmentCombined(None,-1)
             head_segment.clone_segment(top.segment)
             top.segment = head_segment
             container = CombinedContainer(top)
-            if isinstance(bottom,CombinedContainer):
-               children = bottom.sync_children()
-            else:
-                children = [bottom]     
-            for child in children:
-                container.addChild(child)
-            head_segment.set_next_segment(bottom.segment)
-            
             self.layout.insertWidget(index, container)
             container.set_combine_callback(self.decombine_segments)
-            container.set_container_drag_callback(self.set_active_drag_widget) 
+            container.set_container_drag_callback(self.set_active_drag_widget)
             self.layout.removeWidget(top)
+            top = container
+
+        for child in children:
+            top.addChild(child)
+
+        top.sync_children()
         self.layout.removeWidget(bottom)
+        if isinstance(bottom, CombinedContainer):
+            # its children now live in `top`; the empty shell must go away completely
+            bottom.hide()
+            bottom.setParent(None)
+            bottom.deleteLater()
+
+        
 
     def _find_gap_at(self, pos):
         """Return ((top_widget, bottom_widget), gap_y, gap_height) if pos.y() sits in a gap, else (None, 0, 0)."""
