@@ -13,7 +13,7 @@ from ui.windows.project.create_project_window import CreateProjectWindow
 from PIL import Image
 
 from data_structure.project import ChapterEntry, Project
-from storage.project_storage import ProjectStorage, safe_name
+from storage.project_storage import  safe_name
 
 
 SCHEMA_VERSION = 1
@@ -22,10 +22,10 @@ SCHEMA_VERSION = 1
 class ProjectLoader:
     CHAPTER_DATA = "chapter_data"
 
-    def __init__(self):
+    def __init__(self,storage):
         self.project = None
         self.save_path = ""
-        self.storage = None
+        self.storage = storage
 
 
     def create_new_project(self):
@@ -59,7 +59,7 @@ class ProjectLoader:
         
     def _create_storage(self,root):
         
-        self.storage = ProjectStorage(root)
+        self.storage.set_project_root(root)
         self.storage.create_structure()
 
     

@@ -3,32 +3,39 @@ import sys
 from PyQt6.QtWidgets import QApplication, QDialog, QFileDialog, QLabel, QMainWindow, QPushButton,  QSplitter, QVBoxLayout, QWidget, QMenuBar
 from data_structure.segment_combined import SegmentCombined
 from ui.windows.project.create_project_window import CreateProjectWindow
-from process.background_worker import BackgroundWorker
+from storage.process.background_worker import BackgroundWorker
 from storage.project_loader import ProjectLoader
 from ui.windows.chapter.chapter_window import ChapterWindow
 from CATtools.text_extractor import TextExtractor
 from PyQt6.QtCore import QThreadPool
 
 from ui.controllers.project_manager import ProjectManager
+from ui.controllers.config_controller import ConfigController
 from ui.windows.project.project_window import ProjectWindow
 
 
 class LauncherWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, storage = None):
         super().__init__()
-        
-        
-        self.project_loader = ProjectLoader()
+        self.storage = storage
+        self.config_controller = ConfigController(storage=self.storage, parent=self)
+        self.config_window = None
+        self.project_loader = ProjectLoader(storage)
         self.thread_pool = QThreadPool.globalInstance()
         self.text_extractor = None  
         self.pending_chapter = None 
 
         self.setWindowTitle("Launcher")
         self.resize(400, 200)
-
+        self.menu_bar = QMenuBar(self)
+        file_menu = self.menu_bar.addMenu("App")
+        #Save project button
+        create_action = file_menu.addAction("Preferences")
+        create_action.triggered.connect(self.open_preferences)
         layout = QVBoxLayout()
 
         self.status_label = QLabel("")
+        layout.setMenuBar(self.menu_bar)
         layout.addWidget(self.status_label)
         
         self.create_project_button = QPushButton("Create New Project")
@@ -87,4 +94,7 @@ class LauncherWindow(QMainWindow):
     def set_buttons_enabled(self, enabled: bool):
         self.create_project_button.setEnabled(enabled)
         self.load_project_button.setEnabled(enabled)
-            
+
+    def open_preferences(self):
+        self.config_window = self.config_controller.open(self)
+        

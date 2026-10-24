@@ -28,6 +28,15 @@ HUNSPELL_FILES = {
     "es_AR.dic": "https://raw.githubusercontent.com/wooorm/dictionaries/main/dictionaries/es-AR/index.dic",
 }
 
+def load_config(config):
+    config_path = DATA_DIR / "config.json"
+    if not config_path.exists():
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(config_path, "w", encoding="utf-8") as f:
+            import json
+            json.dump(config.get_data(), f, indent=4)
+    
+
 def missing_hunspell():
     return [n for n in HUNSPELL_FILES if not (HUNSPELL_DIR / n).exists()]
 

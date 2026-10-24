@@ -1,20 +1,25 @@
 import sys
+
+from data_structure.app_config import AppConfig
 from ui.windows.launcher_window import LauncherWindow
 from ui.windows.chapter.chapter_window import ChapterWindow
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtWidgets import QApplication
 from ui import theme
+from data_structure import app_config
 import sys, traceback, datetime
 from pathlib import Path
 from PyQt6.QtWidgets import QApplication, QMessageBox
 from PyQt6.QtCore import QThreadPool, QEventLoop
 from PyQt6.QtWidgets import QProgressDialog, QMessageBox
 import first_run
+from storage.project_storage import ProjectStorage
 from storage.process.background_worker import BackgroundWorker   # wherever your class lives
 
 LOG_FILE = Path.home() / "komicat_error.log"
 
 def run_setup(app):
+    
     if not first_run.needs_setup():
         return True
 
@@ -84,9 +89,13 @@ def apply_theme(t):
     app.setStyleSheet(theme.build_qss(t))
 
 def main():
+    first_run.load_config(app_config.config)
+    storage = ProjectStorage()
+    app_config.config.load_data(storage.get_config_data())
+    theme.theme_manager.set_theme(app_config.config.theme)
     apply_theme(theme.current())                              # apply at startup
     theme.theme_manager.theme_changed.connect(apply_theme)
-    launcher = LauncherWindow()
+    launcher = LauncherWindow(storage)
     sys.exit(app.exec())
 
 if __name__ == "__main__":
