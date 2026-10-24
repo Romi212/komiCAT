@@ -10,78 +10,10 @@ from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QScrollArea,
     QMenu, QInputDialog, QMessageBox, QFrame, QLineEdit, QComboBox, QFileDialog
 )
-CARD_SIZE = (130, 180)      # chapter thumbnail, width x height
+
+from image_card import ImageCard
+
 COVER_SIZE = (150, 210)
-
-
-def _load_pixmap(path, size):
-    """Scaled and center-cropped pixmap, or None if the file is missing or unreadable."""
-    if not path or not Path(path).exists():
-        return None
-    pix = QPixmap(str(path))
-    if pix.isNull():
-        return None
-    scaled = pix.scaled(QSize(*size), Qt.AspectRatioMode.KeepAspectRatioByExpanding,
-                        Qt.TransformationMode.SmoothTransformation)
-    x = (scaled.width() - size[0]) // 2
-    y = (scaled.height() - size[1]) // 2
-    return scaled.copy(x, y, size[0], size[1])
-
-
-class ChapterCard(QWidget):
-    """Thumbnail + name. Left click opens, right click shows rename/delete."""
-    open_requested = pyqtSignal(object)
-    rename_requested = pyqtSignal(object, str)
-    delete_requested = pyqtSignal(object)
-
-    def __init__(self, chapter, thumb_path=None, parent=None):
-        super().__init__(parent)
-        self.chapter = chapter
-
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(4)
-
-        self.thumb = QPushButton()
-        self.thumb.setObjectName("chapterThumb")
-        self.thumb.setFixedSize(*CARD_SIZE)
-        self.thumb.setIconSize(QSize(*CARD_SIZE))
-        self.thumb.setCursor(Qt.CursorShape.PointingHandCursor)
-        pix = _load_pixmap(thumb_path, CARD_SIZE)
-        if pix:
-            self.thumb.setIcon(QIcon(pix))
-        else:
-            self.thumb.setText("No pages")
-        self.thumb.clicked.connect(lambda: self.open_requested.emit(self.chapter))
-        layout.addWidget(self.thumb)
-
-        self.name_label = QLabel(chapter.name)
-        self.name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.name_label.setFixedWidth(CARD_SIZE[0])
-        self.name_label.setWordWrap(True)
-        layout.addWidget(self.name_label)
-
-    def contextMenuEvent(self, event):
-        menu = QMenu(self)
-        rename = menu.addAction("Rename")
-        delete = menu.addAction("Delete")
-        chosen = menu.exec(event.globalPos())
-        if chosen == rename:
-            new_name, ok = QInputDialog.getText(self, "Rename chapter", "Name:",
-                                                text=self.chapter.name)
-            if ok and new_name.strip():
-                self.rename_requested.emit(self.chapter, new_name.strip())
-        elif chosen == delete:
-            reply = QMessageBox.question(
-                self, "Delete chapter",
-                f'Delete "{self.chapter.name}"? This removes its images and translations.',
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                QMessageBox.StandardButton.No)
-            if reply == QMessageBox.StandardButton.Yes:
-                self.delete_requested.emit(self.chapter)
-
-
-
 
 # code -> display name. Extend as needed.
 SOURCE_LANGUAGES = {"jp": "Japanese"}
@@ -270,7 +202,7 @@ class ProjectWindow(QWidget):
         row.setContentsMargins(4, 4, 4, 4)
         row.setSpacing(16)
         for chapter in self.project.chapters:
-            card = ChapterCard(chapter, self._chapter_thumb(chapter))
+            card = ImageCard("chapter", chapter, chapter.name, self._chapter_thumb(chapter))
             card.open_requested.connect(self.chapter_opened)
             card.rename_requested.connect(self.chapter_rename_requested)
             card.delete_requested.connect(self.chapter_delete_requested)
