@@ -238,9 +238,11 @@ class SegmentList:
         else:
             return len(self.segments)
 
+    def __reversed__(self):
+        return reversed(list(self))     # builds the list once, O(n)
+
     def get_last_segment(self):
-        for i in range(max(self.segments_indexes, default=0), 0, -1):
-            seg = self.segments_indexes.get(i)
-            if seg is not None and seg.segment_box:
+        for seg in reversed(self):
+            if seg.segment_box:
                 return seg
         return None

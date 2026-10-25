@@ -135,7 +135,12 @@ class ProjectManager():
         self.loader.save_chapter(chapter)
 
     def update_translation_memory(self, segments):
-        self.project.translation_memory.save_checked_segments(segments)
+        valid_segments = []
+        for segment in segments:
+            segment.set_confirmed(True)
+            context = str({"chapter": segment.page.chapter, "page": segment.page.number})
+            valid_segments.append((segment.source_text, segment.translation, context))
+        self.project.translation_memory.save_checked_segments(valid_segments)
 
     def close_all_chapters(self):
          

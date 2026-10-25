@@ -10,8 +10,10 @@ from ui.windows.chapter.image_area_widgets.image_viewer import ImageViewer
 from storage.project_loader import ProjectLoader
 from ui.windows.chapter.text_area_widgets.text_viewer import TextViewer
 from data_structure.chapter import Chapter
+from ui.windows.chapter.text_area_widgets.segment_box import SegmentBox
 from ui.windows.tools.termbase_panel import TermbasePanel
 from ui.windows.tools.translation_memory_panel import TranslationMemoryPanel
+from ui.windows.chapter.confirmation_window import ConfirmationWindow
 
 class ChapterWindow(QMainWindow):
     edit_mode_changed = pyqtSignal(Page, bool)
@@ -100,6 +102,8 @@ class ChapterWindow(QMainWindow):
         layout.addWidget(splitter)
         central_widget.setLayout(layout)
         self.setCentralWidget(central_widget)
+
+        self.confirmation_Dialog = None
         
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         self.show()
@@ -197,8 +201,58 @@ class ChapterWindow(QMainWindow):
         return self.project_manager.open_images(self.chapter, paths)
 
     def save_checked_segments(self, segments):
-        print(segments)
-        self.project_manager.update_translation_memory(segments)
+        valid_segments = []
+        mistake_segments = []
+        empty_segments = 0
+        for segment in segments:
+            if not segment.confirmed:
+                if segment.get_translation():
+                    if segment.correct_spelling():
+                        valid_segments.append(segment)
+                    else:
+                        mistake_segments.append(segment)
+                else:
+                    empty_segments+= 1
+
+        self.show_confirm_translation_window(valid_segments,mistake_segments,empty_segments)
+        
+
+    def show_confirm_translation_window(self, valid_segments, mistake_segments, empty_count):
+        boxes = [self._create_confirm_box(s) for s in mistake_segments]       # if they are already boxes, drop this
+        window = ConfirmationWindow(len(valid_segments), empty_count, boxes, self)
+
+        window.add_correct_requested.connect(
+            lambda: self.confirm_segments(valid_segments, mistake_segments, exclude_mistakes= True))
+        window.add_all_requested.connect(
+            lambda: self.confirm_segments(valid_segments, mistake_segments, exclude_mistakes= False))
+        window.finished.connect(lambda _: self._close_confirmation(window))
+
+        self.confirmation_Dialog = window          # keep a reference
+        window.open()                        # modal, doesn't block this call
+        
+        self.project_manager.update_translation_memory(valid_segments)
+
+    def _create_confirm_box(self, segment):
+        segment_box = segment.segment_box
+        sb =  SegmentBox(segment_box.spell_checker, segment_box.jp_dict, segment)
+        sb.check_spelling()
+        return sb
+    def confirm_segments(self, valid_segments, mistake_segments, exclude_mistakes = True):
+        to_add = []
+        if exclude_mistakes:
+            for segment in mistake_segments:
+                if segment.correct_spelling():
+                    to_add.append(segment)
+        else:
+            to_add = mistake_segments
+        added = self.project_manager.update_translation_memory(valid_segments + to_add)
+        if added:
+            for segment in valid_segments + to_add:
+                segment.set_confirmed(True)
+
+    def _close_confirmation(self, window):
+        window.close()
+
 
     def closeEvent(self, event):
 

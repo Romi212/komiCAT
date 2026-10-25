@@ -263,7 +263,7 @@ class SegmentBox(QWidget):
     def _on_text_area_focus(self, event):
         self.segment.show_focus(True)
         self.focused.emit(self.segment)
-        if not self._is_sfx():          # the horizontal layout has no spot for suggestions
+        if not self._is_sfx() and not self.segment.confirmed:          # the horizontal layout has no spot for suggestions
             self.suggestions.show_suggestions(self.get_japanese_text(), self.label._term_matches)
         QTextEdit.focusInEvent(self.text_area, event)
 
@@ -272,7 +272,7 @@ class SegmentBox(QWidget):
         self.segment.show_focus(False)
         
         QTextEdit.focusOutEvent(self.text_area, event)
-        self.segment.translation = self.get_translation()
+        self.segment.set_translation(self.get_translation())
         self.suggestions.setVisible(False)
         print(f"Updated translation for segment {self.segment.nro}: {self.segment.translation}")
         self.check_spelling() 
@@ -333,3 +333,11 @@ class SegmentBox(QWidget):
     def delete_self(self):
         self.drag_handle.setVisible(False)
         self.deleted.emit(self)
+
+    def correct_spelling(self):
+        return self.text_area.correct_spelling()
+
+    def update_translation(self, tl):
+        if self.get_translation() != tl:
+            self.text_area.setText(tl)
+        self.check_spelling()

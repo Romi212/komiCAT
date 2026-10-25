@@ -10,6 +10,7 @@ class Segment:
         self.head_index = segment_nro
         self.source_text = None
         self.translation = ""
+        self.confirmed = False
 
         self.text_box = None
         self.button = None
@@ -128,7 +129,13 @@ class Segment:
         self.text_box = text_box
         self.button = button
         button.set_segment(self)
-        
+
+    def set_translation(self, tl):
+        if self.translation  != tl:
+            self.set_confirmed(False)
+            self.translation = tl
+            if self.segment_box:
+                self.segment_box.update_translation(tl)
 
     def get_translation(self):
         if(self.nro == -1): 
@@ -160,3 +167,12 @@ class Segment:
 
     def equals(self, segment):
         return self.source_text == segment.source_text
+
+    def correct_spelling(self):
+        if not self.segment_box:
+            return False
+
+        return self.segment_box.correct_spelling()
+
+    def set_confirmed(self, confirmed):
+        self.confirmed = confirmed
