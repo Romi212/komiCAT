@@ -26,6 +26,8 @@ class Theme:
     scroll_handle: str
     scroll_handle_hover: str
     dict_word: str
+    surface_confirmed: str 
+    confirmed_badge: str
     # segment types: role -> (bg hex, bg alpha, border hex)
     segment_colors: dict = field(default_factory=dict)
 
@@ -51,17 +53,20 @@ DARK = Theme(
     accent="#6e2130", accent_hover="#8a2e40", accent_dim="#4a1620",
     term_highlight="#ffeb3b", term_highlight_alpha=140,
     dict_word= "#4791ca",
+    surface_confirmed = "#333a33",     # lighter, slightly greenish
+    confirmed_badge = "#3e7d4a",
     segment_colors={
-        "text_bubble": ("#c80000", 50, "#ff0000"),
-        "text_free":   ("#0000c8", 50, "#0000ff"),
-        "sfx":         ("#00c800", 50, "#00ff00"),
-    },
+            "text_bubble": ("#c80000", 50, "#ff0000"),
+            "text_free":   ("#0000c8", 50, "#0000ff"),
+            "sfx":         ("#00c800", 50, "#00ff00"),
+        },
+    
 )
 LIGHT = replace(DARK, name="Light",
     window="#f5f5f5", surface="#f9f9f9", input_bg="#ffffff", text="#222222",
     border="#cccccc", button_bg="#e2e2e2", button_bg_hover="#cccccc",
     popup_bg="#ffffff", popup_text="#222222",
-    scroll_handle="#b5b5b5", scroll_handle_hover="#8f8f8f")
+    scroll_handle="#b5b5b5", scroll_handle_hover="#8f8f8f",surface_confirmed="#e3efe3", confirmed_badge="#5aa469")
 # add more: replace(DARK, name="Ocean", accent="#1f5f8b", ...)  (dataclasses.replace)
 
 THEMES = {t.name: t for t in (DARK, LIGHT)}
@@ -178,6 +183,17 @@ def build_qss(t):
     QLabel#DragHandle:hover {{
         background-color: {t.scroll_handle_hover};
         color: {t.text};
+    }}
+    SegmentBox[confirmed="true"] {{
+        background-color: {t.surface_confirmed};
+        border: 1px solid {t.confirmed_badge};
+    }}
+    QLabel#confirmedBadge {{
+        background-color: {t.confirmed_badge};
+        color: #ffffff;
+        border-radius: 3px;
+        font-size: 11px;
+        font-weight: bold;
     }}
     QWidget#dictPopup {{  background-color: {t.popup_bg};
                         color: {t.popup_bg};

@@ -140,10 +140,16 @@ class SegmentBox(QWidget):
         self.number_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.number_badge.setFixedSize(24, 18)
 
+        self.confirmed_badge = QLabel("✓", self)
+        self.confirmed_badge.setObjectName("confirmedBadge")
+        self.confirmed_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.confirmed_badge.setFixedSize(24, 18)
+        self.confirmed_badge.hide()
+
         self.setLayout(main_layout)
         self._apply_layout()
         self.refresh_number()
-
+        self.refresh_confirmed()
 
     def _is_sfx(self):
         return self.segment.segment_type == SegmentType.SFX
@@ -190,17 +196,27 @@ class SegmentBox(QWidget):
             self.label.setStyleSheet(f"font-size: {self.text_size}px;")
 
     def refresh_type(self):
-        """Call when the segment type changes."""
         self._apply_layout()
 
     def refresh_number(self):
-        """Call after the segments are renumbered."""
         self.number_badge.setText(str(self.segment.nro))
+
+    def refresh_confirmed(self):
+        confirmed = bool(self.segment.confirmed)
+        self.setProperty("confirmed", confirmed)
+        self.confirmed_badge.setVisible(confirmed)
+        for w in (self, self.label, self.text_area):
+            w.style().unpolish(w)
+            w.style().polish(w)
+        self.update()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.number_badge.move(self.width() - self.number_badge.width() - 6, 6)
         self.number_badge.raise_()
+        self.confirmed_badge.move(self.width() - self.confirmed_badge.width() - 6,
+                              self.height() - self.confirmed_badge.height() - 6)
+        self.confirmed_badge.raise_()
 
 
     def set_prev_focus(self, segment):
@@ -296,6 +312,7 @@ class SegmentBox(QWidget):
         if not self.get_translation().strip():  # Only check if there's text
             return
         """Check spelling of the translation text and highlight misspelled words."""
+        self.text_area._reset_underlines()
         text = self.get_translation()
         misspelled_words = self.spell_checker.get_misspelled_words(text)
 

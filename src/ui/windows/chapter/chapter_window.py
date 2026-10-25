@@ -157,6 +157,7 @@ class ChapterWindow(QMainWindow):
         self.termbase_panel.activateWindow()
 
     def show_tm(self):
+            self.tm_panel.refresh_table()
             self.tm_panel.show()
             self.tm_panel.raise_()
             self.tm_panel.activateWindow()

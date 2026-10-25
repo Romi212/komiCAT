@@ -98,6 +98,7 @@ class Segment:
         
         return {
             "nro": self.nro,
+            "confirmed": self.confirmed,
             "panel": self.panel.nro,
             "bounds": {"xmin": self.text_box.xmin, "ymin": self.text_box.ymin, "xmax": self.text_box.xmax, "ymax": self.text_box.ymax},
             "label" : self.text_box.label,
@@ -108,6 +109,7 @@ class Segment:
     
     def load_data(self, data):
         self.nro = data["nro"]
+        self.confirmed = data.get("confirmed", False)
         print(data["panel"])
         self.panel = self.page.get_panel(data["panel"])
         self.panel.add_segment(self)
@@ -175,4 +177,7 @@ class Segment:
         return self.segment_box.correct_spelling()
 
     def set_confirmed(self, confirmed):
-        self.confirmed = confirmed
+        if(self.confirmed != confirmed):
+            self.confirmed = confirmed
+            self.segment_box.refresh_confirmed()
+        

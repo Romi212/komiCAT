@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QMenu,  QTextEdit
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QKeyEvent,  QTextCharFormat
+from PyQt6.QtGui import QKeyEvent,  QTextCharFormat, QTextCursor, QTextDocument
 
 class TranslationTextEdit(QTextEdit):
 
@@ -47,22 +47,54 @@ class TranslationTextEdit(QTextEdit):
 
         menu.exec(global_pos)
 
+    @staticmethod
+    def _no_underline(fmt):
+        fmt.setFontUnderline(False)
+        fmt.setUnderlineStyle(QTextCharFormat.UnderlineStyle.NoUnderline)
+        return fmt
+    def _reset_underlines(self):
+        """Set the whole document back to 'no underline' before re-marking."""
+        cursor = QTextCursor(self.document())
+        cursor.select(QTextCursor.SelectionType.Document)
+        cursor.mergeCharFormat(self._no_underline(QTextCharFormat()))
+
+    def _clear_underline(self, word):
+        """Remove the underline from every occurrence of `word` and forget it as misspelled."""
+        flags = (QTextDocument.FindFlag.FindCaseSensitively
+                 | QTextDocument.FindFlag.FindWholeWords)
+        fmt = self._no_underline(QTextCharFormat())
+
+        doc_cursor = QTextCursor(self.document())
+        doc_cursor.beginEditBlock()
+        found = self.document().find(word, 0, flags)
+        while not found.isNull():
+            found.mergeCharFormat(fmt)
+            found = self.document().find(word, found, flags)
+        doc_cursor.endEditBlock()
+
+        self.misspelled_words = [w for w in self.misspelled_words if w != word]
+
+    def add_misspelled_word(self, word):
+        self.misspelled_words.append(word)
+        
     def _replace_word(self, cursor, replacement):
         # Begin edit block for undo/redo history
+        old_word = cursor.selectedText().strip()
         cursor.beginEditBlock()
-        fmt = QTextCharFormat()
-        fmt.setFontUnderline(False) 
-        cursor.mergeCharFormat(fmt)
-        cursor.insertText(replacement)
+        fmt = self._no_underline(cursor.charFormat())   # keep font etc., drop underline
+        cursor.insertText(replacement, fmt)             # inserted text gets the clean format
         cursor.endEditBlock()
+        self.misspelled_words = [w for w in self.misspelled_words if w != old_word]
+
+    def _ignore_word(self, word):
+        # TODO: persist this (per chapter/project) and make the spell check skip these words
+        self.ignored_words.add(word.lower())
+        self._clear_underline(word)
 
     def _add_to_dictionary(self, word):
         if hasattr(self.spell_checker, 'add_custom_word'):
             self.spell_checker.add_custom_word(word)
-            # Optionally re-trigger parent check_spelling if available
-
-    def add_misspelled_word(self, word):
-        self.misspelled_words.append(word)
+        self._clear_underline(word)
 
     def correct_spelling(self):
         text = self.toPlainText().strip()
