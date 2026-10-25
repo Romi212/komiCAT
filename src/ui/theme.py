@@ -220,6 +220,15 @@ def build_qss(t):
                     padding: 8px 10px;
                     border-radius: 6px;
                 }}
+    QPushButton#acceptSuggestion {{
+        background-color: {t.accent};
+        color: #ffffff;
+        border: none;
+        border-radius: 3px;
+        padding: 1px 8px;
+        font-size: 10px;
+    }}
+    QPushButton#acceptSuggestion:hover {{ background-color: {t.accent_hover}; }}
                 
            
     """

@@ -105,7 +105,7 @@ class SegmentBox(QWidget):
         self.suggestions.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.suggestions.setMinimumHeight(5)
         self.suggestions.setVisible(False)  # Initially hidden
-
+        self.suggestions.accepted.connect(self._accept_suggestion)
         
         self.text_area = TranslationTextEdit(spell_checker=self.spell_checker)
         self.text_area.setPlainText(self.segment.translation)
@@ -153,7 +153,14 @@ class SegmentBox(QWidget):
 
     def _is_sfx(self):
         return self.segment.segment_type == SegmentType.SFX
-
+    
+    def _accept_suggestion(self, text):
+        self.text_area.setPlainText(text)       # textChanged adjusts the height
+        cursor = self.text_area.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.End)
+        self.text_area.setTextCursor(cursor)
+        self.text_area.setFocus()               # the user can edit right away
+        
     def _apply_layout(self):
         # takeAt removes the item from the layout without deleting the widget
         while self.body_layout.count():
