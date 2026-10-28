@@ -1,3 +1,4 @@
+import ctypes
 import sys
 
 from data_structure.app_config import AppConfig
@@ -9,11 +10,13 @@ from ui import theme
 from data_structure import app_config
 import sys, traceback, datetime
 from pathlib import Path
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import QApplication, QMessageBox
 from PyQt6.QtCore import QThreadPool, QEventLoop
 from PyQt6.QtWidgets import QProgressDialog, QMessageBox
 import first_run
 from storage.project_storage import ProjectStorage
+from storage.resources import get_image_path, IMG_ICON, IMG_PEEK
 from storage.process.background_worker import BackgroundWorker   # wherever your class lives
 from ui.controllers.launcher_controller import LauncherController
 
@@ -82,7 +85,12 @@ def handle_exception(exc_type, exc_value, exc_tb):
         box.exec()
 
 #sys.excepthook = handle_exception
+try:
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("Romi.KomiCAT")
+except Exception:
+    pass
 app = QApplication(sys.argv)
+
 if not run_setup(app):
     sys.exit(1)
 
@@ -92,11 +100,12 @@ def apply_theme(t):
 def main():
     first_run.load_config(app_config.config)
     storage = ProjectStorage()
+    app.setWindowIcon(QIcon(str(get_image_path(IMG_ICON))))
     app_config.config.load_data(storage.get_config_data())
     theme.theme_manager.set_theme(app_config.config.theme)
     apply_theme(theme.current())                              # apply at startup
     theme.theme_manager.theme_changed.connect(apply_theme)
-    launcher_window = LauncherWindow()
+    launcher_window = LauncherWindow(get_image_path(IMG_PEEK))
     launcher = LauncherController(launcher_window, storage)   # keep a reference
     launcher_window.show()
     sys.exit(app.exec())

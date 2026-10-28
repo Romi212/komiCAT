@@ -2,8 +2,9 @@ import lzma
 import os
 import tarfile
 from pathlib import Path
+from PyQt6.QtGui import QColor, QFontDatabase
+from storage.resources import resource, APP_FONT, DATA_DIR
 
-DATA_DIR = Path(os.environ["LOCALAPPDATA"]) / "KomiCAT"
 MODELS_DIR = DATA_DIR / "models"
 JAMDICT_DIR = Path.home() / ".jamdict" / "data"
 JAMDICT_DB = JAMDICT_DIR / "jamdict.db"
@@ -30,12 +31,20 @@ HUNSPELL_FILES = {
 
 def load_config(config):
     config_path = DATA_DIR / "config.json"
+    load_fonts()
     if not config_path.exists():
         config_path.parent.mkdir(parents=True, exist_ok=True)
         with open(config_path, "w", encoding="utf-8") as f:
             import json
             json.dump(config.get_data(), f, indent=4)
-    
+
+def load_fonts():
+    """Register the bundled font files. Must run after QApplication exists."""
+    for f in resource("assets/fonts").glob("*.ttf"):
+        if QFontDatabase.addApplicationFont(str(f)) == -1:
+            print(f"Could not load font {f.name}")
+    if APP_FONT not in QFontDatabase.families():
+        print(f"{APP_FONT} not found. Registered:", QFontDatabase.families())
 
 def missing_hunspell():
     return [n for n in HUNSPELL_FILES if not (HUNSPELL_DIR / n).exists()]

@@ -4,11 +4,67 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
     QHBoxLayout, QLabel, QMainWindow, QMessageBox, QPushButton, QVBoxLayout, QWidget,
 )
-
+from PyQt6.QtGui import QPixmap
+from PyQt6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QLabel, QWidget
+from PyQt6.QtCore import Qt
 from ui.windows.project.widgets.image_card import ImageCard      # adjust to where ImageCard lives
 
 CARD_COVER = (110, 155)
 
+class PeekPanel(QWidget):
+    """A bordered panel with a character peeking over its top edge."""
+
+    def __init__(self, image_path, title="Recent Projects", image_height=90,
+                 paw_overlap=10, right_margin=24, parent=None):
+        super().__init__(parent)
+
+        self.right_margin = right_margin
+
+        pix = QPixmap(str(image_path))
+        has_image = not pix.isNull()
+
+        # the layout leaves room above the panel for the image, minus the overlap
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, (image_height - paw_overlap) if has_image else 0, 0, 0)
+        outer.setSpacing(0)
+
+        self.panel = QFrame()
+        self.panel.setObjectName("recentPanel")
+        outer.addWidget(self.panel)
+
+        panel_layout = QVBoxLayout(self.panel)
+        panel_layout.setContentsMargins(16, 12, 16, 14)
+        panel_layout.setSpacing(10)
+
+        # ---- title, top left ----
+        self.title_label = QLabel(title)
+        self.title_label.setObjectName("recentTitle")
+        panel_layout.addWidget(self.title_label, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        # ---- cards row, centered: stretch | cards | stretch ----
+        row = QHBoxLayout()
+        row.addStretch(1)
+        self.content = QHBoxLayout()          # the launcher puts the cards in this layout
+        self.content.setSpacing(24)
+        row.addLayout(self.content)
+        row.addStretch(1)
+        panel_layout.addLayout(row)
+
+        # ---- character, child of this widget (not of the panel) ----
+        self.peek = QLabel(self)
+        self.peek.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.peek.setStyleSheet("background: transparent; border: none;")
+        if has_image:
+            self.peek.setPixmap(pix.scaledToHeight(
+                image_height, Qt.TransformationMode.SmoothTransformation))
+            self.peek.adjustSize()
+        else:
+            self.peek.hide()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.peek.move(self.width() - self.peek.width() - self.right_margin, 0)
+        self.peek.raise_()       
 
 class LauncherWindow(QMainWindow):
     create_requested = pyqtSignal()
@@ -17,7 +73,7 @@ class LauncherWindow(QMainWindow):
     recent_open_requested = pyqtSignal(str)       # project (.romi) path
     recent_remove_requested = pyqtSignal(str)
 
-    def __init__(self):
+    def __init__(self, image_path):
         super().__init__()
         self.setWindowTitle("KomiCAT")
         self.resize(560, 460)
@@ -48,10 +104,11 @@ class LauncherWindow(QMainWindow):
         root.addStretch(1)
 
         # ---- recent projects row ----
-        self.recent_host = QWidget()
-        self.recent_layout = QHBoxLayout(self.recent_host)
-        self.recent_layout.setSpacing(24)
-        root.addWidget(self.recent_host, alignment=Qt.AlignmentFlag.AlignHCenter)
+        # ---- recent projects panel with Komi peeking ----
+        self.peek_panel = PeekPanel(image_path, title="Recent Projects",
+                            image_height=90, paw_overlap=5, right_margin=24)
+        self.recent_layout = self.peek_panel.content        # set_recents keeps working as is
+        root.addWidget(self.peek_panel)
         root.addStretch(1)
 
         # ---- status ----
@@ -78,7 +135,7 @@ class LauncherWindow(QMainWindow):
         self.status_label.setText(text)
 
     def set_busy(self, busy: bool):
-        for w in (self.create_button, self.load_button, self.recent_host):
+        for w in (self.create_button, self.load_button, self.peek_panel.panel):
             w.setEnabled(not busy)
 
     def set_recents(self, entries):

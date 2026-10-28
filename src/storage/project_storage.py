@@ -1,6 +1,7 @@
 # data_structure/project_storage.py  (or a storage/ package)
 import json, re, shutil
 from pathlib import Path
+import sys
 from PIL import Image
 from first_run import DATA_DIR
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".gif"}
@@ -15,7 +16,7 @@ class ProjectStorage:
     SHARED_DIR = "shared"
     TRANSLATION_MEMORY = SHARED_DIR + "/translation_memory.db"
     CHAPTERS_DIR = "chapters"
-
+    
     def __init__(self):
         self.project_root = None
 
@@ -25,6 +26,7 @@ class ProjectStorage:
     # -------- generic methods --------
     def resolve(self, relative_path):
             return self.project_root / relative_path
+    
     
     def write_json(self, relative_path, data, app_data=False):
         root = self.project_root if not app_data else DATA_DIR

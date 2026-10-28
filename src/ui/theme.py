@@ -3,6 +3,10 @@ from dataclasses import dataclass, field, replace
 from PyQt6.QtGui import QColor
 from PyQt6.QtCore import QObject, pyqtSignal, QSettings
 
+from storage.resources import APP_FONT
+APP_FONT_CSS = f'"{APP_FONT}", "Yu Gothic UI", "Meiryo UI", "Segoe UI", sans-serif'
+
+
 @dataclass(frozen=True)
 class Theme:
     name: str
@@ -94,7 +98,7 @@ def current(): return theme_manager.theme
 def build_qss(t):
     return f"""
     QMainWindow, QDialog {{ background-color: {t.window}; }}
-    QWidget {{ color: {t.text}; }}
+    QWidget {{ color: {t.text}; font-family: {APP_FONT_CSS}; }}
     QPushButton#coverButton {{
         border: 1px solid {t.border};
         border-radius: 4px;
@@ -102,6 +106,18 @@ def build_qss(t):
         padding: 0;
         }}
     QPushButton#coverButton:hover {{ border: 2px solid {t.accent}; }}
+    QFrame#recentPanel {{
+        background-color: {t.surface};
+        border: 2px solid {t.border};
+        border-radius: 10px;
+    }}
+    QLabel#recentTitle {{
+        font-size: 10pt;
+        font-weight: bold;
+        color: {t.text};
+        background: transparent;
+        border: none;
+    }}
     QPushButton#prefsButton {{
         background-color: transparent;
         color: {t.text};

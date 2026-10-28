@@ -9,7 +9,7 @@ import sys
 def resource(rel):
     base = getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent)
     return Path(base) / rel
-
+#TODO sacar d aca, ya ta en storage
 class SpellChecker:
     def __init__(self, language='es', termbase = None):
         self.language = language
