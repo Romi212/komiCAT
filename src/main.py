@@ -94,8 +94,7 @@ app = QApplication(sys.argv)
 if not run_setup(app):
     sys.exit(1)
 
-def apply_theme(t):
-    app.setStyleSheet(theme.build_qss(t))
+
 
 def main():
     first_run.load_config(app_config.config)
@@ -103,8 +102,7 @@ def main():
     app.setWindowIcon(QIcon(str(get_image_path(IMG_ICON))))
     app_config.config.load_data(storage.get_config_data())
     theme.theme_manager.set_theme(app_config.config.theme)
-    apply_theme(theme.current())                              # apply at startup
-    theme.theme_manager.theme_changed.connect(apply_theme)
+    theme.apply(app)                             # apply at startup
     launcher_window = LauncherWindow(get_image_path(IMG_PEEK))
     launcher = LauncherController(launcher_window, storage)   # keep a reference
     launcher_window.show()

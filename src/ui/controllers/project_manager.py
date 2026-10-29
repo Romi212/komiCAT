@@ -10,6 +10,21 @@ from PyQt6.QtWidgets import QDialog
 from PyQt6.QtCore import Qt
 from ui.windows.tools.termbase_panel import TermbasePanel
 from ui.windows.tools.translation_memory_panel import TranslationMemoryPanel
+from errors import KomiError
+from ui.windows.error_window import ErrorWindow
+
+import functools, logging
+logger = logging.getLogger(__name__)
+
+def handle_errors(func):
+    @functools.wraps(func)
+    def wrapper(self, *args, **kwargs):
+        try:
+            return func(self, *args, **kwargs)
+        except KomiError as e:
+            logger.warning("%s failed", func.__name__, exc_info=True)
+            ErrorWindow.show_error(self.project_window, e)
+    return wrapper
 
 class ProjectManager():
     def __init__(self, project, loader, text_extractor):
@@ -31,7 +46,8 @@ class ProjectManager():
     def get_thubnail_path(self,chapter):
         print(self.storage.get_image_path(chapter))
         return self.storage.get_image_path(chapter)
-    
+
+    @handle_errors
     def add_chapter(self):
         create_chapter_window = CreateChapterWindow(existing_numbers=[c.number for c in self.project.chapters])
         data = create_chapter_window.exec()
@@ -43,7 +59,7 @@ class ProjectManager():
             self.create_chapter_window(chapter)
             self.project_window.refresh()
         return None
-
+    
     def create_project_chapter(self, project_data):
         number = project_data["number"]
         chapter = self.create_chapter_object(project_data["name"], number)
@@ -59,19 +75,20 @@ class ProjectManager():
         chapter.spell_checker = self.project.spell_checker
         chapter.jp_dict = self.project.jp_dict
         return chapter
-    
+
+    @handle_errors
     def delete_chapter(self, chapter):
         self.project.remove_chapter(chapter)
         self.loader.save_project(self.project)               
         #self.storage.delete_chapter_folder(chapter.id)     
         self.project_window.refresh()    
-
+    @handle_errors
     def rename_chapter(self, chapter, new_name):
         chapter.name = new_name
         self.project.update_chapter(chapter)
         self.loader.save_project(self.project) 
         self.project_window.refresh()
-
+    @handle_errors
     def open_chapter(self, chapter_Entry):
         window = self.open_chapters.get(chapter_Entry.number)
         
@@ -114,7 +131,7 @@ class ProjectManager():
         tm_panel.show()
         tm_panel.raise_()
         tm_panel.activateWindow()
-
+    @handle_errors
     def edit_project_info(self, data, cover_path):
         if cover_path:
             self.loader.store_new_cover(cover_path)

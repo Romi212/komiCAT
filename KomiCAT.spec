@@ -3,7 +3,7 @@ from PyInstaller.utils.hooks import collect_data_files
 from PyInstaller.utils.hooks import collect_all
 from PyInstaller.utils.hooks import copy_metadata
 
-datas = [('src/resources/dicts', 'resources/dicts')]
+datas = [('src/resources', 'resources')]
 binaries = []
 hiddenimports = []
 datas += collect_data_files('symspellpy')
@@ -74,6 +74,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=['src/resources/images/icon/komi-chan.ico'],
 )
 coll = COLLECT(
     exe,

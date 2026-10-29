@@ -118,6 +118,33 @@ def build_qss(t):
         background: transparent;
         border: none;
     }}
+    QLabel#errorBubbleText {{
+        color: {t.text};
+        font-family: "Rampart One", {APP_FONT_CSS};
+        font-size: 20pt;
+        font-weight: bold;
+        background: transparent;
+        border: none;
+    }}
+    QFrame#errorPanel {{
+        background-color: {t.surface};
+        border: 2px solid {t.border};
+        border-radius: 10px;
+    }}
+    QLabel#errorMessage {{
+        color: #e5534b;
+        font-weight: bold;
+        background: transparent;
+        border: none;
+    }}
+    QLabel#errorSolution {{
+        color: {t.text};
+        background: transparent;
+        border: none;
+    }}
+    QPushButton#errorOkButton {{
+        padding: 6px 24px;
+    }}
     QPushButton#prefsButton {{
         background-color: transparent;
         color: {t.text};
@@ -250,5 +277,8 @@ def build_qss(t):
     """
 
 def apply(app):
+    font = app.font()
+    font.setPointSize(11)          # or font.setPixelSize(16)
+    app.setFont(font)
     app.setStyleSheet(build_qss(current()))
     theme_manager.theme_changed.connect(lambda t: app.setStyleSheet(build_qss(t)))

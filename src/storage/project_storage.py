@@ -4,6 +4,7 @@ from pathlib import Path
 import sys
 from PIL import Image
 from first_run import DATA_DIR
+from errors import ProjectCorruptedError,ProjectError,ProjectNotFoundError,ProjectSaveError, ConfigError, ImageError
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".gif"}
 
 
@@ -38,7 +39,17 @@ class ProjectStorage:
 
     def read_json(self, relative_path, app_data=False):
         root = self.project_root if not app_data else DATA_DIR
-        return json.loads((root / relative_path).read_text(encoding="utf-8"))
+        path = root / relative_path
+        try:
+             return json.loads((path).read_text(encoding="utf-8"))
+        except FileNotFoundError as e:
+            raise ProjectNotFoundError(f"Missing {path}", user_message="File not found.",
+                                    solution="Check that the project folder wasn't moved or deleted.") from e
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            raise ProjectCorruptedError(f"Bad JSON in {path}: {e}", user_message="The project file is corrupted.",
+                                        solution="Restore a backup copy if you have one.") from e
+        except OSError as e:
+            raise ProjectError(f"Cannot read {path}: {e}", user_message="Could not read the file.") from e
 
     def store_image(self, src_path, subfolder, new_name=None):
         """Copy an image into root/subfolder unchanged. Returns the relative path."""
@@ -114,7 +125,10 @@ class ProjectStorage:
             (self.resolve(path)).mkdir(parents=True, exist_ok=True)
 
     def get_custom_words(self):
-        return self.read_json(self.SHARED_DIR+"/custom_words.json")
+        path = self.SHARED_DIR + "/custom_words.json"
+        if not (self.project_root / path).exists():
+            return {"custom_words": {"es":[],"en":[]}, "ignore_words": []}
+        return self.read_json(path)
     
     # ---- Chapter-wide methods ----
     def store_chapter_images(self, chapter_id, image_paths, start_at=1):

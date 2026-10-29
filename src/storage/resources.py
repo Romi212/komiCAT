@@ -14,6 +14,7 @@ DICT_DIR = "resources/dicts/"
 
 IMG_ICON = "icon/komi-chan.png"
 IMG_PEEK = "komi-peek.png"
+IMG_ERROR = "komi-error.png"
 
 APP_FONT = "Zen Kaku Gothic Antique"
 def resource(rel):
