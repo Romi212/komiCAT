@@ -1,6 +1,6 @@
 import ctypes
 import sys
-
+import logging, threading
 from data_structure.app_config import AppConfig
 from ui.windows.launcher_window import LauncherWindow
 from ui.windows.chapter.chapter_window import ChapterWindow
@@ -19,8 +19,15 @@ from storage.project_storage import ProjectStorage
 from storage.resources import get_image_path, IMG_ICON, IMG_PEEK
 from storage.process.background_worker import BackgroundWorker   # wherever your class lives
 from ui.controllers.launcher_controller import LauncherController
+from errors import KomiError
+from ui.windows.error_window import ErrorWindow
 
 LOG_FILE = Path.home() / "komicat_error.log"
+logging.basicConfig(
+    filename=LOG_FILE, encoding="utf-8", level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
+logger = logging.getLogger("komicat")
 
 def run_setup(app):
     
@@ -60,31 +67,40 @@ def run_setup(app):
             f"Could not download the required files:\n{result['error']}\n\n"
             "Check your connection and restart.")
     return result["ok"]
+def as_komi_error(exc):
+    """Any exception -> KomiError (KomiErrors pass through unchanged)."""
+    if isinstance(exc, KomiError):
+        return exc
+    err = KomiError(
+        f"{type(exc).__name__}: {exc}",
+        user_message=f"Something unexpected went wrong.\n({type(exc).__name__}: {exc})",
+        solution=f"The details were saved to {LOG_FILE}. Please send me that file.",
+    )
+    err.__cause__ = exc          # keeps the original in the chain
+    return err
+
+_handling = False
 
 def handle_exception(exc_type, exc_value, exc_tb):
+    global _handling
     if issubclass(exc_type, KeyboardInterrupt):
         sys.__excepthook__(exc_type, exc_value, exc_tb)
         return
 
-    text = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
+    # log the ORIGINAL exception with its real traceback, before converting
+    logger.critical("Uncaught exception", exc_info=(exc_type, exc_value, exc_tb))
 
-    # 1. always write to a log file, so nothing is lost
+    if _handling or not QApplication.instance():
+        return
+    _handling = True
     try:
-        with open(LOG_FILE, "a", encoding="utf-8") as f:
-            f.write(f"\n--- {datetime.datetime.now()} ---\n{text}")
-    except OSError:
-        pass
-
-    # 2. show it on screen (only if the app exists)
-    if QApplication.instance():
-        box = QMessageBox()
-        box.setIcon(QMessageBox.Icon.Critical)
-        box.setWindowTitle("KomiCAT - unexpected error")
-        box.setText("Something went wrong. Please send me the log file:\n" + str(LOG_FILE))
-        box.setDetailedText(text)          # expandable "Show Details" with the traceback
-        box.exec()
-
-#sys.excepthook = handle_exception
+        ErrorWindow.show_error(None, as_komi_error(exc_value), get_image_path(IMG_ERROR))
+    except Exception:
+        logger.exception("Failed to show the error dialog")
+        QMessageBox.critical(None, "KomiCAT", f"Unexpected error. See {LOG_FILE}")   # last resort
+    finally:
+        _handling = False
+sys.excepthook = handle_exception
 try:
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("Romi.KomiCAT")
 except Exception:
@@ -103,6 +119,7 @@ def main():
     app_config.config.load_data(storage.get_config_data())
     theme.theme_manager.set_theme(app_config.config.theme)
     theme.apply(app)                             # apply at startup
+
     launcher_window = LauncherWindow(get_image_path(IMG_PEEK))
     launcher = LauncherController(launcher_window, storage)   # keep a reference
     launcher_window.show()

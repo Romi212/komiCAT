@@ -32,10 +32,16 @@ class ProjectStorage:
     def write_json(self, relative_path, data, app_data=False):
         root = self.project_root if not app_data else DATA_DIR
         path = root / relative_path
-        path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_name(path.name + ".tmp")
-        tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
-        tmp.replace(path)
+        try:
+            text = json.dumps(data, indent=2, ensure_ascii=False)   # serialize first
+            path.parent.mkdir(parents=True, exist_ok=True)
+            tmp.write_text(text, encoding="utf-8")
+            tmp.replace(path)
+        except (OSError, TypeError, ValueError) as e:
+            tmp.unlink(missing_ok=True)                             # don't leave .tmp litter
+            raise ProjectSaveError(f"Cannot write {path}: {e}", user_message="Could not save the file.",
+                                solution="Check free disk space and folder permissions.") from e
 
     def read_json(self, relative_path, app_data=False):
         root = self.project_root if not app_data else DATA_DIR
