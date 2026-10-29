@@ -121,8 +121,8 @@ class TextViewer(QWidget):
     def load_chapter(self, chapter):
         self.chapter = chapter
         print(f"language: {chapter.language}")
-        self.spell_checker = SpellChecker(language=chapter.language, termbase=self.chapter.get_termbase())  # Initialize the spell checker for Spanish
-        self.jp_dict = JPDictionary()
+        self.spell_checker = chapter.spell_checker
+        self.jp_dict = chapter.jp_dict
         
         for page in chapter.pages:
             page_container = self._create_page_container(page)

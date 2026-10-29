@@ -2,6 +2,8 @@ from ui.windows.chapter.chapter_window import ChapterWindow
 from ui.windows.chapter.create_chapter_window import CreateChapterWindow
 from data_structure.chapter import Chapter
 from data_structure.page import Page
+from CATtools.spell_checker import SpellChecker
+from CATtools.jp_dictionaries import JPDictionary
 from storage.project_storage import safe_name
 from ui.windows.project.project_window import ProjectWindow
 from PyQt6.QtWidgets import QDialog
@@ -44,14 +46,20 @@ class ProjectManager():
 
     def create_project_chapter(self, project_data):
         number = project_data["number"]
-        chapter = Chapter(self.project,self.project.series_name, project_data["name"], number, self.project.target_language)
-        chapter.termbase = self.project.termbase
-        chapter.translation_memory = self.project.translation_memory
+        chapter = self.create_chapter_object(project_data["name"], number)
         relative_path = self.project.add_chapter(chapter)
         self.storage.add_chapter(self.storage.chapter_dir(relative_path))
         self.storage.write_json(f"{safe_name(self.project.project_name)}.romi", self.project.get_data())
         return chapter
 
+    def create_chapter_object(self, name, number):
+        chapter = Chapter(self.project,self.project.series_name, name, number, self.project.target_language)
+        chapter.termbase = self.project.termbase
+        chapter.translation_memory = self.project.translation_memory
+        chapter.spell_checker = self.project.spell_checker
+        chapter.jp_dict = self.project.jp_dict
+        return chapter
+    
     def delete_chapter(self, chapter):
         self.project.remove_chapter(chapter)
         self.loader.save_project(self.project)               
@@ -78,7 +86,9 @@ class ProjectManager():
             window.raise_()
             window.activateWindow()
             return
-        chapter = self.loader.load_chapter(self.project, chapter_Entry)
+
+        chapter = self.create_chapter_object(chapter_Entry.name, chapter_Entry.number)
+        chapter = self.loader.load_chapter( chapter)
         window = self.create_chapter_window(chapter)
         
 

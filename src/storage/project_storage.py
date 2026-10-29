@@ -112,6 +112,9 @@ class ProjectStorage:
     def add_chapter(self, path):
             # Make dir in resolve_path(path)
             (self.resolve(path)).mkdir(parents=True, exist_ok=True)
+
+    def get_custom_words(self):
+        return self.read_json(self.SHARED_DIR+"/custom_words.json")
     
     # ---- Chapter-wide methods ----
     def store_chapter_images(self, chapter_id, image_paths, start_at=1):

@@ -41,7 +41,8 @@ class TranslationTextEdit(QTextEdit):
             no_sugg.setEnabled(False)
 
         menu.addSeparator()
-        # Option to ignore or add to dictionary dynamically
+        ignore_action = menu.addAction("Ignore spelling")
+        ignore_action.triggered.connect(lambda: self._ignore_word(word))
         add_dict_action = menu.addAction(f"Add '{word}' to dictionary")
         add_dict_action.triggered.connect(lambda: self._add_to_dictionary(word))
 
@@ -87,8 +88,7 @@ class TranslationTextEdit(QTextEdit):
         self.misspelled_words = [w for w in self.misspelled_words if w != old_word]
 
     def _ignore_word(self, word):
-        # TODO: persist this (per chapter/project) and make the spell check skip these words
-        self.ignored_words.add(word.lower())
+        self.spell_checker.ignore_word(word)
         self._clear_underline(word)
 
     def _add_to_dictionary(self, word):

@@ -9,7 +9,6 @@ from ui.windows.project.create_project_window import CreateProjectWindow
 from ui.windows.chapter.image_area_widgets.image_viewer import ImageViewer
 from storage.project_loader import ProjectLoader
 from ui.windows.chapter.text_area_widgets.text_viewer import TextViewer
-from data_structure.chapter import Chapter
 from ui.windows.chapter.text_area_widgets.segment_box import SegmentBox
 from ui.windows.tools.termbase_panel import TermbasePanel
 from ui.windows.tools.translation_memory_panel import TranslationMemoryPanel

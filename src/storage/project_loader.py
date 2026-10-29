@@ -14,6 +14,8 @@ from PIL import Image
 
 from data_structure.project import ChapterEntry, Project
 from storage.project_storage import  safe_name
+from CATtools.spell_checker import SpellChecker
+from CATtools.jp_dictionaries import JPDictionary
 
 
 SCHEMA_VERSION = 1
@@ -48,6 +50,8 @@ class ProjectLoader:
                         name=project_data["project_name"], source_language = project_data["source_language"], target_language=project_data["target_language"])
         project.termbase = Termbase(project_data["source_language"], project_data["target_language"])
         project.translation_memory = TranslationMemoryDB(self.storage.resolve(self.storage.TRANSLATION_MEMORY))
+        project.spell_checker = SpellChecker(language=project.target_language, termbase=project.termbase)        
+        project.jp_dict = JPDictionary()
         cover_src = project_data.get("cover_path")
         project.cover = self.store_new_cover(cover_src)
         self.save_project(project)
@@ -85,21 +89,27 @@ class ProjectLoader:
         project.termbase = Termbase(project.source_language, project.target_language)
         project.termbase.load_data(termbase_data)
         project.translation_memory = TranslationMemoryDB(self.storage.resolve(self.storage.TRANSLATION_MEMORY))
+        project.spell_checker = SpellChecker(language=project.target_language, termbase=project.termbase)        
+        project.jp_dict = JPDictionary()
+        custom_words = self.storage.get_custom_words()
+        project.spell_checker.load_custom_words(custom_words["custom_words"].get(project.target_language))
+        project.spell_checker.load_ignore_words(custom_words["ignore_words"])
 
 
-    def load_chapter(self, project, chapter):
+    def load_chapter(self,  chapter):
          rel_path = Path(self.storage.CHAPTERS_DIR) / chapter.path / f"{self.CHAPTER_DATA}.json"
          chapter_data = self.storage.read_json(rel_path)
-         loaded_chapter = Chapter(project,project.series_name, chapter.name, chapter.number, project.target_language)
-         loaded_chapter.load_chapter(chapter_data)
-         loaded_chapter.termbase = project.termbase
-         loaded_chapter.translation_memory = project.translation_memory
-         return loaded_chapter
+        
+         chapter.load_chapter(chapter_data)
+         
+         return chapter
          
     def save_project(self, project):
         print("Saving project...")
         self.storage.write_json(f"{safe_name(project.project_name)}.romi", project.get_data())
         self.storage.write_json("shared/termbase.json", {"schema_version": 1, **project.termbase.get_data()})
+        self.storage.write_json("shared/custom_words.json", project.spell_checker.get_data())
+        
         
             
     def save_chapter(self, chapter):

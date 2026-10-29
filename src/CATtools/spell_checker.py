@@ -1,31 +1,27 @@
 import os
 import re
 from symspellpy import SymSpell, Verbosity
-from first_run import DICTS_DIR, DICT_CHECK_FILE, dictionary_file
+from first_run import  dictionary_file
 from spylls.hunspell import Dictionary
-from pathlib import Path
-import sys
+from storage.resources import get_dictionary
 
-def resource(rel):
-    base = getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent)
-    return Path(base) / rel
-#TODO sacar d aca, ya ta en storage
+
 class SpellChecker:
     def __init__(self, language='es', termbase = None):
         self.language = language
         self.termbase = termbase
         self.sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
 
+        self.custom_words = set()      # stored lowercase
+        self.ignore_words = set()
         path = dictionary_file(language)
         if not path.exists():
             raise FileNotFoundError(f"No {language} dictionary at {path}")
         self.sym_spell.load_dictionary(str(path), term_index=0, count_index=1)
 
-        self.hunspell = Dictionary.from_files( str(resource(f"resources/dicts/{self.language}")))   # no extension
+        self.hunspell = Dictionary.from_files( str(get_dictionary(self.language)))   
 
 
-
-        
         print(f"SpellChecker initialized for language: {language}")
         trial = "escrivo mal a proposito aver que paza"
         print(f"Checking spelling for: '{trial}'")
@@ -46,7 +42,9 @@ class SpellChecker:
         # Ignore numbers or single characters
         if word.isdigit() or len(word) <= 1:
             return True
-        
+
+        if word in self.ignore_words:
+            return True
         # Exact match check in dictionary
         suggestions = self.sym_spell.lookup(
             word.lower(), 
@@ -71,22 +69,52 @@ class SpellChecker:
 
     def get_suggestions(self, word: str, max_suggestions: int = 5) -> list[str]:
         """Returns a list of suggested corrections for a misspelled word."""
-
         
-        suggestions = self.sym_spell.lookup(
-            word.lower(),
-            Verbosity.CLOSEST,
-            max_edit_distance=2,
-            transfer_casing=True # Preserves initial capitals if present
-        )
-        suggestions = [item.term for item in suggestions[:max_suggestions]]
+        suggestions = []
         closest = self.termbase.find_closest_target(word, max_distance=2)
         if closest:
             suggestions.insert(0,closest)
-        
-        return suggestions
 
-    def add_custom_word(self, word: str, frequency: int = 1000):
+        for s in self.hunspell.suggest(word):
+            if s not in suggestions:
+                suggestions.append(s)
+            if len(suggestions) >= max_suggestions + 2:     # collect a few extra to rank
+                break
+
+        # 3. SymSpell only fills gaps
+        if len(suggestions) < max_suggestions:
+            for item in self.sym_spell.lookup(word.lower(), Verbosity.CLOSEST,
+                                            max_edit_distance=2, transfer_casing=True):
+                if item.term not in suggestions:
+                    suggestions.append(item.term)
+
+        return suggestions[:max_suggestions]
+
+    def add_custom_word(self, word, frecuency= 1000):
+        self.custom_words.add(word.lower())
+        self.add_custom_word_to_libraries(word)
+
+    def ignore_word(self, word):
+        self.ignore_words.add(word.lower())
+
+    def add_custom_word_to_libraries(self, word: str, frequency: int = 1000):
         """Add character names or Manga slang dynamically to memory."""
         self.sym_spell.create_dictionary_entry(word.lower(), frequency)
-   
+
+
+    def load_custom_words(self, custom_words):
+        for word in custom_words:
+            self.add_custom_word(word)
+
+    def load_ignore_words(self, ignore_words):
+        for w in ignore_words:
+            self.ignore_word(w)
+
+
+    def get_data(self):
+        return {
+            "ignore_words": [w for w in self.ignore_words],
+            "custom_words": {
+                self.language : [w for w in self.custom_words],
+            }
+        }
