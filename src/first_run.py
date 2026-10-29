@@ -3,7 +3,7 @@ import os
 import tarfile
 from pathlib import Path
 from PyQt6.QtGui import QColor, QFontDatabase
-from storage.resources import resource, APP_FONT, DATA_DIR
+from storage.resources import resource, APP_FONT, DATA_DIR, FONT_DIR
 
 MODELS_DIR = DATA_DIR / "models"
 JAMDICT_DIR = Path.home() / ".jamdict" / "data"
@@ -40,7 +40,7 @@ def load_config(config):
 
 def load_fonts():
     """Register the bundled font files. Must run after QApplication exists."""
-    for f in resource("assets/fonts").glob("*.ttf"):
+    for f in resource(FONT_DIR).glob("*.ttf"):
         if QFontDatabase.addApplicationFont(str(f)) == -1:
             print(f"Could not load font {f.name}")
     if APP_FONT not in QFontDatabase.families():

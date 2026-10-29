@@ -9,6 +9,7 @@ IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".gif"}
 
 DATA_DIR = Path(os.environ["LOCALAPPDATA"]) / "KomiCAT"
 IMAGES_DIR = "resources/images/"
+FONT_DIR = "resources/fonts/"
 DICT_DIR = "resources/dicts/"
 
 IMG_ICON = "icon/komi-chan.png"
