@@ -7,7 +7,7 @@ from PyQt6.QtGui import QFont, QPixmap, QImage, QColor, QPen, QIcon
 from PyQt6.QtCore import QRectF, Qt, QSize, QRect, pyqtSignal
 from PIL import Image
 import os
-
+from ui.windows.loading_panel import run_with_loading
 from ui.windows.chapter.image_area_widgets.text_box_rect import TextBoxRect
 from CATtools.text_extractor import TextExtractor
 from data_structure.text_box import TextBox
@@ -27,7 +27,7 @@ class ImageViewer(QWidget):
         self.edit_menu = None
         
         self.zoom_factor = 1.0
-        
+        self._busy = False
         # Setup UI
         self.init_ui()
         
@@ -285,48 +285,11 @@ class ImageViewer(QWidget):
             
     
     
-    def detect_bubbles(self):
-        
-        if self.current_page and not self.current_page.has_been_processed:
-            current_image = self.current_page.image
-            
-            detected_panels = self.text_extractor.detect_panels(current_image)
-            
-            detected_bubbles, detected_text_bubbles, detected_free_text = \
-                            self.text_extractor.detect_speech_bubbles(current_image)
-
-            #Stores everything in current page and sorts them
-            self.current_page.store_detected_bubbles(detected_bubbles, detected_text_bubbles, detected_free_text, detected_panels)
+   
 
     def extract_text(self):
         if self._finish_editing_mode():
-            segments = self.current_page.get_segments_to_extract(all_segments = True)
-            for segment in segments:        
-                text_box = segment.text_box
-                self.text_extractor.extract_text(self.current_page.image,[text_box])
-                segment.has_been_extracted()
-
-            self.controller.extracted(self.current_page, segments)
-
-
-            """else:
-                #Updates actual coordinates if button was moved by user
-                for button in self.selected_bubbles:
-
-                    scene_rect = button.mapToScene(button.rect()).boundingRect()
-
-                    button.text_box.xmin = scene_rect.left()
-                    button.text_box.ymin = scene_rect.top()
-                    button.text_box.xmax = scene_rect.right()
-                    button.text_box.ymax = scene_rect.bottom()
-
-                #Extracts texts and stores it directly in text_boxes        
-                self.text_extractor.extract_text(
-                    self.current_page.image,
-                    [button.text_box for button in self.selected_bubbles]
-                )
-                self.controller.extracted(self.current_page,self.selected_bubbles)
-                self.selected_bubbles = []  # Clear selection after extraction"""
+            self.controller.extract_text_from_pages([self.current_page])
 
     def clear_selection(self):
         for button in self.selected_bubbles:
@@ -371,26 +334,17 @@ class ImageViewer(QWidget):
 
     def detect_all_pages(self):
         self.detect_bubbles_button.setDisabled(True)
-        for page in self.chapter.pages:
-            self.current_page = page
-            self.detect_bubbles()
-        self.current_page = self.chapter.get_current_page()
-        self._setup_page()
+        self.controller.detect_bubbles_from_pages(self.chapter.pages)
+        
         
         
 
     def detect_page_bubbles(self):
-        if self.current_page:
-            self.detect_bubbles()
-            self._setup_page()
+        self.controller.detect_bubbles_from_pages([self.current_page])
 
     def batch_extract_text(self):
         if self._finish_editing_mode():
-            for page in self.chapter.pages:
-                self.current_page = page
-                self.extract_text()
-            self.current_page = self.chapter.get_current_page()
-            self._setup_page()
+            self.controller.extract_text_from_pages(self.chapter.pages)
 
 
     def add_segment(self):

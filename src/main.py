@@ -16,7 +16,7 @@ from PyQt6.QtCore import QThreadPool, QEventLoop
 from PyQt6.QtWidgets import QProgressDialog, QMessageBox
 import first_run
 from storage.project_storage import ProjectStorage
-from storage.resources import get_image_path, IMG_ICON, IMG_PEEK
+from storage.resources import get_image_path, IMG_ICON, IMG_PEEK, IMG_ERROR
 from storage.process.background_worker import BackgroundWorker   # wherever your class lives
 from ui.controllers.launcher_controller import LauncherController
 from errors import KomiError
@@ -94,7 +94,7 @@ def handle_exception(exc_type, exc_value, exc_tb):
         return
     _handling = True
     try:
-        ErrorWindow.show_error(None, as_komi_error(exc_value), get_image_path(IMG_ERROR))
+        ErrorWindow.show_error(None, as_komi_error(exc_value))
     except Exception:
         logger.exception("Failed to show the error dialog")
         QMessageBox.critical(None, "KomiCAT", f"Unexpected error. See {LOG_FILE}")   # last resort

@@ -68,7 +68,7 @@ class TextExtractor:
         for bubble in bubbles:
             cropped_image = image.crop((bubble.xmin, bubble.ymin, bubble.xmax, bubble.ymax))
             bubble.text = self.mocr(cropped_image)
-            print(bubble.text)
+            
         return bubbles
     
     def detect_speech_bubbles(self, image):
@@ -91,7 +91,7 @@ class TextExtractor:
                     detected_free_text.append(text_box)
                 else:
                     detected_bubbles.append(text_box)
-                print(f"Detected {label} with confidence {score:.2f} at ({box['xmin']}, {box['ymin']}, {box['xmax']}, {box['ymax']})")
+               # print(f"Detected {label} with confidence {score:.2f} at ({box['xmin']}, {box['ymin']}, {box['xmax']}, {box['ymax']})")
         return detected_bubbles, detected_text_bubbles, detected_free_text
     
 
@@ -115,5 +115,5 @@ class TextExtractor:
             if cls == 0:
                 text_box = TextBox(xmin, xmax, ymin, ymax, "panel")
                 detected_panels.append(text_box)
-                print(f"Detected panel at ({xmin}, {ymin}, {xmax}, {ymax}) w conf {conf}")
+               # print(f"Detected panel at ({xmin}, {ymin}, {xmax}, {ymax}) w conf {conf}")
         return detected_panels

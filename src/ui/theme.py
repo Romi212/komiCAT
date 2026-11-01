@@ -105,6 +105,7 @@ def build_qss(t):
         background-color: {t.input_bg};
         padding: 0;
         }}
+    QWidget#loadingOverlay {{ background-color: rgba(0, 0, 0, 120); }}
     QPushButton#coverButton:hover {{ border: 2px solid {t.accent}; }}
     QFrame#recentPanel {{
         background-color: {t.surface};

@@ -13,7 +13,8 @@ from ui.windows.chapter.text_area_widgets.segment_box import SegmentBox
 from ui.windows.tools.termbase_panel import TermbasePanel
 from ui.windows.tools.translation_memory_panel import TranslationMemoryPanel
 from ui.windows.chapter.confirmation_window import ConfirmationWindow
-
+from ui.windows.loading_panel import LoadingOverlay, run_with_loading
+from errors import OCRError
 class ChapterWindow(QMainWindow):
     edit_mode_changed = pyqtSignal(Page, bool)
     def __init__(self, text_extractor=None, chapter=None, project_loader=None, project_manager= None):
@@ -27,7 +28,7 @@ class ChapterWindow(QMainWindow):
         
         self.setWindowTitle("KomiCAT")
         self.resize(1600, 900)
-
+        
         #Create menu bar
         self.menu_bar = QMenuBar(self)
         file_menu = self.menu_bar.addMenu("File")
@@ -103,7 +104,8 @@ class ChapterWindow(QMainWindow):
         self.setCentralWidget(central_widget)
 
         self.confirmation_Dialog = None
-        
+        self.loading = LoadingOverlay(self)
+        self._busy = False
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         self.show()
        
@@ -276,3 +278,69 @@ class ChapterWindow(QMainWindow):
             event.accept()
         else:
             event.ignore()
+
+    def detect_bubbles_from_pages(self, pages):
+
+        if self._busy or not pages:
+                    return
+        self._busy = True
+
+        def _detect_bubbles():  
+            for page in pages:
+
+                if page and not page.has_been_processed:
+                    current_image = page.image
+                    
+                    detected_panels = self.text_extractor.detect_panels(current_image)
+                    
+                    detected_bubbles, detected_text_bubbles, detected_free_text = \
+                                    self.text_extractor.detect_speech_bubbles(current_image)
+        
+                    #Stores everything in current page and sorts them
+                    page.store_detected_bubbles(detected_bubbles, detected_text_bubbles, detected_free_text, detected_panels)
+
+        def _update_views(_):
+            try:
+
+                self.image_viewer.current_page = self.chapter.get_current_page()
+                self.image_viewer._setup_page()
+            finally:
+                self._busy = False
+        def failed(err):
+                    self._busy = False
+                    raise OCRError(f"Error detecting speech bubbles: {err}", user_message="There was an error when detecting panels and bubbles",
+                                                                solution="Try again.") from err
+                    
+        run_with_loading(self.loading, "Detecting speech bubbles...", _detect_bubbles, _update_views, failed)
+
+    def extract_text_from_pages(self,pages):
+        if self._busy or not pages:
+            return
+        self._busy = True
+        jobs = [(page,  page.get_segments_to_extract(all_segments=True)) for page in pages]
+        
+
+        def _extract_text():
+            for page, segments in jobs:
+                for segment in segments:
+                    self.text_extractor.extract_text(page.image, [segment.text_box])
+    
+        def _update_views(_):
+            try:
+                for page, segments in jobs:
+                    for segment in segments:
+                        segment.has_been_extracted()
+                    self.extracted(page, segments)
+                self.image_viewer.current_page = self.chapter.get_current_page()
+                self.image_viewer._setup_page()
+            finally:
+                self._busy = False
+
+        def failed(err):
+            self._busy = False
+            raise OCRError(f"Error extracting text: {err}", user_message="There was an error when extracting text",
+                                            solution="Try again.") from err
+
+        run_with_loading(self.loading, "Extracting text...", _extract_text, _update_views, failed)
+
+    
