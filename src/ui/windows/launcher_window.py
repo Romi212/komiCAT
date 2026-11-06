@@ -1,5 +1,5 @@
 from pathlib import Path
-
+from storage.resources import get_image_path, IMG_PEEK, IMG_LOGO
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
     QHBoxLayout, QLabel, QMainWindow, QMessageBox, QPushButton, QVBoxLayout, QWidget,
@@ -12,20 +12,29 @@ from ui.windows.project.widgets.image_card import ImageCard      # adjust to whe
 CARD_COVER = (110, 155)
 
 class PeekPanel(QWidget):
-    """A bordered panel with a character peeking over its top edge."""
+    """A bordered panel with a logo on top and a character peeking over its top edge."""
 
-    def __init__(self, image_path, title="Recent Projects", image_height=90,
-                 paw_overlap=10, right_margin=24, parent=None):
+    def __init__(self, image_path, logo_path=None, title="Recent Projects",
+                 image_height=90, paw_overlap=10, right_margin=24,
+                 logo_height=60, logo_overlap=20, peek_drop=0, parent=None):
         super().__init__(parent)
 
         self.right_margin = right_margin
+        self.peek_drop = peek_drop      # extra px pushing Komi lower
 
         pix = QPixmap(str(image_path))
         has_image = not pix.isNull()
+        logo_pix = QPixmap(str(logo_path)) if logo_path else QPixmap()
+        has_logo = not logo_pix.isNull()
 
-        # the layout leaves room above the panel for the image, minus the overlap
+        # the strip above the frame: tall enough for the logo minus its overlap onto the panel
+        logo_strip = (logo_height - logo_overlap) if has_logo else 0
+        peek_strip = (image_height - paw_overlap) if has_image else 0
+        self.top_margin = max(logo_strip, peek_strip)
+        self.paw_overlap = paw_overlap
+
         outer = QVBoxLayout(self)
-        outer.setContentsMargins(0, (image_height - paw_overlap) if has_image else 0, 0, 0)
+        outer.setContentsMargins(0, self.top_margin, 0, 0)
         outer.setSpacing(0)
 
         self.panel = QFrame()
@@ -36,21 +45,30 @@ class PeekPanel(QWidget):
         panel_layout.setContentsMargins(16, 12, 16, 14)
         panel_layout.setSpacing(10)
 
-        # ---- title, top left ----
         self.title_label = QLabel(title)
         self.title_label.setObjectName("recentTitle")
         panel_layout.addWidget(self.title_label, alignment=Qt.AlignmentFlag.AlignLeft)
 
-        # ---- cards row, centered: stretch | cards | stretch ----
         row = QHBoxLayout()
         row.addStretch(1)
-        self.content = QHBoxLayout()          # the launcher puts the cards in this layout
+        self.content = QHBoxLayout()
         self.content.setSpacing(24)
         row.addLayout(self.content)
         row.addStretch(1)
         panel_layout.addLayout(row)
 
-        # ---- character, child of this widget (not of the panel) ----
+        # ---- logo, child of this widget, aligned to the top ----
+        self.logo = QLabel(self)
+        self.logo.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.logo.setStyleSheet("background: transparent; border: none;")
+        if has_logo:
+            self.logo.setPixmap(logo_pix.scaledToHeight(
+                logo_height, Qt.TransformationMode.SmoothTransformation))
+            self.logo.adjustSize()
+        else:
+            self.logo.hide()
+
+        # ---- character, child of this widget ----
         self.peek = QLabel(self)
         self.peek.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         self.peek.setStyleSheet("background: transparent; border: none;")
@@ -63,8 +81,13 @@ class PeekPanel(QWidget):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        self.peek.move(self.width() - self.peek.width() - self.right_margin, 0)
-        self.peek.raise_()       
+        # logo: top aligned, horizontally centered
+        self.logo.move((self.width() - self.logo.width()) // 2, 0)
+        # Komi: paws land paw_overlap px inside the frame, plus an optional drop
+        peek_y = self.top_margin - self.peek.height() + self.paw_overlap + self.peek_drop
+        self.peek.move(self.width() - self.peek.width() - self.right_margin, peek_y)
+        self.logo.raise_()
+        self.peek.raise_()
 
 class LauncherWindow(QMainWindow):
     create_requested = pyqtSignal()
@@ -73,41 +96,30 @@ class LauncherWindow(QMainWindow):
     recent_open_requested = pyqtSignal(str)       # project (.romi) path
     recent_remove_requested = pyqtSignal(str)
 
-    def __init__(self, image_path):
+    def __init__(self):
         super().__init__()
         self.setWindowTitle("KomiCAT")
         self.resize(560, 460)
 
-        root = QVBoxLayout()
-        root.setContentsMargins(16, 12, 16, 20)
 
-        # ---- top row: gear | title | spacer (same width, keeps title centered) ----
-        top = QHBoxLayout()
+        root = QVBoxLayout()
+        root.setContentsMargins(16, 20, 16, 20)
+        root.setSpacing(0)
+
         self.prefs_button = QPushButton("⚙")
         self.prefs_button.setFixedSize(36, 36)
         self.prefs_button.setToolTip("Preferences")
         self.prefs_button.setObjectName("preferencesButton")
         self.prefs_button.clicked.connect(self.preferences_requested)
 
-        title = QLabel("KomiCAT")
-        title.setObjectName("launcherTitle")
-        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title.setObjectName("launcherTitle")
-
-        spacer = QWidget()
-        spacer.setFixedSize(36, 36)
-
-        top.addWidget(self.prefs_button)
-        top.addWidget(title, 1)
-        top.addWidget(spacer)
-        root.addLayout(top)
-        root.addStretch(1)
-
-        # ---- recent projects row ----
-        # ---- recent projects panel with Komi peeking ----
-        self.peek_panel = PeekPanel(image_path, title="Recent Projects",
-                            image_height=90, paw_overlap=5, right_margin=24)
-        self.recent_layout = self.peek_panel.content        # set_recents keeps working as is
+        self.peek_panel = PeekPanel(
+            get_image_path(IMG_PEEK),
+            logo_path=get_image_path(IMG_LOGO),
+            title="Recent Projects",
+            image_height=90, paw_overlap=5, right_margin=24,
+            logo_height=90, logo_overlap=-20, peek_drop=0,
+        )
+        self.recent_layout = self.peek_panel.content
         root.addWidget(self.peek_panel)
         root.addStretch(1)
 
@@ -129,6 +141,11 @@ class LauncherWindow(QMainWindow):
         central = QWidget()
         central.setLayout(root)
         self.setCentralWidget(central)
+
+        self.prefs_button.setParent(central)
+        self.prefs_button.move(16, 12)
+        self.prefs_button.show()
+        self.prefs_button.raise_()
 
     # ---------- API used by the controller ----------
     def set_status(self, text):

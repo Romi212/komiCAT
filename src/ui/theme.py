@@ -4,7 +4,7 @@ from PyQt6.QtGui import QColor
 from PyQt6.QtCore import QObject, pyqtSignal, QSettings
 
 from storage.resources import APP_FONT
-APP_FONT_CSS = f'"{APP_FONT}", "Yu Gothic UI", "Meiryo UI", "Segoe UI", sans-serif'
+APP_FONT_CSS = f' "Yu Gothic UI", "Meiryo UI", "Segoe UI", sans-serif'
 
 
 @dataclass(frozen=True)
@@ -111,6 +111,13 @@ def build_qss(t):
         background-color: {t.surface};
         border: 2px solid {t.border};
         border-radius: 10px;
+    }}
+    QLabel#launcherTitle {{
+        color: {t.text};
+        font-family: "Rampart One", {APP_FONT_CSS};
+        font-size: 30pt;
+        font-weight: bold;
+        letter-spacing: 2px;
     }}
     QLabel#recentTitle {{
         font-size: 10pt;

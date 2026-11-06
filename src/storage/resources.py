@@ -16,6 +16,7 @@ IMG_ICON = "icon/komi-chan.png"
 IMG_PEEK = "komi-peek.png"
 IMG_ERROR = "komi-error.png"
 IMG_LOAD = "komi-load.gif"
+IMG_LOGO = "icon/logo-horizontal-byn.png"
 
 APP_FONT = "Zen Kaku Gothic Antique"
 def resource(rel):

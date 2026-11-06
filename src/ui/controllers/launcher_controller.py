@@ -39,7 +39,7 @@ class LauncherController(QObject):
 
     # ---------- models ----------
     def preload_models(self):
-        self.window.set_status("Loading AI models in background...")
+        self.window.set_status("Loading detection models in background...")
         worker = BackgroundWorker(TextExtractor)
         worker.signals.finished.connect(self._on_models_loaded)
         worker.signals.error.connect(self._on_models_error)
@@ -47,14 +47,14 @@ class LauncherController(QObject):
 
     def _on_models_loaded(self, text_extractor):
         self.text_extractor = text_extractor
-        self.window.set_status("AI models loaded successfully.")
+        self.window.set_status("Detection models loaded successfully.")
         if self.pending_project is not None:
             self._open_pending()
         else:
             self.window.set_busy(False)
 
     def _on_models_error(self, error):
-        self.window.set_status(f"Error loading AI models: {error}")
+        self.window.set_status(f"Error loading Detection models: {error}")
         print(f"Error loading AI models: {error}")
 
     # ---------- create / load ----------
@@ -98,7 +98,7 @@ class LauncherController(QObject):
     def _open_pending(self):
         if self.text_extractor is None:
             self.window.set_busy(True)
-            self.window.set_status("AI models are still loading. Please wait...")
+            self.window.set_status("Detection models are still loading. Please wait...")
             return
         self.project_manager = ProjectManager(
             self.pending_project, self.loader, self.text_extractor)

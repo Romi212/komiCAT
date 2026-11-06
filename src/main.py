@@ -120,7 +120,7 @@ def main():
     theme.theme_manager.set_theme(app_config.config.theme)
     theme.apply(app)                             # apply at startup
 
-    launcher_window = LauncherWindow(get_image_path(IMG_PEEK))
+    launcher_window = LauncherWindow()
     launcher = LauncherController(launcher_window, storage)   # keep a reference
     launcher_window.show()
     sys.exit(app.exec())
