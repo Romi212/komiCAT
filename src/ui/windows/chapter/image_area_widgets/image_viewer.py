@@ -13,6 +13,7 @@ from CATtools.text_extractor import TextExtractor
 from data_structure.text_box import TextBox
 from data_structure.page import Page
 from data_structure.segment import Segment
+from ui.windows.chapter.image_area_widgets.panel_rect import PanelFrame
 
 class ImageViewer(QWidget):
     
@@ -191,10 +192,12 @@ class ImageViewer(QWidget):
                 
                 # Clear scene and add pixmap
                 for item in self.scene.items():
-                    self.scene.removeItem(item)
+                    if item.parentItem() is None:
+                        self.scene.removeItem(item)
                 self.selected_bubbles = []
                 self.detect_page_bubbles_button.setDisabled(self.current_page.has_been_processed)
-                self.scene.addPixmap(current_pixmap)
+                page_item = self.scene.addPixmap(current_pixmap)
+                page_item.setZValue(-10)
                 self.image_index_label.setText(self.current_page.page_name)
                 self.status_label.setText(f"Image loaded: {self.current_page.page_name}")
             except Exception as e:
@@ -221,24 +224,12 @@ class ImageViewer(QWidget):
                 if(segment.next_arrow):
                     self.scene.addItem(segment.next_arrow)
                     
-            i = 0
-            for panel in self.current_page.detected_panels:
-                print(f"Panel {i}")
-                #Create a square to show panel but not button
-                x = panel.text_box.xmin
-                y = panel.text_box.ymin
-                w = panel.text_box.xmax - panel.text_box.xmin
-                h = panel.text_box.ymax - panel.text_box.ymin
-
-                panel_rect = QGraphicsRectItem( x,y,w,h )
-                panel_rect.setPen(QPen(QColor(255, 0, 0), 2))
-                self.scene.addItem(panel_rect)
-                panel_text = QGraphicsSimpleTextItem(f"Panel {i + 1}")
-                panel_text.setPos(x + 5, y + 5)
-                panel_text.setBrush(QColor(255, 0, 0))
-                panel_text.setFont(QFont("Arial", 24, QFont.Weight.Bold))
-                self.scene.addItem(panel_text)
-                i += 1
+           
+            for i, panel in enumerate(self.current_page.detected_panels, start=1):
+                tb = panel.text_box
+                frame = PanelFrame(tb.xmin, tb.ymin, tb.xmax - tb.xmin, tb.ymax - tb.ymin,
+                                f"Panel {i}")
+                self.scene.addItem(frame)
             if change_focus:
                 self.controller.page_changed(self.current_page)
 

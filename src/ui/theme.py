@@ -34,10 +34,21 @@ class Theme:
     confirmed_badge: str
     # segment types: role -> (bg hex, bg alpha, border hex)
     segment_colors: dict = field(default_factory=dict)
+    badge_text: str = "#ffffff"
+    focus_border: str = "#ffffff"
+    arrow: str = "#b5223f"
+    arrow_hover: str = "#d03a58"
+    panel_border: str = "#9c3a52"
+    panel_label_bg: str = "#9c3a52"
 
     def segment_style(self, seg_type):
-            bg_hex, alpha, border_hex = self.segment_colors[seg_type.key]
-            return {"bg": self.qcolor(bg_hex, alpha), "border": QColor(border_hex)}
+        bg_hex, alpha, border_hex, badge_hex = self.segment_colors[seg_type.key]
+        return {
+            "bg": self.qcolor(bg_hex, alpha),
+            "border": QColor(border_hex),
+            "badge": QColor(badge_hex),
+            "badge_text": QColor(self.badge_text),
+        }
 
     def qcolor(self, hex_str, alpha=255):
         c = QColor(hex_str)
@@ -59,11 +70,12 @@ DARK = Theme(
     dict_word= "#4791ca",
     surface_confirmed = "#333a33",     # lighter, slightly greenish
     confirmed_badge = "#3e7d4a",
-    segment_colors={
-            "text_bubble": ("#c80000", 50, "#ff0000"),
-            "text_free":   ("#0000c8", 50, "#0000ff"),
-            "sfx":         ("#00c800", 50, "#00ff00"),
-        },
+        segment_colors={
+        #               bg        alpha  border     badge
+        "text_bubble": ("#e0566e", 85,  "#b5223f", "#b5223f"),
+        "text_free":   ("#e0566e", 85,  "#9c3a52", "#9c3a52"),
+        "sfx":         ("#f2a58b", 110, "#e8896e", "#e8896e"),
+    },
     
 )
 LIGHT = replace(DARK, name="Light",

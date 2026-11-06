@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QGraphicsRectItem, QGraphicsItem, QMenu
 from PyQt6.QtGui import QActionGroup, QPen, QBrush, QColor, QFont, QCursor
 from PyQt6.QtCore import QObject, Qt, QRectF, pyqtSignal
-
+from PyQt6.QtGui import QActionGroup, QPen, QBrush, QColor, QFont, QCursor, QPainter
 from ui.segment_types import SEGMENT_TYPE_FORMAT, SegmentType
 from ui import theme
 
@@ -11,7 +11,7 @@ class TextBoxRectSignals(QObject):
     moved = pyqtSignal() 
 
 class TextBoxRect(QGraphicsRectItem):
-
+    BADGE_R = 14
     def __init__(self, text_box, parent = None,  alpha=0.6):
         w = text_box.xmax - text_box.xmin
         h = text_box.ymax - text_box.ymin
@@ -185,34 +185,51 @@ class TextBoxRect(QGraphicsRectItem):
             super().mouseReleaseEvent(event)
             if event.button() == Qt.MouseButton.LeftButton:
                 self.focus_segment()
-
+    def boundingRect(self):
+            m = self.BADGE_R + 4
+            return self.rect().adjusted(-4, -m, m, 4)
+    
     def paint(self, painter, option, widget=None):
-        """Replaces QSS completely with fast, native vector painting."""
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        style = self.style_config
         rect = self.rect()
 
-        if self.has_been_extracted_flag:                
-            if self.state == "focused":
-                pen = QPen(QColor("blue"), 4, Qt.PenStyle.SolidLine)
-                brush = QBrush(QColor(0, 0, 0, 0))
-            else:
-                pen = QPen(QColor("gray"), 1, Qt.PenStyle.SolidLine)
-                brush = QBrush(QColor(0, 0, 0, 0))
+        focused = self.state == "focused"
+        extracted_idle = self.has_been_extracted_flag and not focused
+
+        fill = QColor(0, 0, 0, 0) if self.has_been_extracted_flag else QColor(style["bg"])
+
+        if extracted_idle:
+            pen = QPen(style["border"], 1)
+           # pen.setCosmetic(True)           # stays 1px at any zoom level
+            half = 0.5
         else:
-            border_width = 6 if self.isSelected() else 2
-            pen = QPen(self.style_config["border"], border_width)
-            brush = QBrush(self.style_config["bg"])
+            width = 5 if (focused or self.isSelected()) else 3
+            pen = QPen(style["border"], width)
+            pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+            half = width / 2
 
         painter.setPen(pen)
-        painter.setBrush(brush)
-        painter.drawRoundedRect(rect, 4, 4)
+        painter.setBrush(QBrush(fill))
+        painter.drawRoundedRect(rect.adjusted(half, half, -half, -half), 6, 6)
 
-        # Draw selection number text
-        
-        if not self.has_been_extracted_flag and self.number > 0 and self.state == "checked":
-            painter.setPen(QPen(QColor("red")))
-            painter.setFont(QFont("Arial", int(min(rect.height() * 0.5, 36)), QFont.Weight.Bold))
-            painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, str(self.number))
+        # ---- number badge, top-right corner ----
+        if self.number > 0:
+            r = max(min(self.BADGE_R, rect.width() / 3, rect.height() / 3), 8)
+            cx = rect.right() - r * 0.2
+            cy = rect.top() + r * 0.2
+            badge_rect = QRectF(cx - r, cy - r, 2 * r, 2 * r)
 
+            painter.setPen(QPen(QColor(255, 255, 255, 200), 1.5))
+            painter.setBrush(QBrush(style["badge"]))
+            painter.drawEllipse(badge_rect)
+
+            font = QFont("Arial")
+            font.setBold(True)
+            font.setPixelSize(int(r * 1.15))
+            painter.setFont(font)
+            painter.setPen(style["badge_text"])
+            painter.drawText(badge_rect, Qt.AlignmentFlag.AlignCenter, str(self.number))
     def has_been_extracted(self):
             self.has_been_extracted_flag = True
             self.state = "extracted"

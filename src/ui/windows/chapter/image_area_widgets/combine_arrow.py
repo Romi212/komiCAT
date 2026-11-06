@@ -5,9 +5,12 @@ from PyQt6.QtWidgets import QGraphicsEllipseItem, QGraphicsItem, QGraphicsPathIt
 from PyQt6.QtGui import QFont, QPainterPath, QPainterPathStroker, QPen, QBrush, QColor, QPolygonF
 from PyQt6.QtCore import QPointF, Qt
 
+from PyQt6.QtWidgets import (QGraphicsEllipseItem, QGraphicsItem, QGraphicsPathItem,
+                             QGraphicsPolygonItem, QGraphicsSimpleTextItem)
 from ui.theme import current
 
-ARROW_COLOR = QColor(current().accent)  
+def arrow_color():
+    return QColor(current().arrow)
 
 class UnlinkButton(QGraphicsEllipseItem):
     """Small round ✕ button shown at the middle of a CombineArrow while hovered."""
@@ -35,9 +38,10 @@ class UnlinkButton(QGraphicsEllipseItem):
         self.hide()
 
     def _set_hovered(self, hovered):
-        self.setBrush(QBrush(QColor(current().accent_hover) if hovered else ARROW_COLOR))
-        self.setPen(QPen(QColor("white"), 1.5))
-
+            t = current()
+            self.setBrush(QBrush(QColor(t.arrow_hover if hovered else t.arrow)))
+            self.setPen(QPen(QColor("white"), 2))
+            
     def hoverEnterEvent(self, event):
         self.arrow._cancel_hide()   # cursor moved from the arrow onto the button
         self._set_hovered(True)
@@ -61,11 +65,12 @@ class CombineArrow(QGraphicsPathItem):
     Follows both bubbles automatically through their `signals.moved` signal.
     """
 
-    HEAD_SIZE = 16
+    HEAD_SIZE = 18
+    LINE_WIDTH = 4
+    HALO_EXTRA = 4       # halo is this much wider than the line
     CURVE_FACTOR = 0.3   # how far the curve bulges, relative to the arrow length
     MAX_BEND = 60        # cap on the bulge, in scene pixels
-    CURVED = True        # set to False for a straight arrow
-
+    CURVED = True
     def __init__(self, parent_seg, child_seg, on_remove=None):
         super().__init__()
         self.edit_mode = False
@@ -73,16 +78,23 @@ class CombineArrow(QGraphicsPathItem):
         self.child_seg = child_seg
         self.on_remove = on_remove   # optional: called as on_remove(parent_seg, child_seg)
 
-        self.setZValue(10)  # above the bubble rects
-        self.setPen(QPen(ARROW_COLOR, 3, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+        color = arrow_color()
+        self.setZValue(10)
         self.setBrush(QBrush(Qt.BrushStyle.NoBrush))
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setToolTip("Right-click to separate these segments")
 
-        # Arrowhead is a child item so it moves/gets removed together with the arrow
+        # white halo behind the line, so it reads on dark and busy art
+        self.halo = QGraphicsPathItem(self)
+        self.halo.setFlag(QGraphicsItem.GraphicsItemFlag.ItemStacksBehindParent, True)
+        self.halo.setBrush(QBrush(Qt.BrushStyle.NoBrush))
+        self.halo.setAcceptedMouseButtons(Qt.MouseButton.NoButton)
+
+        # filled arrowhead with a white outline
         self.head = QGraphicsPolygonItem(self)
-        self.head.setBrush(QBrush(ARROW_COLOR))
-        self.head.setPen(QPen(ARROW_COLOR))
+        self.head.setAcceptedMouseButtons(Qt.MouseButton.NoButton)
+
+        self.apply_style()
 
         # Follow both bubbles when they are moved or resized
         if self.parent_seg.button:
@@ -90,11 +102,24 @@ class CombineArrow(QGraphicsPathItem):
         if self.child_seg:
             if self.child_seg.button:
                 self.child_seg.button.signals.moved.connect(self.update_geometry)
-
+        self.setZValue(1000)
         self.update_geometry()
 
     # ---------- geometry ----------
+    def apply_style(self):
+        color = arrow_color()
+        line = QPen(color, self.LINE_WIDTH, Qt.PenStyle.SolidLine,
+                    Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
+        self.setPen(line)
 
+        halo_pen = QPen(QColor(255, 255, 255, 170), self.LINE_WIDTH + self.HALO_EXTRA,
+                        Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
+        self.halo.setPen(halo_pen)
+
+        self.head.setBrush(QBrush(color))
+        self.head.setPen(QPen(QColor(255, 255, 255, 170), 2,
+                              Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap,
+                              Qt.PenJoinStyle.RoundJoin))
     @staticmethod
     def _corner(seg):
         """Top-left corner of a segment's rect in scene coordinates."""
@@ -127,6 +152,7 @@ class CombineArrow(QGraphicsPathItem):
 
         self.prepareGeometryChange()
         self.setPath(path)
+        self.halo.setPath(path)
         self._update_head(tail, p2)
 
     def _update_head(self, tail, tip):
@@ -139,7 +165,16 @@ class CombineArrow(QGraphicsPathItem):
         self.head.setPolygon(QPolygonF([tip, left, right]))
 
     # ---------- interaction ----------
+    def hoverEnterEvent(self, event):
+        c = QColor(current().arrow_hover)
+        self.setPen(QPen(c, self.LINE_WIDTH + 1, Qt.PenStyle.SolidLine,
+                         Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+        self.head.setBrush(QBrush(c))
+        super().hoverEnterEvent(event)
 
+    def hoverLeaveEvent(self, event):
+        self.apply_style()
+        super().hoverLeaveEvent(event)
     def shape(self):
         """Wider hit area so the thin curve is easy to click."""
         stroker = QPainterPathStroker()
