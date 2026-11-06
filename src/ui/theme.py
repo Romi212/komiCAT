@@ -68,7 +68,7 @@ DARK = Theme(
     accent="#6e2130", accent_hover="#8a2e40", accent_dim="#4a1620",
     term_highlight="#ffeb3b", term_highlight_alpha=140,
     dict_word= "#4791ca",
-    surface_confirmed = "#333a33",     # lighter, slightly greenish
+    surface_confirmed = "#262626",     # lighter, slightly greenish
     confirmed_badge = "#3e7d4a",
         segment_colors={
         #               bg        alpha  border     badge
