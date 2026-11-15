@@ -19,8 +19,10 @@ class PageContainer(QWidget):
         self.layout.setContentsMargins(5, 5, 5, 5)
         self.layout.setSpacing(10)
 
-        self.page_label = QLabel("---------------------------  " + self.page.page_name + " ----------------------------------")
+        self.page_label = QLabel("Page "+str(self.page.number))
         self.page_label.setObjectName("PageDivisionLabel")
+        self.page_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.page_label.setFixedHeight(22)
         self.layout.insertWidget(0, self.page_label)
           
         

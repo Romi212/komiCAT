@@ -40,7 +40,8 @@ class Theme:
     arrow_hover: str = "#d03a58"
     panel_border: str = "#9c3a52"
     panel_label_bg: str = "#9c3a52"
-
+    panel_label_bg: str = "#9c3a52"   # light rose pill
+    page_label_text: str = "#e8b4be"   # dark burgundy, readable on the pill
     def segment_style(self, seg_type):
         bg_hex, alpha, border_hex, badge_hex = self.segment_colors[seg_type.key]
         return {
@@ -70,6 +71,7 @@ DARK = Theme(
     dict_word= "#4791ca",
     surface_confirmed = "#262626",     # lighter, slightly greenish
     confirmed_badge = "#3e7d4a",
+    
         segment_colors={
         #               bg        alpha  border     badge
         "text_bubble": ("#e0566e", 85,  "#b5223f", "#b5223f"),
@@ -85,7 +87,27 @@ LIGHT = replace(DARK, name="Light",
     scroll_handle="#b5b5b5", scroll_handle_hover="#8f8f8f",surface_confirmed="#e3efe3", confirmed_badge="#5aa469")
 # add more: replace(DARK, name="Ocean", accent="#1f5f8b", ...)  (dataclasses.replace)
 
-THEMES = {t.name: t for t in (DARK, LIGHT)}
+SAKURA = replace(DARK, name="Sakura",
+    # window = lightest pink, used ONLY for the page background
+    window="#ffd9d9",
+    # segments, panels, buttons, inputs all share the slightly darker pink
+    surface="#f9c3c3",
+    input_bg="#f9c3c3",
+    button_bg="#f9c3c3", button_bg_hover="#f0abb0",
+    text="#4a1620",
+    border="#c9626f",
+    popup_bg="#f9c3c3", popup_text="#4a1620",
+    scroll_handle="#d98c97", scroll_handle_hover="#c4697a",
+    accent="#6e2430", accent_hover="#8f3040", accent_dim="#5a1e24",
+    term_highlight="#ffb3a0", term_highlight_alpha=150,
+    dict_word="#a62a45",
+    surface_confirmed="#f9c3c3", confirmed_badge="#b5384a",
+    arrow="#b5223f", arrow_hover="#d03a58",
+    panel_border="#9c3a52", panel_label_bg="#6e2430",
+   page_label_text="#ffffff",
+)
+
+THEMES = {t.name: t for t in (DARK, LIGHT, SAKURA)}
 
 class ThemeManager(QObject):
     theme_changed = pyqtSignal(object)
@@ -190,7 +212,7 @@ def build_qss(t):
         border: 1px solid {t.border};
         border-radius: 3px;
     }}
-
+    
     QPushButton {{
         background-color: {t.button_bg};
         border: 1px solid {t.border};
@@ -231,7 +253,14 @@ def build_qss(t):
 
     SegmentBox QTextEdit {{ background: transparent; border: none; }}
     #combinedSegmentContainer {{ border: 2px solid {t.accent}; border-radius: 5px; }}
-    #PageDivisionLabel {{font-weight: bold; border: none;}}
+    QLabel#PageDivisionLabel {{
+        background-color: {t.accent};
+        color: {t.page_label_text};
+        border: none;
+        border-radius: 8px;
+        padding: 2px 12px;
+        font-weight: bold;
+    }}
     #combineHighlight {{
         background-color: {t.accent_hover};
         border-radius: 3px;
@@ -292,7 +321,42 @@ def build_qss(t):
         font-size: 10px;
     }}
     QPushButton#acceptSuggestion:hover {{ background-color: {t.accent_hover}; }}
-                
+        QWidget {{ background-color: {t.window}; color: {t.text}; }}
+    QMainWindow, QDialog, QMessageBox {{ background-color: {t.window}; }}
+
+    QLabel, QCheckBox, QRadioButton, QGroupBox {{ background: transparent; }}
+
+    QComboBox, QSpinBox, QDoubleSpinBox {{
+        background-color: {t.input_bg};
+        color: {t.text};
+        border: 1px solid {t.border};
+        border-radius: 3px;
+        padding: 3px 6px;
+    }}
+    QComboBox QAbstractItemView {{
+        background-color: {t.input_bg};
+        color: {t.text};
+        border: 1px solid {t.border};
+        selection-background-color: {t.accent};
+        selection-color: #ffffff;
+    }}
+
+    QMenuBar {{ background-color: {t.window}; color: {t.text}; }}
+    QMenuBar::item:selected {{ background-color: {t.button_bg_hover}; }}
+    QMenu {{
+        background-color: {t.popup_bg};
+        color: {t.popup_text};
+        border: 1px solid {t.border};
+    }}
+    QMenu::item {{ padding: 5px 24px; }}
+    QMenu::item:selected {{ background-color: {t.accent}; color: #ffffff; }}
+    QMenu::separator {{ height: 1px; background: {t.border}; margin: 4px 8px; }}
+
+    QToolTip {{
+        background-color: {t.popup_bg};
+        color: {t.popup_text};
+        border: 1px solid {t.border};
+    }}          
            
     """
 
