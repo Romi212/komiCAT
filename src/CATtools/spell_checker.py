@@ -22,30 +22,20 @@ class SpellChecker:
         self.hunspell = Dictionary.from_files( str(get_dictionary(self.language)))   
 
 
-        print(f"SpellChecker initialized for language: {language}")
-        trial = "escrivo mal a proposito aver que paza"
-        print(f"Checking spelling for: '{trial}'")
-        misspelled = self.get_misspelled_words(trial)
-        print(f"Misspelled words: {misspelled}")
-        for word in misspelled:
-            suggestions = self.get_suggestions(word)
-            print(f"Suggestions for '{word}': {suggestions}")
-
     def clean_text(self, text: str) -> list[str]:
-        """Strip punctuation while keeping Spanish accents and characters."""
+       
         # Removes punctuation except Spanish letters (á, é, í, ó, ú, ñ, ü)
         cleaned = re.sub(r'[^\w\sáéíóúñüÁÉÍÓÚÑÜ]', '', text)
         return cleaned.split()
 
     def check_word(self, word: str) -> bool:
-        """Returns True if the word is spelled correctly, False otherwise."""
-        # Ignore numbers or single characters
+        
         if word.isdigit() or len(word) <= 1:
             return True
 
         if word in self.ignore_words:
             return True
-        # Exact match check in dictionary
+        
         suggestions = self.sym_spell.lookup(
             word.lower(), 
             Verbosity.TOP, 
@@ -55,7 +45,7 @@ class SpellChecker:
         return len(suggestions) > 0 or self.hunspell.lookup(word)
 
     def get_misspelled_words(self, text: str) -> list[str]:
-        """Scans a block of text and returns a list of unknown/misspelled words."""
+        
         words = self.clean_text(text)
         misspelled = []
         
@@ -68,7 +58,7 @@ class SpellChecker:
         return misspelled
 
     def get_suggestions(self, word: str, max_suggestions: int = 5) -> list[str]:
-        """Returns a list of suggested corrections for a misspelled word."""
+        
         
         suggestions = []
         closest = self.termbase.find_closest_target(word, max_distance=2)
@@ -81,7 +71,7 @@ class SpellChecker:
             if len(suggestions) >= max_suggestions + 2:     # collect a few extra to rank
                 break
 
-        # 3. SymSpell only fills gaps
+       
         if len(suggestions) < max_suggestions:
             for item in self.sym_spell.lookup(word.lower(), Verbosity.CLOSEST,
                                             max_edit_distance=2, transfer_casing=True):
@@ -98,7 +88,7 @@ class SpellChecker:
         self.ignore_words.add(word.lower())
 
     def add_custom_word_to_libraries(self, word: str, frequency: int = 1000):
-        """Add character names or Manga slang dynamically to memory."""
+       
         self.sym_spell.create_dictionary_entry(word.lower(), frequency)
 
 

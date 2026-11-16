@@ -21,7 +21,7 @@ class UnlinkButton(QGraphicsEllipseItem):
         super().__init__(-r, -r, 2 * r, 2 * r, arrow)
         self.arrow = arrow
 
-        # Keeps a constant on-screen size no matter how far the view is zoomed
+        
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations, True)
         self.setZValue(11)
         self.setAcceptHoverEvents(True)
@@ -43,7 +43,7 @@ class UnlinkButton(QGraphicsEllipseItem):
             self.setPen(QPen(QColor("white"), 2))
             
     def hoverEnterEvent(self, event):
-        self.arrow._cancel_hide()   # cursor moved from the arrow onto the button
+        self.arrow._cancel_hide()   
         self._set_hovered(True)
         super().hoverEnterEvent(event)
 
@@ -67,16 +67,16 @@ class CombineArrow(QGraphicsPathItem):
 
     HEAD_SIZE = 18
     LINE_WIDTH = 4
-    HALO_EXTRA = 4       # halo is this much wider than the line
-    CURVE_FACTOR = 0.3   # how far the curve bulges, relative to the arrow length
-    MAX_BEND = 60        # cap on the bulge, in scene pixels
+    HALO_EXTRA = 4       
+    CURVE_FACTOR = 0.3   
+    MAX_BEND = 60        
     CURVED = True
     def __init__(self, parent_seg, child_seg, on_remove=None):
         super().__init__()
         self.edit_mode = False
         self.parent_seg = parent_seg
         self.child_seg = child_seg
-        self.on_remove = on_remove   # optional: called as on_remove(parent_seg, child_seg)
+        self.on_remove = on_remove   
 
         color = arrow_color()
         self.setZValue(10)
@@ -84,19 +84,19 @@ class CombineArrow(QGraphicsPathItem):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setToolTip("Right-click to separate these segments")
 
-        # white halo behind the line, so it reads on dark and busy art
+       
         self.halo = QGraphicsPathItem(self)
         self.halo.setFlag(QGraphicsItem.GraphicsItemFlag.ItemStacksBehindParent, True)
         self.halo.setBrush(QBrush(Qt.BrushStyle.NoBrush))
         self.halo.setAcceptedMouseButtons(Qt.MouseButton.NoButton)
 
-        # filled arrowhead with a white outline
+       
         self.head = QGraphicsPolygonItem(self)
         self.head.setAcceptedMouseButtons(Qt.MouseButton.NoButton)
 
         self.apply_style()
 
-        # Follow both bubbles when they are moved or resized
+       
         if self.parent_seg.button:
             self.parent_seg.button.signals.moved.connect(self.update_geometry)
         if self.child_seg:
@@ -122,7 +122,6 @@ class CombineArrow(QGraphicsPathItem):
                               Qt.PenJoinStyle.RoundJoin))
     @staticmethod
     def _corner(seg):
-        """Top-left corner of a segment's rect in scene coordinates."""
         if not seg:
             return QPointF(0,0)
         btn = seg.button
@@ -137,7 +136,7 @@ class CombineArrow(QGraphicsPathItem):
         path = QPainterPath(p1)
 
         if self.CURVED:
-            # Control point: midpoint pushed sideways, perpendicular to the line p1 -> p2
+            
             mid = (p1 + p2) / 2
             dx, dy = p2.x() - p1.x(), p2.y() - p1.y()
             length = math.hypot(dx, dy) or 1.0
@@ -145,7 +144,7 @@ class CombineArrow(QGraphicsPathItem):
             ctrl = QPointF(mid.x() - dy / length * bend,
                            mid.y() + dx / length * bend)
             path.quadTo(ctrl, p2)
-            tail = ctrl  # the arrowhead points along the curve's final tangent (ctrl -> p2)
+            tail = ctrl  
         else:
             path.lineTo(p2)
             tail = p1
@@ -191,7 +190,6 @@ class CombineArrow(QGraphicsPathItem):
     # ---------- lifecycle ----------
 
     def detach(self):
-        """Disconnect from the bubbles and leave the scene. Call this when the link is dropped."""
         for seg in (self.parent_seg, self.child_seg):
             if seg.button:
                 try:
@@ -205,6 +203,6 @@ class CombineArrow(QGraphicsPathItem):
         self.edit_mode = value
 
     def request_remove(self):
-        parent = self.parentWidget()          # PageContainer or CombinedContainer
-        self.setParentItem(None)                  # leaves the layout at once, the scroll panel resizes
+        parent = self.parentWidget()          
+        self.setParentItem(None)                  
         

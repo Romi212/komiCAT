@@ -19,10 +19,10 @@ class TextExtractor:
 
 
     def _intialize_local(self):
-        # 1. Define the relative path to your local model folder
+        
         local_model_path = (model_path("bubble_detector_model"))
         
-        # 2. Load the processor and model locally
+       
         processor = AutoImageProcessor.from_pretrained(
             local_model_path, 
             local_files_only=True
@@ -32,7 +32,6 @@ class TextExtractor:
             local_files_only=True
         )
 
-        # 3. Pass them into the pipeline
         self.bubble_detector = pipeline(
             "object-detection",
             model=model,

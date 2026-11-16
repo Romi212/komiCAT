@@ -19,7 +19,7 @@ class TextViewer(QWidget):
         self.controller = controller
         self.page_containers = []
         self.current_panel = None
-        self.text_size = 14  # Default text size
+        self.text_size = 14  
         
         # Create layout
         layout = QVBoxLayout()
@@ -143,12 +143,12 @@ class TextViewer(QWidget):
     def zoom_out(self):
         self.text_size = max(2, self.text_size - 2)  
         for segment in self.segment_boxes:
-            segment.zoom(self.text_size)  # Zoom out by adjusting the text size
+            segment.zoom(self.text_size) 
 
     def focus_next_segment(self, next_segment):
                 
         if next_segment.page != self.chapter.current_page:
-            self.controller.set_current_page(next_segment.page, False)  # Switch to the page of the next segment
+            self.controller.set_current_page(next_segment.page, False)  
         
         if next_segment.panel != self.current_panel:
             self.current_panel = next_segment.panel
@@ -172,11 +172,11 @@ class TextViewer(QWidget):
 
     def delete_segment(self, segment):
         box = segment.segment_box
-        if box is None:                      # never extracted, so it has no box in the text panel
+        if box is None:                      
             return
 
-        parent = box.parentWidget()          # PageContainer or CombinedContainer
-        box.setParent(None)                  # leaves the layout at once, the scroll panel resizes
+        parent = box.parentWidget()          
+        box.setParent(None)                  
         box.deleteLater()
         segment.segment_box = None
 

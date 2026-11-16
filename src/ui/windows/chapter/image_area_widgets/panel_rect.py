@@ -15,8 +15,8 @@ class PanelFrame(QGraphicsRectItem):
         super().__init__(0, 0, w, h)
         self.setPos(x, y)
         self.label = label
-        self.setZValue(-1)                                   # below bubble boxes
-        self.setAcceptedMouseButtons(Qt.MouseButton.NoButton)  # clicks pass through to the boxes
+        self.setZValue(-1)                                   
+        self.setAcceptedMouseButtons(Qt.MouseButton.NoButton) 
 
     def boundingRect(self):
         return self.rect().adjusted(-self.BORDER, -self.BORDER, self.BORDER, self.BORDER)

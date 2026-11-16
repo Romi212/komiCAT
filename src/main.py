@@ -1,3 +1,7 @@
+# KomiCAT - manga computer-assisted translation tool
+# Copyright (C) 2026 Romi
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 import ctypes
 import sys
 import logging, threading
@@ -17,7 +21,7 @@ from PyQt6.QtWidgets import QProgressDialog, QMessageBox
 import first_run
 from storage.project_storage import ProjectStorage
 from storage.resources import get_image_path, IMG_ICON, IMG_PEEK, IMG_ERROR
-from storage.process.background_worker import BackgroundWorker   # wherever your class lives
+from storage.process.background_worker import BackgroundWorker   
 from ui.controllers.launcher_controller import LauncherController
 from errors import KomiError
 from ui.windows.error_window import ErrorWindow
@@ -118,10 +122,10 @@ def main():
     app.setWindowIcon(QIcon(str(get_image_path(IMG_ICON))))
     app_config.config.load_data(storage.get_config_data())
     theme.theme_manager.set_theme(app_config.config.theme)
-    theme.apply(app)                             # apply at startup
+    theme.apply(app)                             
 
     launcher_window = LauncherWindow()
-    launcher = LauncherController(launcher_window, storage)   # keep a reference
+    launcher = LauncherController(launcher_window, storage)   
     launcher_window.show()
     sys.exit(app.exec())
 

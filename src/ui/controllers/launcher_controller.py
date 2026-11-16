@@ -88,7 +88,7 @@ class LauncherController(QObject):
         self._start(project)
 
     def _start(self, project):
-        if project is None:                         # user cancelled a dialog
+        if project is None:                         
             return
         manifest = self.storage.resolve(project.project_name+".romi")
         self.add_recent(str(manifest), project.project_name)
@@ -120,7 +120,7 @@ class LauncherController(QObject):
 
     def refresh_recents(self):
         valid = [e for e in self.config.recent_projects if Path(e["path"]).exists()]
-        if len(valid) != len(self.config.recent_projects):   # drop moved/deleted ones
+        if len(valid) != len(self.config.recent_projects):   
             self.config.recent_projects = valid
             self._save_config()
 

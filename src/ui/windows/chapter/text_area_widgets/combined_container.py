@@ -6,7 +6,7 @@ from ui.windows.chapter.text_area_widgets.segment_box import DragHandle, Segment
 class DecombineButton(QPushButton):
     """Floating button to split a CombinedContainer back into individual segments."""
     def __init__(self, parent=None):
-        super().__init__("⛓️‍💥", parent)  # broken-chain emoji as a placeholder icon
+        super().__init__("⛓️‍💥", parent) 
         self.setFixedSize(18, 18)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setToolTip("Split combined segments")
@@ -31,7 +31,6 @@ class CombinedContainer(QWidget):
         self.layout.addWidget(segment_head)
         self.setLayout(self.layout)
 
-        # Floating drag handle, not part of the layout
         self.drag_handle = DragHandle(self)
         self.drag_handle.setFixedSize(18, 18)
         self.drag_handle.setParent(self)  # child of container, but outside its layout
@@ -60,7 +59,7 @@ class CombinedContainer(QWidget):
         
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        self.drag_handle.move(4, 4)  # keep it pinned top-left on resize
+        self.drag_handle.move(4, 4)  
         self._position_decombine_button()
 
     def set_container_drag_callback(self, callback):
@@ -94,7 +93,7 @@ class CombinedContainer(QWidget):
     def addChild(self, segment):
         self.segment_boxes.append(segment)
         self.layout.addWidget(segment)
-        segment.set_drag_callback(self.set_active_drag_widget)  # route child drags here, not to PageContainer
+        segment.set_drag_callback(self.set_active_drag_widget)  
         segment.deleted.connect(self.remove_segment)
 
     def set_active_drag_widget(self, widget):
@@ -128,7 +127,6 @@ class CombinedContainer(QWidget):
         return self.layout.count()
 
     def sync_children(self):
-        """Re-link the combined segment chain to match the new visual order inside this block."""
         ordered = []
         for i in range(self.layout.count()):
             widget = self.layout.itemAt(i).widget()
@@ -155,13 +153,12 @@ class CombinedContainer(QWidget):
         boxes = [self.layout.itemAt(i).widget() for i in range(self.layout.count())
                 if self.layout.itemAt(i).widget() is not None]
         if len(boxes) < 2 and self.decombine_callback:
-            self.decombine_callback(self)    # the same method as the decombine button
+            self.decombine_callback(self)   
         elif boxes:
             self.head = boxes[0]
             self.seg_children = boxes[1:]
 
     def link_last_segment_to(self, next_segment):
-        """Link the last segment in this container to the provided next_segment."""
         if self.segment_boxes:
             last_segment = self.segment_boxes[-1].segment
             last_segment.set_next_segment(next_segment)

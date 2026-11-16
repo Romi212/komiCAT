@@ -7,7 +7,7 @@ class JPDictionary():
 
 
     def lookup_jp(self,kotoba):
-        print(f"looking for word {kotoba}")
+        #print(f"looking for word {kotoba}")
         result = self.jam.lookup(kotoba)
         for word in result.entries:
             print(word)

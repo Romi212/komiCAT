@@ -155,7 +155,6 @@ class ProjectManager():
             chapter.add_page(page)
             new_pages.append(page)
 
-        #self.loader.save_chapter(chapter)        # chapter.json now lists the new pages
         return new_pages
 
     def save_chapter(self, chapter):

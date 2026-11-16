@@ -11,7 +11,6 @@ class TranslationTextEdit(QTextEdit):
 
 
     def mouseDoubleClickEvent(self, event):
-        # Let default double-click behavior run first so PyQt selects the word
         super().mouseDoubleClickEvent(event)
         
         if not self.spell_checker:
@@ -23,7 +22,6 @@ class TranslationTextEdit(QTextEdit):
         if not selected_word:
             return
 
-        # Check if the clicked word is misspelled
         if not self.spell_checker.check_word(selected_word):
             suggestions = self.spell_checker.get_suggestions(selected_word)
             self._show_suggestions_menu(event.globalPosition().toPoint(), selected_word, suggestions, cursor)
@@ -54,13 +52,11 @@ class TranslationTextEdit(QTextEdit):
         fmt.setUnderlineStyle(QTextCharFormat.UnderlineStyle.NoUnderline)
         return fmt
     def _reset_underlines(self):
-        """Set the whole document back to 'no underline' before re-marking."""
         cursor = QTextCursor(self.document())
         cursor.select(QTextCursor.SelectionType.Document)
         cursor.mergeCharFormat(self._no_underline(QTextCharFormat()))
 
     def _clear_underline(self, word):
-        """Remove the underline from every occurrence of `word` and forget it as misspelled."""
         flags = (QTextDocument.FindFlag.FindCaseSensitively
                  | QTextDocument.FindFlag.FindWholeWords)
         fmt = self._no_underline(QTextCharFormat())
@@ -79,11 +75,10 @@ class TranslationTextEdit(QTextEdit):
         self.misspelled_words.append(word)
         
     def _replace_word(self, cursor, replacement):
-        # Begin edit block for undo/redo history
         old_word = cursor.selectedText().strip()
         cursor.beginEditBlock()
-        fmt = self._no_underline(cursor.charFormat())   # keep font etc., drop underline
-        cursor.insertText(replacement, fmt)             # inserted text gets the clean format
+        fmt = self._no_underline(cursor.charFormat())   
+        cursor.insertText(replacement, fmt)             
         cursor.endEditBlock()
         self.misspelled_words = [w for w in self.misspelled_words if w != old_word]
 

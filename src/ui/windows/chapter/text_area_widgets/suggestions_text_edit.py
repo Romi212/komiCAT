@@ -3,19 +3,17 @@ from PyQt6.QtCore import Qt, pyqtSignal
 
 
 class SuggestionsTextEdit(QTextEdit):
-    accepted = pyqtSignal(str)          # the suggestion the user accepted
+    accepted = pyqtSignal(str)          
 
     def __init__(self, translation_memory, parent=None):
         super().__init__(parent)
         self.translation_memory = translation_memory
         self.matches = ""
-        self.best_suggestion = ""       # what [Accept] sends
+        self.best_suggestion = ""       
 
         self.accept_btn = QPushButton("Accept", self.viewport())
         self.accept_btn.setObjectName("acceptSuggestion")
         self.accept_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        # Important: don't take focus. Clicking would otherwise unfocus the text area,
-        # which hides this widget before the click completes.
         self.accept_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.accept_btn.clicked.connect(self._on_accept)
         self.accept_btn.hide()
@@ -38,7 +36,7 @@ class SuggestionsTextEdit(QTextEdit):
             fuzzy_matches = self.translation_memory.find_fuzzy_matches(source_text)
             for source, target, context, accuracy in fuzzy_matches:
                 matches += target + "\n"
-                if not tm_best:                 # first fuzzy match is the best one
+                if not tm_best:                 
                     tm_best = target
 
         if matches:

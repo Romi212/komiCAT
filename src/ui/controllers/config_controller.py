@@ -5,10 +5,7 @@ from data_structure.app_config import config, LANGUAGES, FONT_RANGE
 from ui.theme import THEMES, theme_manager
 
 class ConfigController(QObject):
-    changed = pyqtSignal()          # emitted after new preferences were saved
-
-    
-    
+    changed = pyqtSignal()          
 
     def __init__(self, storage, parent=None):
         super().__init__(parent)
@@ -17,7 +14,7 @@ class ConfigController(QObject):
         self._window = None
 
     def open(self, parent_widget=None):
-        if self._window is not None:             # already open: just bring it forward
+        if self._window is not None:             
             self._window.raise_()
             self._window.activateWindow()
             return
@@ -29,7 +26,7 @@ class ConfigController(QObject):
         window.apply_requested.connect(self.apply)
         window.finished.connect(self._on_closed)
         self._window = window
-        window.open()                            # modal, but doesn't block this call
+        window.open()                            
 
     def _on_closed(self):
         self._window.deleteLater()

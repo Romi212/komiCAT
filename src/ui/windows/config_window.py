@@ -39,8 +39,8 @@ class ConfigWindow(QDialog):
             self.language_combo.addItem(name, code)
 
         form.addRow("Color theme", self.theme_combo)
-        form.addRow("Font size", self.font_spin)
-        form.addRow("App language", self.language_combo)
+        #form.addRow("Font size", self.font_spin)
+        #form.addRow("App language", self.language_combo)
         root.addLayout(form)
 
         # ---- buttons ----

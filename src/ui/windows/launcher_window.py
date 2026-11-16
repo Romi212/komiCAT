@@ -1,4 +1,3 @@
-from pathlib import Path
 from storage.resources import get_image_path, IMG_PEEK, IMG_LOGO
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import (
@@ -7,7 +6,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QLabel, QWidget
 from PyQt6.QtCore import Qt
-from ui.windows.project.widgets.image_card import ImageCard      # adjust to where ImageCard lives
+from ui.windows.project.widgets.image_card import ImageCard      
 
 CARD_COVER = (110, 155)
 

@@ -7,7 +7,7 @@ from ui.windows.chapter.text_area_widgets.translation_text_edit import Translati
 from ui.windows.chapter.text_area_widgets.source_text_edit import SourceTextEdit
 
 class DragHandle(QLabel):
-    """Grip icon placed on the left side of SegmentBox to initiate dragging."""
+
     def __init__(self, parent_segment_box):
         super().__init__("⋮⋮")
         self.segment_box = parent_segment_box
@@ -17,10 +17,10 @@ class DragHandle(QLabel):
         self.setObjectName("DragHandle")
         self._edit_mode = False
         self._drag_start_pos = None
-        self.callback = None  # Placeholder for the callback function
+        self.callback = None  
 
     def set_drag_callback(self, callback):
-        """Set the callback function to be called when dragging starts."""
+
         self.callback = callback
 
     def mousePressEvent(self, event):
@@ -34,20 +34,19 @@ class DragHandle(QLabel):
 
         drag = QDrag(self)
         
-        # Qt requires a QMimeData object to initiate a QDrag, 
-        # but you can leave it empty or attach a direct reference.
+        
         mime_data = QMimeData()
         drag.setMimeData(mime_data)
 
-        # Store a direct Python pointer to the widget on the class or container
-        self.callback(self.segment_box)  # Call the callback to set the active drag widget
+        
+        self.callback(self.segment_box)  
 
-        # Optional ghost preview
+       
         pixmap = self.segment_box.grab()
         drag.setPixmap(pixmap.scaledToWidth(250, Qt.TransformationMode.SmoothTransformation))
 
         drag.exec(Qt.DropAction.MoveAction)
-        self.callback(None)  # Clear the active drag widget after the drag operation
+        self.callback(None)  
 
     def mouseReleaseEvent(self, event):
         self.setCursor(Qt.CursorShape.OpenHandCursor)
@@ -56,7 +55,7 @@ class SegmentBox(QWidget):
 
     focused = pyqtSignal(object)
     deleted = pyqtSignal(object)
-    # Replace with the family name of a bundled display font if you add one
+    
     SFX_FONT_FAMILIES = '"Yu Gothic UI", "Meiryo UI", "MS Gothic", sans-serif'
     SFX_SIZE_FACTOR = 1.8
 
@@ -76,15 +75,13 @@ class SegmentBox(QWidget):
         main_layout.setContentsMargins(5, 5, 5, 5)
         main_layout.setSpacing(6)
 
-        # Drag Handle on the left
+
         self.drag_handle = DragHandle(self)
         main_layout.addWidget(self.drag_handle, alignment=Qt.AlignmentFlag.AlignVCenter)
         self.drag_handle.setVisible(False)
 
         
-        
-        
-        # TextEdit for Japanese text (editable)
+    
         self.termbase = self.segment.page.chapter.get_termbase()
         self.translation_memory = self.segment.page.chapter.get_tm()
         self.label = SourceTextEdit(jmdict=jp_dict, termbase=self.termbase)
@@ -117,7 +114,7 @@ class SegmentBox(QWidget):
         self.text_area.focusOutEvent = self._on_text_area_unfocus  # Reuse unfocus for both
         self.text_area.setTabChangesFocus(True)
         
-        # two dividers, only one is shown at a time
+        
         self.h_divider = QFrame()
         self.h_divider.setObjectName("segmentDivider")
         self.h_divider.setFixedHeight(1)
@@ -155,19 +152,19 @@ class SegmentBox(QWidget):
         return self.segment.segment_type == SegmentType.SFX
     
     def _accept_suggestion(self, text):
-        self.text_area.setPlainText(text)       # textChanged adjusts the height
+        self.text_area.setPlainText(text)       
         cursor = self.text_area.textCursor()
         cursor.movePosition(QTextCursor.MoveOperation.End)
         self.text_area.setTextCursor(cursor)
-        self.text_area.setFocus()               # the user can edit right away
+        self.text_area.setFocus()               
         
     def _apply_layout(self):
-        # takeAt removes the item from the layout without deleting the widget
+        
         while self.body_layout.count():
             self.body_layout.takeAt(0)
 
         if self._is_sfx():
-            # [ jp text (fancy font) | translation ]
+           
             self.body_layout.setDirection(QBoxLayout.Direction.LeftToRight)
             self.body_layout.setSpacing(10)
             self.body_layout.addWidget(self.label, 1, Qt.AlignmentFlag.AlignVCenter)
@@ -175,7 +172,7 @@ class SegmentBox(QWidget):
             self.body_layout.addWidget(self.text_area, 1, Qt.AlignmentFlag.AlignVCenter)
             visible = {self.label, self.v_divider, self.text_area}
         else:
-            # jp text / divider / suggestions / translation
+           
             self.body_layout.setDirection(QBoxLayout.Direction.TopToBottom)
             self.body_layout.setSpacing(5)
             self.body_layout.addWidget(self.label)
@@ -184,7 +181,7 @@ class SegmentBox(QWidget):
             self.body_layout.addWidget(self.text_area)
             visible = {self.label, self.h_divider, self.text_area}
 
-        # suggestions stay hidden until the text area gets focus
+        
         for w in (self.v_divider, self.label, self.h_divider, self.suggestions, self.text_area):
             w.setVisible(w in visible)
 
@@ -193,7 +190,7 @@ class SegmentBox(QWidget):
         self._adjust_height(self.text_area)
 
     def _apply_label_style(self):
-        # font and size live together in the stylesheet (it overrides setFont)
+        
         if self._is_sfx():
             size = int(self.text_size * self.SFX_SIZE_FACTOR)
             self.label.setStyleSheet(
@@ -234,7 +231,6 @@ class SegmentBox(QWidget):
     def get_index(self):
         return self.segment.get_head_index()
     def set_drag_callback(self, callback):
-        """Set the callback function to be called when dragging starts."""
         self.drag_handle.set_drag_callback(callback)
     def set_japanese_text(self, text):
         self.label.setPlainText(text)
@@ -251,22 +247,20 @@ class SegmentBox(QWidget):
         self._adjust_text_area_height()
 
     def _adjust_text_area_height(self):
-        """Adjust text area height dynamically to fit text content."""
+      
         self._adjust_height(self.text_area)
 
     def _adjust_label_height(self):
-        """Adjust label height dynamically to fit text content."""
+
         self._adjust_height(self.label)
     def _adjust_height(self, widget):
-        """Adjust label height dynamically to fit text content."""
-        # Force document layout calculation to get accurate height
         widget.document().adjustSize()
         doc_height = int(widget.document().size().height())
         
         cap = 220 if self._is_sfx() else 150
         target_height = max(32, min(doc_height + 8, cap))
         
-        # Lock minimum and maximum to force the layout engine to respect content height
+
         widget.setFixedHeight(target_height)
         self.updateGeometry()
 
@@ -286,7 +280,7 @@ class SegmentBox(QWidget):
     def _on_text_area_focus(self, event):
         self.segment.show_focus(True)
         self.focused.emit(self.segment)
-        if not self._is_sfx() and not self.segment.confirmed:          # the horizontal layout has no spot for suggestions
+        if not self._is_sfx() and not self.segment.confirmed:          
             self.suggestions.show_suggestions(self.get_japanese_text(), self.label._term_matches)
         QTextEdit.focusInEvent(self.text_area, event)
 
@@ -316,7 +310,7 @@ class SegmentBox(QWidget):
         self.drag_handle.setVisible(enabled)
 
     def check_spelling(self):
-        if not self.get_translation().strip():  # Only check if there's text
+        if not self.get_translation().strip():  
             return
         """Check spelling of the translation text and highlight misspelled words."""
         self.text_area._reset_underlines()
@@ -327,29 +321,25 @@ class SegmentBox(QWidget):
         if misspelled_words:
             print(f"Misspelled words in segment {self.segment.nro}: {misspelled_words}")
  
-            # Configure the underline format
+           
             fmt = QTextCharFormat()
             fmt.setFontUnderline(True) 
-            # Optional: Custom underline styling (like a red wavy spellcheck line)
-            #fmt.setUnderlineStyle(QTextCharFormat.WaveUnderline)
+            
             fmt.setUnderlineColor(QColor("red"))
 
-            # Obtain document cursor
+           
             doc = self.text_area.document()
 
             for word in misspelled_words:
                 if not self.termbase.look_up_source(word):
-                    # Clear previous cursor adjustments and search from beginning
                     cursor = QTextCursor(doc)
                     while True:
-                        # Find the next occurrence of the word
+                        
                         cursor = doc.find(word, cursor)
                         
-                        # If no more matches are found, break loop
                         if cursor.isNull():
                             break
                             
-                        # Apply formatting specifically to the matched cursor selection
                         cursor.mergeCharFormat(fmt)
                         self.text_area.add_misspelled_word(word)
                 else:

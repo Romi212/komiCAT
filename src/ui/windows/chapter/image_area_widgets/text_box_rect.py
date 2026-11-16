@@ -71,7 +71,6 @@ class TextBoxRect(QGraphicsRectItem):
         self.update()
 
     def _get_hit_zone(self, pos):
-        """Hit test for 8-direction resize handles."""
         m = 8  # handle margin
         r = self.rect()
         x, y = pos.x(), pos.y()
@@ -201,7 +200,6 @@ class TextBoxRect(QGraphicsRectItem):
 
         if extracted_idle:
             pen = QPen(style["border"], 1)
-           # pen.setCosmetic(True)           # stays 1px at any zoom level
             half = 0.5
         else:
             width = 5 if (focused or self.isSelected()) else 3

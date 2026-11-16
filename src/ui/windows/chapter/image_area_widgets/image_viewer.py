@@ -50,7 +50,6 @@ class ImageViewer(QWidget):
         layout.addLayout(image_nav_layout)
 
 
-        # Graphics view for image display with zoom
         self.scene = QGraphicsScene()
         self.view = QGraphicsView(self.scene)
         self.view.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
@@ -82,7 +81,6 @@ class ImageViewer(QWidget):
 
         self._update_edit_menu_position()
         
-        # Status label
         self.status_label = QLabel("Ready")
         layout.addWidget(self.status_label)
         
@@ -91,7 +89,7 @@ class ImageViewer(QWidget):
         
         self.open_button = QPushButton("Open Images")
         self.open_button.clicked.connect(self.open_images)
-        #self.button_layout.addWidget(self.open_button)
+        
 
         self.detect_bubbles_button = QPushButton("Batch detect Bubbles")
         self.detect_bubbles_button.clicked.connect(self.detect_all_pages)
@@ -111,18 +109,18 @@ class ImageViewer(QWidget):
         self.button_layout.addWidget(self.extract_text_button)
 
         self.edition_mode_button = QPushButton("Edition Mode")
-        self.edition_mode_button.setCheckable(True)  # Enables checkable/toggle state
-        self.edition_mode_button.toggled.connect(self.edit_mode)  # Sends boolean (True/False)
+        self.edition_mode_button.setCheckable(True)  
+        self.edition_mode_button.toggled.connect(self.edit_mode)  
         self.button_layout.addWidget(self.edition_mode_button)
        
 
         self.clear_selection_button = QPushButton("Clear Selection")
         self.clear_selection_button.clicked.connect(self.clear_selection)
-        #button_layout.addWidget(self.clear_selection_button)
+        
 
         self.add_bubble_button = QPushButton("Add Bubble")
         self.add_bubble_button.clicked.connect(self.add_bubble)
-        #button_layout.addWidget(self.add_bubble_button)
+        
         
         layout.addLayout(self.button_layout)
         self.setLayout(layout)
@@ -138,7 +136,6 @@ class ImageViewer(QWidget):
     def load_chapter(self, chapter):
         self.chapter = chapter
         self._update_open_images_button_visibility()
-        #self.load_pages([page.file_path for page in chapter.pages])
         if len(chapter.pages) > 0:
             self.current_page = chapter.get_current_page()
             self._setup_page()
@@ -153,7 +150,6 @@ class ImageViewer(QWidget):
         btn_width = 140
         btn_height = 40
 
-        # Calculate centered (x, y) coordinates relative to self.view
         x = (self.view.width() - btn_width) // 2
         y = (self.view.height() - btn_height) // 2
 
@@ -179,7 +175,7 @@ class ImageViewer(QWidget):
     def _setup_page(self, change_focus = True):
         self.current_page = self.chapter.get_current_page()
 
-        #Set up image
+      
         
         if self.current_page:
             try:
@@ -190,7 +186,6 @@ class ImageViewer(QWidget):
                 q_image = QImage(data, pil_image.width, pil_image.height, bytes_per_line, QImage.Format.Format_RGB888)
                 current_pixmap = QPixmap.fromImage(q_image)
                 
-                # Clear scene and add pixmap
                 for item in self.scene.items():
                     if item.parentItem() is None:
                         self.scene.removeItem(item)
@@ -204,8 +199,6 @@ class ImageViewer(QWidget):
                 self.status_label.setText(f"Error setting up image: {str(e)}")
                 print(f"Error: {e}")
 
-        #Add bubble butons if it had been detected before
-        
         
             for segment in self.current_page.segments:
                 
@@ -216,8 +209,7 @@ class ImageViewer(QWidget):
                     segment.button = button
                     button.set_segment(segment)
 
-                
-                #button.link_on_click(lambda checked, btn=segment.button: self.selected_bubble(btn))
+            
                 button.conect_signals(self.prompt_and_delete_segment, self.combine_segments)
                 
                 self.scene.addItem(button)
@@ -236,7 +228,6 @@ class ImageViewer(QWidget):
             
             
     def resize_page(self):
-        """Update the view zoom level using transform"""
         if self.current_page:
             try:
                 self.view.resetTransform()
@@ -252,7 +243,7 @@ class ImageViewer(QWidget):
         
         
     def zoom_out(self):
-        if(self.zoom_factor > 0.1):  # Prevent zooming out too much
+        if(self.zoom_factor > 0.1):  
             self.zoom_factor /= 1.2
             self.resize_page()
         
@@ -379,23 +370,22 @@ class ImageViewer(QWidget):
         if not panel:
             print("Panel null")
 
-        # Extract panel coordinates
         x = panel.text_box.xmin
         y = panel.text_box.ymin
         w = panel.text_box.xmax - panel.text_box.xmin
         h = panel.text_box.ymax - panel.text_box.ymin
 
-        # Define panel target rectangle in scene coordinates
+     
         panel_rect = QRectF(x, y, w, h)
 
-        # Optional: Add padding around panel (e.g., 20px) so borders aren't clipped
+       
         margin = 20
         panel_rect_padded = panel_rect.adjusted(-margin, -margin, margin, margin)
 
-        # Scale view to fit the panel area
+        
         self.view.fitInView(panel_rect_padded, Qt.AspectRatioMode.KeepAspectRatio)
 
-        # Sync internal zoom factor with current transform matrix
+       
         self.zoom_factor = self.view.transform().m11()
         self.status_label.setText(f"Focused on panel | Zoom: {self.zoom_factor:.2f}x")
 

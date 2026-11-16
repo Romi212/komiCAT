@@ -46,7 +46,7 @@ class CreateChapterWindow(QDialog):
         self.advanced_toggle.setArrowType(Qt.ArrowType.RightArrow)
         self.advanced_toggle.setAutoRaise(True)
         self.advanced_toggle.toggled.connect(self._toggle_advanced)
-        main_layout.addWidget(self.advanced_toggle)
+        #main_layout.addWidget(self.advanced_toggle)
 
         self.advanced_frame = QFrame()
         adv_layout = QVBoxLayout(self.advanced_frame)
@@ -58,7 +58,7 @@ class CreateChapterWindow(QDialog):
         adv_layout.addWidget(self.use_termbase)
         adv_layout.addWidget(self.use_memory)
         self.advanced_frame.setVisible(False)
-        main_layout.addWidget(self.advanced_frame)
+        #main_layout.addWidget(self.advanced_frame)
 
         # ---------- OK / Cancel ----------
         self.button_box = QDialogButtonBox(

@@ -81,8 +81,8 @@ class Termbase:
                 if idx == -1:
                     break
                 raw_matches.append((idx, idx + len(source_term), source_term, target_term))
-                start = idx + 1  # allow overlapping candidates; resolved below
-
+                start = idx + 1  
+                
         # Prefer longer matches first, then earlier ones, when resolving overlaps
         raw_matches.sort(key=lambda m: (-(m[1] - m[0]), m[0]))
 

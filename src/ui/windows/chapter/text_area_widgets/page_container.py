@@ -10,8 +10,7 @@ class PageContainer(QWidget):
     def __init__(self, page, parent=None):
         super().__init__(parent)
         self.page = page
-        
-        # Enable receiving drop events
+
         self.setAcceptDrops(True)
         self.active_drag_widget = None  
 
@@ -32,7 +31,7 @@ class PageContainer(QWidget):
         self.combine_highlight.setCursor(Qt.CursorShape.PointingHandCursor)
         self.combine_highlight.setObjectName("combineHighlight")
 
-        self._hover_pair = None  # (top_widget, bottom_widget) currently highlighted
+        self._hover_pair = None 
 
     def mouseMoveEvent(self, event):
         pos = event.position().toPoint()
@@ -92,7 +91,6 @@ class PageContainer(QWidget):
         
 
     def _find_gap_at(self, pos):
-        """Return ((top_widget, bottom_widget), gap_y, gap_height) if pos.y() sits in a gap, else (None, 0, 0)."""
         widgets = [
             self.layout.itemAt(i).widget()
             for i in range(self.layout.count())
@@ -144,8 +142,6 @@ class PageContainer(QWidget):
 
         drop_y = event.position().toPoint().y()
         target_index = self._calculate_drop_index(drop_y)
-
-        # Move widget in layout directly using Python pointer
         self.layout.removeWidget(dragged_box)
         self.layout.insertWidget(target_index, dragged_box)
         
@@ -155,7 +151,6 @@ class PageContainer(QWidget):
 
 
     def _calculate_drop_index(self, drop_y):
-        """Find target layout index based on mouse Y coordinate."""
         for i in range(self.layout.count()):
             item = self.layout.itemAt(i)
             widget = item.widget()
@@ -166,7 +161,6 @@ class PageContainer(QWidget):
         return self.layout.count()
 
     def sync_logical_segments(self):
-        """Re-orders logical segments in self.page to match visual layout order."""
         ordered_segments = self.get_ordered_segments()
         self.page.update_segments(ordered_segments)
 
